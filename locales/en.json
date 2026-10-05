@@ -1,0 +1,53 @@
+{
+    "messages": {
+        "signUpSuccess": "Account created successfully. Please check your email to verify your account.",
+        "loginSuccess": "Logged in successfully.",
+        "logoutSuccess": "Logged out successfully.",
+        "emailVerified": "Email verified successfully.",
+        "verificationEmailSent": "If an account with that email exists, a verification link has been sent.",
+        "passwordResetEmailSent": "If an account with that email exists, a password reset link has been sent.",
+        "passwordResetSuccess": "Password reset successfully. You are now logged in.",
+        "passwordChanged": "Password changed successfully.",
+        "profileUpdated": "Profile updated successfully.",
+        "accountDeleted": "Your account has been deactivated successfully."
+    },
+    "errors": {
+        "somethingWentWrong": "Something went wrong. Please try again later.",
+        "routeNotFound": "The route '{{url}}' does not exist on this server.",
+        "missingFields": "Please provide all required fields.",
+        "invalidCredentials": "Incorrect email or password.",
+        "emailAlreadyExists": "An account with this email already exists.",
+        "emailAlreadyVerified": "This email address has already been verified.",
+        "invalidOrExpiredToken": "This link is invalid or has expired. Please request a new one.",
+        "userNotFound": "No user found with this identifier.",
+        "wrongCurrentPassword": "Your current password is incorrect.",
+        "samePassword": "Your new password must be different from your current password.",
+        "noUpdatableFields": "No valid fields provided to update.",
+        "useGoogleLogin": "This account was created with Google. Please sign in with Google.",
+        "emailSendFailed": "There was a problem sending the email. Please try again.",
+        "tokenRequired": "You are not logged in. Please log in to get access.",
+        "tokenExpired": "Your session has expired. Please log in again.",
+        "invalidToken": "Invalid token. Please log in again.",
+        "forbidden": "You do not have permission to perform this action.",
+        "invalidField": "Invalid value '{{value}}' for field '{{path}}'.",
+        "duplicateField": "A record with this '{{field}}' already exists.",
+        "validationError": "Validation failed: {{messages}}",
+        "fileTooLarge": "File size exceeds the allowed limit.",
+        "unexpectedField": "Unexpected file field in the upload.",
+        "uploadFailed": "File upload failed. Please try again.",
+        "firebaseTokenExpired": "Your Google session has expired. Please sign in again.",
+        "firebaseTokenRevoked": "Your Google session has been revoked. Please sign in again.",
+        "userDisabled": "This account has been disabled. Please contact support.",
+        "invalidFirebaseToken": "Invalid Google authentication token.",
+        "invalidEmail": "Please provide a valid email address.",
+        "passwordTooShort": "Password must be at least 8 characters long."
+    },
+    "validation": {
+        "nameRequired": "Name is required.",
+        "nameTooShort": "Name must be at least 2 characters long.",
+        "nameTooLong": "Name cannot exceed 50 characters.",
+        "emailRequired": "Email is required.",
+        "emailInvalid": "Please provide a valid email address.",
+        "passwordTooShort": "Password must be at least 8 characters long."
+    }
+}

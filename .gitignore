@@ -1,0 +1,8 @@
+node_modules/
+atlas-credentials.env
+*.env
+.DS_Store
+
+# Uploaded files
+uploads/*
+!uploads/.gitkeep
