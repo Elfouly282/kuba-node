@@ -30,6 +30,13 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.use('/api/v1/auth', authRoutes);
 
+app.get('/', (req, res) => {
+    res.status(200).json({
+        status: 'success',
+        message: 'API is running successfully',
+    });
+});
+
 app.all('*splat', (req, _res, next) => {
     next(new APIError('errors.routeNotFound', 404, { url: req.originalUrl }));
 });
