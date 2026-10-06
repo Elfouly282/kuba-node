@@ -63,6 +63,7 @@ const SHIPPING_FIELDS = ['name', 'description', 'estimatedDays'];
 const COUPON_FIELDS = ['description'];
 const PAGE_FIELDS = ['title', 'subtitle', 'content', 'address'];
 const JOURNAL_FIELDS = ['title', 'description'];
+const ONBOARDING_FIELDS = ['title', 'description'];
 
 const localizeProduct = (doc, locale) => localizeDoc(doc, PRODUCT_FIELDS, locale);
 const localizeProducts = (docs, locale) => localizeDocs(docs, PRODUCT_FIELDS, locale);
@@ -79,6 +80,8 @@ const localizePage = (doc, locale) => localizeDoc(doc, PAGE_FIELDS, locale);
 const localizePages = (docs, locale) => localizeDocs(docs, PAGE_FIELDS, locale);
 const localizeJournal = (doc, locale) => localizeDoc(doc, JOURNAL_FIELDS, locale);
 const localizeJournals = (docs, locale) => localizeDocs(docs, JOURNAL_FIELDS, locale);
+const localizeOnboardingScreen = (doc, locale) => localizeDoc(doc, ONBOARDING_FIELDS, locale);
+const localizeOnboardingScreens = (docs, locale) => localizeDocs(docs, ONBOARDING_FIELDS, locale);
 
 const localizeLineItem = (item, locale = DEFAULT_LOCALE) =>
     localizeDoc(item, ['name'], locale);
@@ -120,6 +123,8 @@ module.exports = {
     localizePages,
     localizeJournal,
     localizeJournals,
+    localizeOnboardingScreen,
+    localizeOnboardingScreens,
     localizeCart,
     localizeOrder,
     localizeOrders,

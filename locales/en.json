@@ -9,7 +9,11 @@
         "passwordResetSuccess": "Password reset successfully. You are now logged in.",
         "passwordChanged": "Password changed successfully.",
         "profileUpdated": "Profile updated successfully.",
-        "accountDeleted": "Your account has been deactivated successfully."
+        "accountDeleted": "Your account has been deactivated successfully.",
+        "onboardingScreenCreated": "Onboarding screen created successfully.",
+        "onboardingScreenUpdated": "Onboarding screen updated successfully.",
+        "onboardingScreenDeleted": "Onboarding screen deleted successfully.",
+        "onboardingScreensReordered": "Onboarding screens reordered successfully."
     },
     "errors": {
         "somethingWentWrong": "Something went wrong. Please try again later.",

@@ -11,6 +11,7 @@ const globalErrorHandler = require('./middleware/errorMiddleware');
 const APIError = require('./utils/apiError');
 
 const authRoutes = require('./features/auth/routes/authRoutes');
+const onboardingRoutes = require('./features/onboarding/routes/onboardingRoutes');
 
 dbConnection();
 
@@ -29,6 +30,7 @@ app.use(i18nMiddleware);
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/onboarding', onboardingRoutes);
 
 app.get('/', (req, res) => {
     res.status(200).json({
