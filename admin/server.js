@@ -5,7 +5,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 
-const dbConnection = require('./config/database');
+const dbConnection = require('../src/config/database');
 const { i18nMiddleware } = require('../utils/i18n');
 const globalErrorHandler = require('./middleware/errorMiddleware');
 const APIError = require('./utils/apiError');

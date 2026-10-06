@@ -53,7 +53,7 @@ userSchema.methods.comparePassword = function (candidate) {
 };
 
 userSchema.pre(/^find/, function (next) {
-    this.find({ active: { $ne: false } });
+    this.where({ active: { $ne: false } });
     next();
 });
 

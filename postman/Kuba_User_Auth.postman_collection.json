@@ -1,0 +1,349 @@
+{
+  "info": {
+    "name": "Kuba - User Auth",
+    "_postman_id": "kuba-user-auth-v1",
+    "description": "All user authentication endpoints for the Kuba API (src/features/auth)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "JWT token — set automatically after login/signup"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Sign Up",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/signup",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "signup"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Password123\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Register a new local user. Returns a JWT immediately. A verification email is sent in the background."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "if (res.token) {",
+              "  pm.collectionVariables.set('token', res.token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Password123\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Login with email & password (local users only). Returns a JWT."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "if (res.token) {",
+              "  pm.collectionVariables.set('token', res.token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Google Login (Firebase)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/google",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "google"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firebaseIdToken\": \"<FIREBASE_ID_TOKEN_HERE>\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Login via Google using a Firebase ID token. Can also be sent via Authorization: Bearer header instead of body."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "if (res.token) {",
+              "  pm.collectionVariables.set('token', res.token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Verify Email",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/auth/verify-email/:token",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "verify-email", ":token"],
+          "variable": [
+            {
+              "key": "token",
+              "value": "<RAW_TOKEN_FROM_EMAIL>",
+              "description": "Raw token sent in the verification email link"
+            }
+          ]
+        },
+        "description": "Verify email using the raw token received in the verification email."
+      }
+    },
+    {
+      "name": "05 - Resend Verification Email",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/resend-verification",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "resend-verification"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"testuser@example.com\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Resend the email verification link. Responds with success even if email doesn't exist (anti-enumeration)."
+      }
+    },
+    {
+      "name": "06 - Forgot Password",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/forgot-password",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "forgot-password"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"testuser@example.com\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Request a password reset email. Token is valid for 10 minutes. Silently succeeds for unknown or Google accounts."
+      }
+    },
+    {
+      "name": "07 - Reset Password",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/reset-password/:token",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "reset-password", ":token"],
+          "variable": [
+            {
+              "key": "token",
+              "value": "<RAW_TOKEN_FROM_EMAIL>",
+              "description": "Raw reset token from the password reset email"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"password\": \"NewPassword123\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Reset the password using the token from the forgot-password email. Returns a new JWT."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "if (res.token) {",
+              "  pm.collectionVariables.set('token', res.token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Get Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "me"]
+        },
+        "description": "Get the currently authenticated user's profile. Requires Bearer token."
+      }
+    },
+    {
+      "name": "09 - Update Profile",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/update-profile",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "update-profile"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated Name\",\n  \"avatar\": \"https://example.com/avatar.jpg\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Update name and/or avatar. Only these two fields are accepted. Requires Bearer token."
+      }
+    },
+    {
+      "name": "10 - Change Password",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/change-password",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "change-password"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"currentPassword\": \"Password123\",\n  \"newPassword\": \"NewPassword456\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "description": "Change the password while logged in. New password must differ from current. Returns a new JWT. Requires Bearer token."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "if (res.token) {",
+              "  pm.collectionVariables.set('token', res.token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - Logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/logout",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "logout"]
+        },
+        "description": "Logout endpoint. Stateless — token invalidation is handled client-side. Requires Bearer token."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set('token', '');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 - Delete Account",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/delete-account",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "delete-account"]
+        },
+        "description": "Soft-delete the authenticated user account (sets active: false). User will be invisible in all future queries. Requires Bearer token."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.collectionVariables.set('token', '');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}
