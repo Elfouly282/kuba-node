@@ -52,7 +52,17 @@ userSchema.methods.comparePassword = function (candidate) {
     return bcrypt.compare(candidate, this.password);
 };
 
-userSchema.pre(/^find/, function (next) {
+userSchema.pre('find', function (next) {
+    this.where({ active: { $ne: false } });
+    next();
+});
+
+userSchema.pre('findOne', function (next) {
+    this.where({ active: { $ne: false } });
+    next();
+});
+
+userSchema.pre('findOneAndUpdate', function (next) {
     this.where({ active: { $ne: false } });
     next();
 });
