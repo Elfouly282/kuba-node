@@ -29,15 +29,21 @@ const clean = (user) => {
 
 exports.signUp = async (req, res, next) => {
     try {
-        const { name, email, password } = req.body;
-        if (!name || !email || !password) return next(new APIError('errors.missingFields', 400));
+        const { name, email, phone, password, confirmPassword, acceptTerms } = req.body;
+        if (!email || !password || !confirmPassword) return next(new APIError('errors.missingFields', 400));
+        if (password !== confirmPassword) return next(new APIError('errors.passwordsDoNotMatch', 400));
+        if (!acceptTerms) return next(new APIError('errors.mustAcceptTerms', 400));
 
         if (await User.findOne({ email })) return next(new APIError('errors.emailAlreadyExists', 400));
 
         const { raw, hashed } = randomToken();
 
         const user = await User.create({
-            name, email, password, provider: 'local',
+            name: name || null,
+            email,
+            phone: phone || null,
+            password,
+            provider: 'local',
             emailVerificationToken: hashed,
             emailVerificationExpires: expiresIn('EMAIL_VERIFICATION_EXPIRE', '24h'),
         });

@@ -5,10 +5,10 @@ const userSchema = new mongoose.Schema(
     {
         name: {
             type: String,
-            required: [true, 'validation.nameRequired'],
             trim: true,
             minlength: [2, 'validation.nameTooShort'],
             maxlength: [50, 'validation.nameTooLong'],
+            default: null,
         },
         email: {
             type: String,
@@ -17,6 +17,11 @@ const userSchema = new mongoose.Schema(
             lowercase: true,
             trim: true,
             match: [/^\S+@\S+\.\S+$/, 'validation.emailInvalid'],
+        },
+        phone: {
+            type: String,
+            trim: true,
+            default: null,
         },
         password: {
             type: String,
@@ -52,17 +57,7 @@ userSchema.methods.comparePassword = function (candidate) {
     return bcrypt.compare(candidate, this.password);
 };
 
-userSchema.pre('find', function (next) {
-    this.where({ active: { $ne: false } });
-    next();
-});
-
-userSchema.pre('findOne', function (next) {
-    this.where({ active: { $ne: false } });
-    next();
-});
-
-userSchema.pre('findOneAndUpdate', function (next) {
+userSchema.pre(/^find/, function (next) {
     this.where({ active: { $ne: false } });
     next();
 });
