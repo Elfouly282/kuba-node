@@ -32,60 +32,29 @@ const userSchema = new mongoose.Schema(
             enum: ['local', 'google'],
             default: 'local',
         },
-        // ── Email Verification ─────────────────────────────────────────────
-        isEmailVerified: {
-            type: Boolean,
-            default: false,
-        },
-        emailVerificationToken: {
-            type: String,
-            select: false,
-        },
-        emailVerificationExpires: {
-            type: Date,
-            select: false,
-        },
-        // ── Password Reset ─────────────────────────────────────────────────
-        passwordResetToken: {
-            type: String,
-            select: false,
-        },
-        passwordResetExpires: {
-            type: Date,
-            select: false,
-        },
-        // ── Soft-delete / active flag ──────────────────────────────────────
-        active: {
-            type: Boolean,
-            default: true,
-            select: false,
-        },
+        isEmailVerified: { type: Boolean, default: false },
+        emailVerificationToken: { type: String, select: false },
+        emailVerificationExpires: { type: Date, select: false },
+        passwordResetToken: { type: String, select: false },
+        passwordResetExpires: { type: Date, select: false },
+        active: { type: Boolean, default: true, select: false },
     },
-    {
-        timestamps: true,
-        toJSON: { virtuals: true },
-        toObject: { virtuals: true },
-    }
+    { timestamps: true }
 );
 
-// ── Pre-save: hash password only when it's new or modified ─────────────────
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password') || !this.password) return next();
     this.password = await bcrypt.hash(this.password, 12);
     next();
 });
 
-// ── Instance method: compare plain password to hashed ─────────────────────
-userSchema.methods.comparePassword = async function (candidatePassword) {
-    return bcrypt.compare(candidatePassword, this.password);
+userSchema.methods.comparePassword = function (candidate) {
+    return bcrypt.compare(candidate, this.password);
 };
 
-// ── Query middleware: exclude inactive (deleted) users by default ──────────
 userSchema.pre(/^find/, function (next) {
     this.find({ active: { $ne: false } });
     next();
 });
 
-const User = mongoose.model('User', userSchema);
-
-module.exports = User;
+module.exports = mongoose.model('User', userSchema);

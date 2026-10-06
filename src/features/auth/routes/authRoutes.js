@@ -18,18 +18,14 @@ const {
 
 const { protect } = require('../middleware/authMiddleware');
 
-// ── Public routes ────────────────────────────────────────────────────────────
 router.post('/signup', signUp);
 router.post('/login', login);
 router.post('/google', googleLogin);
-
 router.get('/verify-email/:token', verifyEmail);
 router.post('/resend-verification', resendVerificationEmail);
-
 router.post('/forgot-password', forgotPassword);
 router.patch('/reset-password/:token', resetPassword);
 
-// ── Protected routes (JWT required) ─────────────────────────────────────────
 router.post('/logout', protect, logout);
 router.patch('/change-password', protect, changePassword);
 router.get('/me', protect, getMe);
