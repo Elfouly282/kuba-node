@@ -9,7 +9,11 @@
         "passwordResetSuccess": "تمت إعادة تعيين كلمة المرور بنجاح. أنت الآن مسجّل الدخول.",
         "passwordChanged": "تم تغيير كلمة المرور بنجاح.",
         "profileUpdated": "تم تحديث الملف الشخصي بنجاح.",
-        "accountDeleted": "تم إلغاء تنشيط حسابك بنجاح."
+        "accountDeleted": "تم إلغاء تنشيط حسابك بنجاح.",
+        "onboardingScreenCreated": "تم إنشاء شاشة الترحيب بنجاح.",
+        "onboardingScreenUpdated": "تم تحديث شاشة الترحيب بنجاح.",
+        "onboardingScreenDeleted": "تم حذف شاشة الترحيب بنجاح.",
+        "onboardingScreensReordered": "تم إعادة ترتيب شاشات الترحيب بنجاح."
     },
     "errors": {
         "somethingWentWrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.",
@@ -48,6 +52,10 @@
         "nameTooLong": "لا يمكن أن يتجاوز الاسم 50 حرفاً.",
         "emailRequired": "البريد الإلكتروني مطلوب.",
         "emailInvalid": "يرجى تقديم بريد إلكتروني صالح.",
-        "passwordTooShort": "يجب أن تكون كلمة المرور 8 أحرف على الأقل."
+        "passwordTooShort": "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
+        "titleRequired": "العنوان مطلوب.",
+        "titleTooLong": "لا يمكن أن يتجاوز العنوان 120 حرفاً.",
+        "descriptionTooLong": "لا يمكن أن يتجاوز الوصف 500 حرف.",
+        "onboardingScreenNotFound": "شاشة الترحيب غير موجودة."
     }
 }
