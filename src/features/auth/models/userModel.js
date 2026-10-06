@@ -57,9 +57,8 @@ userSchema.methods.comparePassword = function (candidate) {
     return bcrypt.compare(candidate, this.password);
 };
 
-userSchema.pre(/^find/, function (next) {
+userSchema.pre(/^find/, function () {
     this.where({ active: { $ne: false } });
-    next();
 });
 
 module.exports = mongoose.model('User', userSchema);
