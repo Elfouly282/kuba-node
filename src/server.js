@@ -1,5 +1,8 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', 'config.env') });
+// Load config.env if it exists (local dev). On production (Hostinger),
+// env vars are injected by the platform — dotenv is a no-op if file is absent.
+const configEnvPath = path.join(__dirname, '..', 'config.env');
+require('dotenv').config({ path: configEnvPath, override: false });
 
 const express = require('express');
 const cors = require('cors');
