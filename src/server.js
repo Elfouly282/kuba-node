@@ -1,5 +1,10 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', 'config.env') });
+// Try .env first (Hostinger/dotenvx default), fall back to config.env for local dev
+const dotenv = require('dotenv');
+const envResult = dotenv.config({ path: path.join(__dirname, '..', '.env') });
+if (envResult.error) {
+    dotenv.config({ path: path.join(__dirname, '..', 'config.env') });
+}
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
