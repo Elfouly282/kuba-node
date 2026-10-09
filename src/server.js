@@ -31,7 +31,14 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('DB_URI exists:', Boolean(process.env.DB_URI));
 console.log('PORT from environment:', process.env.PORT || 'not set');
 
-dbConnection();
+console.log('BEFORE DB CONNECTION');
+
+try {
+    dbConnection();
+    console.log('AFTER DB CONNECTION CALL');
+} catch (error) {
+    console.error('DB CONNECTION SYNC ERROR:', error.stack || error);
+}
 
 const app = express();
 
@@ -65,26 +72,29 @@ app.use(globalErrorHandler);
 
 const PORT = process.env.PORT || 3000;
 
+console.log('BEFORE APP LISTEN');
+console.log('Attempting to listen on port:', PORT);
+
 const server = app.listen(PORT, () => {
     console.log(`KUBA SERVER STARTED ON PORT ${PORT}`);
     console.log(`Server running in ${process.env.NODE_ENV} mode`);
-    console.log(`DB_URI exists: ${Boolean(process.env.DB_URI)}`);
+    console.log('DB_URI exists:', Boolean(process.env.DB_URI));
 });
 
-server.on('error', (err) => {
-    console.error('KUBA SERVER LISTEN ERROR:', err.message);
+server.on('error', (error) => {
+    console.error('KUBA SERVER LISTEN ERROR:', error.stack || error);
 });
 
-process.on('unhandledRejection', (err) => {
-    console.error('UNHANDLED REJECTION:', err?.stack || err);
+process.on('unhandledRejection', (error) => {
+    console.error('UNHANDLED REJECTION:', error?.stack || error);
 
     server.close(() => {
         process.exit(1);
     });
 });
 
-process.on('uncaughtException', (err) => {
-    console.error('UNCAUGHT EXCEPTION:', err?.stack || err);
+process.on('uncaughtException', (error) => {
+    console.error('UNCAUGHT EXCEPTION:', error.stack || error);
     process.exit(1);
 });
 
