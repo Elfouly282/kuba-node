@@ -1,10 +1,20 @@
+
 const path = require('path');
-// Try .env first (Hostinger/dotenvx default), fall back to config.env for local dev
+
+console.log('KUBA SERVER STARTING...');
+
 const dotenv = require('dotenv');
-const envResult = dotenv.config({ path: path.join(__dirname, '..', '.env') });
+
+const envResult = dotenv.config({
+    path: path.join(__dirname, '..', '.env')
+});
+
 if (envResult.error) {
-    dotenv.config({ path: path.join(__dirname, '..', 'config.env') });
+    dotenv.config({
+        path: path.join(__dirname, '..', 'config.env')
+    });
 }
+
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -16,6 +26,10 @@ const APIError = require('./utils/apiError');
 
 const authRoutes = require('./features/auth/routes/authRoutes');
 const onboardingRoutes = require('./features/onboarding/routes/onboardingRoutes');
+
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('DB_URI exists:', Boolean(process.env.DB_URI));
+console.log('PORT from environment:', process.env.PORT || 'not set');
 
 dbConnection();
 
@@ -50,17 +64,27 @@ app.all('*splat', (req, _res, next) => {
 app.use(globalErrorHandler);
 
 const PORT = process.env.PORT || 3000;
+
 const server = app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    console.log(`KUBA SERVER STARTED ON PORT ${PORT}`);
+    console.log(`Server running in ${process.env.NODE_ENV} mode`);
+    console.log(`DB_URI exists: ${Boolean(process.env.DB_URI)}`);
+});
+
+server.on('error', (err) => {
+    console.error('KUBA SERVER LISTEN ERROR:', err.message);
 });
 
 process.on('unhandledRejection', (err) => {
-    console.error('UNHANDLED REJECTION', err.name, err.message);
-    server.close(() => process.exit(1));
+    console.error('UNHANDLED REJECTION:', err?.stack || err);
+
+    server.close(() => {
+        process.exit(1);
+    });
 });
 
 process.on('uncaughtException', (err) => {
-    console.error('UNCAUGHT EXCEPTION', err.name, err.message);
+    console.error('UNCAUGHT EXCEPTION:', err?.stack || err);
     process.exit(1);
 });
 
