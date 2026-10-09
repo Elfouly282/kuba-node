@@ -1,5 +1,4 @@
 const crypto = require('crypto');
-const admin = require('../../../../admin/config/firebase');
 const User = require('../models/userModel');
 const APIError = require('../../../utils/apiError');
 const generateToken = require('../../../utils/generateToken');
@@ -229,6 +228,8 @@ exports.googleLogin = async (req, res, next) => {
         let firebaseToken = req.body.firebaseIdToken || req.headers.authorization?.split(' ')[1];
         if (!firebaseToken) return next(new APIError('errors.tokenRequired', 401));
 
+        // Lazy-load Firebase so an initialization failure only affects this route
+        const admin = require('../../../../admin/config/firebase');
         const decoded = await admin.auth().verifyIdToken(firebaseToken);
 
         res.status(200).json({
