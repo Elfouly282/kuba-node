@@ -14,7 +14,6 @@ exports.googleLogin = async (req, res, next) => {
 
         const jwtToken = generateToken({
             uid: decodedToken.uid,
-            email: decodedToken.email,
         });
 
         res.status(200).json({

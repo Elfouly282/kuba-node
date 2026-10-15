@@ -52,7 +52,7 @@ exports.signUp = async (req, res, next) => {
         res.status(201).json({
             status: 'success',
             message: req.t('messages.signUpSuccess'),
-            token: generateToken({ id: user._id, email: user.email }),
+            token: generateToken({ id: user._id }),
             data: { user: clean(user) },
         });
     } catch (err) { next(err); }
@@ -70,7 +70,7 @@ exports.login = async (req, res, next) => {
         res.status(200).json({
             status: 'success',
             message: req.t('messages.loginSuccess'),
-            token: generateToken({ id: user._id, email: user.email }),
+            token: generateToken({ id: user._id }),
             data: { user: clean(user) },
         });
     } catch (err) { next(err); }
@@ -201,7 +201,7 @@ exports.resetPassword = async (req, res, next) => {
         res.status(200).json({
             status: 'success',
             message: req.t('messages.passwordResetSuccess'),
-            token: generateToken({ id: user._id, email: user.email }),
+            token: generateToken({ id: user._id }),
         });
     } catch (err) { next(err); }
 };
@@ -222,7 +222,7 @@ exports.changePassword = async (req, res, next) => {
         res.status(200).json({
             status: 'success',
             message: req.t('messages.passwordChanged'),
-            token: generateToken({ id: user._id, email: user.email }),
+            token: generateToken({ id: user._id }),
         });
     } catch (err) { next(err); }
 };
@@ -268,7 +268,7 @@ exports.googleLogin = async (req, res, next) => {
         res.status(200).json({
             status: 'success',
             message: req.t('messages.loginSuccess'),
-            token: generateToken({ uid: decoded.uid, email: decoded.email }),
+            token: generateToken({ uid: decoded.uid }),
             data: { uid: decoded.uid, email: decoded.email, name: decoded.name, picture: decoded.picture },
         });
     } catch (err) {
