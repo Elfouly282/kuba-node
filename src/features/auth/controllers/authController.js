@@ -136,7 +136,8 @@ exports.forgotPassword = async (req, res, next) => {
 
         try {
             await sendPasswordResetEmail(user.email, user.name, raw, req.locale);
-        } catch {
+        } catch (emailErr) {
+            console.error('[forgotPassword] SMTP error:', emailErr);
             user.passwordResetToken = undefined;
             user.passwordResetExpires = undefined;
             await user.save({ validateBeforeSave: false });
