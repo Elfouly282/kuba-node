@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const User = require('../models/userModel');
 const APIError = require('../../../utils/apiError');
 const generateToken = require('../../../utils/generateToken');
-const { sendVerificationEmail, sendPasswordResetEmail } = require('../../../utils/sendEmail');
+const { sendVerificationEmail, sendPasswordResetOtpEmail } = require('../../../utils/sendEmail');
 
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
@@ -129,22 +129,55 @@ exports.forgotPassword = async (req, res, next) => {
 
         if (!user || user.provider !== 'local') return res.status(200).json(response);
 
-        const { raw, hashed } = randomToken();
-        user.passwordResetToken = hashed;
-        user.passwordResetExpires = expiresIn('PASSWORD_RESET_EXPIRE', '10m');
+        const otp = String(Math.floor(100000 + Math.random() * 900000));
+
+        user.passwordResetOtp = hashToken(otp);
+        user.passwordResetOtpExpires = expiresIn('PASSWORD_RESET_EXPIRE', '10m');
         await user.save({ validateBeforeSave: false });
 
         try {
-            await sendPasswordResetEmail(user.email, user.name, raw, req.locale);
+            await sendPasswordResetOtpEmail(user.email, user.name, otp, req.locale);
         } catch (emailErr) {
             console.error('[forgotPassword] SMTP error:', emailErr);
-            user.passwordResetToken = undefined;
-            user.passwordResetExpires = undefined;
+            user.passwordResetOtp = undefined;
+            user.passwordResetOtpExpires = undefined;
             await user.save({ validateBeforeSave: false });
             return next(new APIError('errors.emailSendFailed', 500));
         }
 
         res.status(200).json(response);
+    } catch (err) { next(err); }
+};
+
+exports.verifyResetOtp = async (req, res, next) => {
+    try {
+        const { email, otp } = req.body;
+        if (!email || !otp) return next(new APIError('errors.missingFields', 400));
+
+        const user = await User.findOne({ email })
+            .select('+passwordResetOtp +passwordResetOtpExpires');
+
+        if (
+            !user ||
+            !user.passwordResetOtp ||
+            user.passwordResetOtp !== hashToken(String(otp)) ||
+            user.passwordResetOtpExpires < Date.now()
+        ) {
+            return next(new APIError('errors.invalidOrExpiredOtp', 400));
+        }
+
+        const { raw, hashed } = randomToken();
+        user.passwordResetToken = hashed;
+        user.passwordResetExpires = expiresIn('PASSWORD_RESET_EXPIRE', '10m');
+        user.passwordResetOtp = undefined;
+        user.passwordResetOtpExpires = undefined;
+        await user.save({ validateBeforeSave: false });
+
+        res.status(200).json({
+            status: 'success',
+            message: req.t('messages.otpVerified'),
+            resetToken: raw,
+        });
     } catch (err) { next(err); }
 };
 
@@ -229,7 +262,6 @@ exports.googleLogin = async (req, res, next) => {
         let firebaseToken = req.body.firebaseIdToken || req.headers.authorization?.split(' ')[1];
         if (!firebaseToken) return next(new APIError('errors.tokenRequired', 401));
 
-        // Lazy-load Firebase so an initialization failure only affects this route
         const admin = require('../../../../admin/config/firebase');
         const decoded = await admin.auth().verifyIdToken(firebaseToken);
 
