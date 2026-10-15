@@ -1,6 +1,6 @@
 const admin = require('../../../config/firebase');
 const APIError = require('../../../utils/apiError');
-const generateToken = require('../../../utils/generateToken');
+const { generateToken } = require('../../../utils/generateToken');
 
 exports.googleLogin = async (req, res, next) => {
     try {

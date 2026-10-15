@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const User = require('../models/userModel');
 const APIError = require('../../../utils/apiError');
-const generateToken = require('../../../utils/generateToken');
+const { generateToken } = require('../../../utils/generateToken');
 const { sendVerificationEmail, sendPasswordResetOtpEmail } = require('../../../utils/sendEmail');
 
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');

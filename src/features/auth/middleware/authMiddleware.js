@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const APIError = require('../../../utils/apiError');
+const { decompressId } = require('../../../utils/generateToken');
 
 const protect = async (req, _res, next) => {
     const authHeader = req.headers.authorization;
@@ -20,14 +21,15 @@ const protect = async (req, _res, next) => {
     }
 
     if (decoded.id) {
-        const user = await User.findById(decoded.id);
+        const userId = decompressId(decoded.id);
+        const user = await User.findById(userId);
         if (!user) return next(new APIError('errors.userNotFound', 401));
         req.user = user;
         return next();
     }
 
     if (decoded.uid) {
-        req.user = { _id: decoded.uid, uid: decoded.uid, email: decoded.email, provider: 'google' };
+        req.user = { _id: decompressId(decoded.uid), uid: decoded.uid, provider: 'google' };
         return next();
     }
 
