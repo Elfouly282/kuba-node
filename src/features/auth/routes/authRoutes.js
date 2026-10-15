@@ -18,6 +18,28 @@ const {
 
 const { protect } = require('../middleware/authMiddleware');
 
+// ─── Temporary SMTP diagnostic — REMOVE before going live ───────────────────
+if (process.env.NODE_ENV !== 'production') {
+    router.get('/debug/smtp', async (_req, res) => {
+        const nodemailer = require('nodemailer');
+        const port = Number(process.env.EMAIL_PORT) || 465;
+        const transporter = nodemailer.createTransport({
+            host: process.env.EMAIL_HOST,
+            port,
+            secure: port === 465,
+            auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+            tls: { rejectUnauthorized: false },
+        });
+        try {
+            await transporter.verify();
+            res.json({ status: 'ok', message: 'SMTP connection verified successfully' });
+        } catch (err) {
+            res.status(500).json({ status: 'error', message: err.message, code: err.code });
+        }
+    });
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 router.post('/signup', signUp);
 router.post('/login', login);
 router.post('/google', googleLogin);

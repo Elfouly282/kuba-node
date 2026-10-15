@@ -1,20 +1,23 @@
 const nodemailer = require('nodemailer');
 
-// Transporter is created lazily (on first use) so that env vars are
-// guaranteed to be loaded by the time we actually send an email.
+// Transporter is created lazily so env vars are loaded before first use.
 let _transporter = null;
 
 const getTransporter = () => {
     if (_transporter) return _transporter;
 
-    const port = Number(process.env.EMAIL_PORT);
+    const port = Number(process.env.EMAIL_PORT) || 465;
     _transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
         port,
-        secure: port === 465,
+        secure: port === 465,       // true for 465 (SSL), false for 587 (STARTTLS)
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
+        },
+        tls: {
+            // Hostinger shared hosting sometimes returns a cert chain mismatch
+            rejectUnauthorized: false,
         },
     });
     return _transporter;
