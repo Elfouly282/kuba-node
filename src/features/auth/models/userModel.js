@@ -37,6 +37,11 @@ const userSchema = new mongoose.Schema(
             enum: ['local', 'google'],
             default: 'local',
         },
+        role: {
+            type: String,
+            enum: ['user', 'admin'],
+            default: 'user',
+        },
         isEmailVerified: { type: Boolean, default: false },
         emailVerificationToken: { type: String, select: false },
         emailVerificationExpires: { type: Date, select: false },
@@ -60,7 +65,9 @@ userSchema.methods.comparePassword = function (candidate) {
 };
 
 userSchema.pre(/^find/, function () {
-    this.where({ active: { $ne: false } });
+    if (!this.getOptions().includeInactive) {
+        this.where({ active: { $ne: false } });
+    }
 });
 
 module.exports = mongoose.model('User', userSchema);

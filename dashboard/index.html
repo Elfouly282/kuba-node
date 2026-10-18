@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuba | لوحة التحكم الإدارية</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Cairo & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-[#f8faf9] text-slate-900">
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container"></div>
+
+    <!-- ─── AUTH SCREEN (Shown if not logged in) ───────────────────────────── -->
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 bg-[#f4f6f4]">
+        <div class="card p-8 w-full max-w-md border border-[#c2d6c3] bg-white relative overflow-hidden shadow-xl">
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-[#2D4F2E]/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-[#2D4F2E]/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-[#2D4F2E] flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-[#2D4F2E]/25">
+                    K
+                </div>
+                <h1 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="loginTitle">تسجيل الدخول للوحة التحكم</h1>
+                <p class="text-xs text-slate-500" data-i18n="loginSubtitle">أدخل بيانات حساب المدير للمتابعة</p>
+            </div>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="email">البريد الإلكتروني</label>
+                    <div class="relative">
+                        <input type="email" id="login-email" required class="form-input text-sm ps-10" placeholder="admin@kuba-app.com">
+                        <i class="fas fa-envelope absolute top-3.5 start-3.5 text-slate-400 text-xs"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="password">كلمة المرور</label>
+                    <div class="relative">
+                        <input type="password" id="login-password" required class="form-input text-sm ps-10" placeholder="••••••••">
+                        <i class="fas fa-lock absolute top-3.5 start-3.5 text-slate-400 text-xs"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="gold-btn w-full mt-2 py-3 text-sm">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span data-i18n="loginBtn">دخول للوحة التحكم</span>
+                </button>
+            </form>
+
+            <div class="mt-6 pt-4 border-t border-slate-100 text-center">
+                <button type="button" onclick="fillDemoAdmin()" class="text-xs text-[#2D4F2E] hover:text-[#223e23] underline font-bold">
+                    <i class="fas fa-magic"></i>
+                    <span data-i18n="quickFillAdmin">تعبئة بيانات المدير التجريبي تلقائياً</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── MAIN APP SCREEN ───────────────────────────────────────────────── -->
+    <div id="app-screen" class="hidden">
+        <div class="app-container">
+
+            <!-- Sidebar -->
+            <aside class="sidebar p-4 bg-white" id="sidebar">
+                <div class="flex items-center gap-3 px-3 py-3 mb-6 border-b border-slate-100">
+                    <div class="w-10 h-10 rounded-xl bg-[#2D4F2E] flex items-center justify-center text-white font-black text-xl shadow-md shadow-[#2D4F2E]/20">
+                        K
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-900 text-base tracking-wide" data-i18n="appName">لوحة تحكم كوبا</div>
+                        <div class="text-[11px] text-[#2D4F2E] font-bold tracking-wider">AUREVIA LUXURY</div>
+                    </div>
+                </div>
+
+                <nav class="flex-1 space-y-1">
+                    <a href="#" class="nav-link active" data-tab="overview">
+                        <i class="fas fa-chart-pie w-5 text-center text-[#2D4F2E]"></i>
+                        <span data-i18n="overview">نظرة عامة</span>
+                    </a>
+                    <a href="#" class="nav-link" data-tab="users">
+                        <i class="fas fa-users w-5 text-center text-[#2D4F2E]"></i>
+                        <span data-i18n="users">إدارة المستخدمين</span>
+                    </a>
+                    <a href="#" class="nav-link" data-tab="onboarding">
+                        <i class="fas fa-mobile-screen w-5 text-center text-[#2D4F2E]"></i>
+                        <span data-i18n="onboarding">شاشات الترحيب</span>
+                    </a>
+                    <a href="#" class="nav-link" data-tab="categories">
+                        <i class="fas fa-layer-group w-5 text-center text-[#2D4F2E]"></i>
+                        <span data-i18n="categoriesBanners">الفئات والبانرات</span>
+                    </a>
+                    <a href="#" class="nav-link" data-tab="system">
+                        <i class="fas fa-terminal w-5 text-center text-[#2D4F2E]"></i>
+                        <span data-i18n="systemStatus">فحص النظام والـ APIs</span>
+                    </a>
+                </nav>
+
+                <div class="p-3 border-t border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2.5 h-2.5 rounded-full bg-[#2D4F2E] animate-pulse"></div>
+                        <span class="text-xs text-slate-600 font-medium" data-i18n="online">متصل بالسيرفر</span>
+                    </div>
+                    <button onclick="logout()" class="text-xs text-red-600 hover:text-red-700 font-medium flex items-center gap-1.5 p-1 rounded" title="تسجيل الخروج">
+                        <i class="fas fa-power-off"></i>
+                        <span data-i18n="logout">خروج</span>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+
+                <!-- Header / Navbar -->
+                <header class="h-16 px-6 bg-white/95 backdrop-blur border-b border-slate-200 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <button class="lg:hidden text-slate-600 hover:text-slate-900 p-2" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                            <i class="fas fa-bars text-lg"></i>
+                        </button>
+                        <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500 font-medium">
+                            <span class="text-slate-700 font-bold">Kuba App</span>
+                            <span>•</span>
+                            <span class="badge badge-brand">v1.0.0</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <!-- Language Switcher -->
+                        <button onclick="toggleLanguage()" class="btn-secondary text-xs py-1.5 px-3">
+                            <i class="fas fa-globe text-[#2D4F2E]"></i>
+                            <span id="lang-btn-text">English</span>
+                        </button>
+
+                        <!-- Refresh -->
+                        <button onclick="loadCurrentTab()" class="btn-secondary text-xs py-1.5 px-3" title="تحديث">
+                            <i class="fas fa-rotate"></i>
+                        </button>
+
+                        <!-- User Profile Pill -->
+                        <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-3 py-1">
+                            <div class="w-6 h-6 rounded-full bg-[#2D4F2E] text-white flex items-center justify-center font-bold text-xs">
+                                <i class="fas fa-user-shield text-[10px]"></i>
+                            </div>
+                            <div class="text-xs">
+                                <span id="header-admin-name" class="font-bold text-slate-800">Admin</span>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Page Content Views -->
+                <div class="p-6 flex-1 space-y-6">
+
+                    <!-- 1. OVERVIEW VIEW -->
+                    <section id="view-overview" class="tab-view space-y-6">
+                        <!-- KPI Stats -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                            <div class="card p-4 bg-white">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="totalUsers">إجمالي المستخدمين</span>
+                                    <div class="w-8 h-8 rounded-lg bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center">
+                                        <i class="fas fa-users text-xs"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-total-users">0</div>
+                                <div class="text-[10px] text-slate-500 mt-1 flex items-center gap-1 font-medium">
+                                    <i class="fas fa-arrow-trend-up text-[#2D4F2E]"></i>
+                                    <span>المسجلين في النظام</span>
+                                </div>
+                            </div>
+
+                            <div class="card p-4 bg-white">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="activeUsers">المستخدمون النشطون</span>
+                                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                        <i class="fas fa-user-check text-xs"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-active-users">0</div>
+                                <div class="text-[10px] text-emerald-600 font-medium mt-1">حسابات نشطة</div>
+                            </div>
+
+                            <div class="card p-4 bg-white">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="verifiedAccounts">الحسابات الموثقة</span>
+                                    <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                                        <i class="fas fa-envelope-circle-check text-xs"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-verified-users">0</div>
+                                <div class="text-[10px] text-slate-500 font-medium mt-1">تم تأكيد البريد</div>
+                            </div>
+
+                            <div class="card p-4 bg-white">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="totalOnboarding">شاشات الترحيب</span>
+                                    <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                                        <i class="fas fa-mobile-screen text-xs"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-onboarding">0</div>
+                                <div class="text-[10px] text-purple-600 font-medium mt-1">شاشات Onboarding</div>
+                            </div>
+
+                            <div class="card p-4 bg-white">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="categoriesTitle">التصنيفات</span>
+                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                                        <i class="fas fa-layer-group text-xs"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-categories">0</div>
+                                <div class="text-[10px] text-blue-600 font-medium mt-1">فنادق، شاليهات...</div>
+                            </div>
+
+                            <div class="card p-4 bg-white">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="bannersTitle">البانرات</span>
+                                    <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
+                                        <i class="fas fa-images text-xs"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-banners">0</div>
+                                <div class="text-[10px] text-rose-600 font-medium mt-1">بانرات إعلانية نشطة</div>
+                            </div>
+                        </div>
+
+                        <!-- System Info & Quick Actions -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- Recent Users Box -->
+                            <div class="card p-5 bg-white lg:col-span-2">
+                                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                                    <h3 class="font-bold text-slate-900 text-sm" data-i18n="recentUsers">أحدث المستخدمين المسجلين</h3>
+                                    <button onclick="switchTab('users')" class="text-xs text-[#2D4F2E] hover:underline font-bold">عرض الكل &larr;</button>
+                                </div>
+                                <div id="recent-users-list">
+                                    <div class="text-center py-6 text-slate-400 text-xs">جاري التحميل...</div>
+                                </div>
+                            </div>
+
+                            <!-- System Status Box -->
+                            <div class="card p-5 bg-white space-y-4">
+                                <h3 class="font-bold text-slate-900 text-sm pb-3 border-b border-slate-100" data-i18n="systemInfo">معلومات الخادم وقاعدة البيانات</h3>
+                                
+                                <div class="space-y-3 text-xs">
+                                    <div class="flex justify-between items-center py-1">
+                                        <span class="text-slate-500" data-i18n="databaseStatus">حالة قاعدة البيانات:</span>
+                                        <span class="badge badge-success" data-i18n="connected">متصلة بنجاح (MongoDB)</span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-1">
+                                        <span class="text-slate-500" data-i18n="environment">البيئة:</span>
+                                        <span class="text-[#2D4F2E] font-bold" id="info-env">development</span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-1">
+                                        <span class="text-slate-500" data-i18n="serverTime">توقيت الخادم:</span>
+                                        <span class="text-slate-700 font-medium" id="info-time">—</span>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4 border-t border-slate-100 space-y-2">
+                                    <div class="text-xs font-bold text-slate-700 mb-2" data-i18n="quickActions">إجراءات سريعة</div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button onclick="openAddCategoryModal()" class="gold-btn text-xs py-2 text-center">
+                                            <i class="fas fa-tags me-1"></i> <span data-i18n="addCategory">إضافة تصنيف</span>
+                                        </button>
+                                        <button onclick="openAddBannerModal()" class="btn-secondary text-xs py-2 text-center">
+                                            <i class="fas fa-bullhorn text-[#2D4F2E] me-1"></i> <span data-i18n="addBanner">إضافة بانر</span>
+                                        </button>
+                                    </div>
+                                    <button onclick="openAddUserModal()" class="btn-secondary w-full text-xs py-2">
+                                        <i class="fas fa-user-plus text-[#2D4F2E]"></i> <span data-i18n="addUser">إضافة مستخدم جديد</span>
+                                    </button>
+                                    <button onclick="openAddOnboardingModal()" class="btn-secondary w-full text-xs py-2">
+                                        <i class="fas fa-plus-circle text-[#2D4F2E]"></i> <span data-i18n="addOnboarding">إضافة شاشة ترحيب</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 2. USERS MANAGEMENT VIEW -->
+                    <section id="view-users" class="tab-view hidden space-y-4">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900" data-i18n="users">إدارة المستخدمين</h2>
+                                <p class="text-xs text-slate-500">إدارة حسابات التطبيق والصلاحيات والحالات</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="openAddUserModal()" class="gold-btn text-xs">
+                                    <i class="fas fa-plus"></i>
+                                    <span data-i18n="addUser">إضافة مستخدم جديد</span>
+                                </button>
+                                <button onclick="loadUsers()" class="btn-secondary text-xs">
+                                    <i class="fas fa-sync-alt"></i>
+                                    <span data-i18n="refresh">تحديث</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Filters & Search Bar -->
+                        <div class="card p-4 bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                            <div class="lg:col-span-2 relative">
+                                <input type="text" id="user-search-input" oninput="loadUsers(1)" class="form-input text-xs ps-9" placeholder="ابحث بالاسم، البريد أو الهاتف..." data-i18n-placeholder="searchUsersPlaceholder">
+                                <i class="fas fa-search absolute top-3 start-3 text-slate-400 text-xs"></i>
+                            </div>
+
+                            <div>
+                                <select id="user-filter-role" onchange="loadUsers(1)" class="form-select text-xs">
+                                    <option value="" data-i18n="filterAll">كل الصلاحيات</option>
+                                    <option value="admin" data-i18n="roleAdmin">المدراء (Admin)</option>
+                                    <option value="user" data-i18n="roleUser">المستخدمين (User)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <select id="user-filter-active" onchange="loadUsers(1)" class="form-select text-xs">
+                                    <option value="" data-i18n="filterAll">كل الحالات</option>
+                                    <option value="true" data-i18n="filterActive">نشط فقط</option>
+                                    <option value="false" data-i18n="filterInactive">معطل فقط</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <select id="user-filter-provider" onchange="loadUsers(1)" class="form-select text-xs">
+                                    <option value="" data-i18n="filterAll">كل طرق التسجيل</option>
+                                    <option value="local">Local (كلمة مرور)</option>
+                                    <option value="google">Google</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Users Data Table -->
+                        <div class="card data-table-container bg-white">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="user">المستخدم</th>
+                                        <th data-i18n="contact">الاتصال</th>
+                                        <th data-i18n="provider">طريقة التسجيل</th>
+                                        <th data-i18n="role">الصلاحية</th>
+                                        <th data-i18n="status">التوثيق</th>
+                                        <th data-i18n="active">التفعيل</th>
+                                        <th data-i18n="actions">الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-8 text-slate-400">جاري تحميل بيانات المستخدمين...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div id="users-pagination" class="flex items-center justify-between pt-2"></div>
+                    </section>
+
+                    <!-- 3. ONBOARDING SCREENS VIEW -->
+                    <section id="view-onboarding" class="tab-view hidden space-y-4">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900" data-i18n="onboarding">شاشات الترحيب (Onboarding)</h2>
+                                <p class="text-xs text-slate-500">تخصيص الشاشات التمهيدية لتطبيق الموبايل باللغتين العربية والإنجليزية</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="openAddOnboardingModal()" class="gold-btn text-xs">
+                                    <i class="fas fa-plus"></i>
+                                    <span data-i18n="addOnboarding">إضافة شاشة ترحيب</span>
+                                </button>
+                                <button onclick="loadOnboarding()" class="btn-secondary text-xs">
+                                    <i class="fas fa-sync-alt"></i>
+                                    <span data-i18n="refresh">تحديث</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="onboarding-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            <div class="col-span-full text-center py-12 text-slate-400 text-xs">جاري تحميل شاشات الترحيب...</div>
+                        </div>
+                    </section>
+
+                    <!-- 4. CATEGORIES & BANNERS VIEW -->
+                    <section id="view-categories" class="tab-view hidden space-y-6">
+                        <!-- Header with Quick Actions -->
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900" data-i18n="categoriesBanners">إدارة التصنيفات والبانرات الإعلانية</h2>
+                                <p class="text-xs text-slate-500">إدارة تصنيفات التطبيق (فنادق، شقق ساحلية، شاليهات...) والبانرات المرتبطة بإعلانات الحجز</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="openAddCategoryModal()" class="gold-btn text-xs">
+                                    <i class="fas fa-plus"></i>
+                                    <span data-i18n="addCategory">إضافة تصنيف</span>
+                                </button>
+                                <button onclick="openAddBannerModal()" class="btn-secondary text-xs">
+                                    <i class="fas fa-plus text-[#2D4F2E]"></i>
+                                    <span data-i18n="addBanner">إضافة بانر</span>
+                                </button>
+                                <button onclick="loadCategoriesAndBanners()" class="btn-secondary text-xs" title="تحديث">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 1. Categories Management Section -->
+                        <div class="card p-5 bg-white space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center font-bold text-sm">
+                                        <i class="fas fa-layer-group"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-slate-900 text-sm" data-i18n="categoriesTitle">التصنيفات (Categories)</h3>
+                                        <p class="text-[11px] text-slate-500">تصنيفات الوحدات المتاحة في التطبيق (تتكون من: ID، الاسم، الصورة)</p>
+                                    </div>
+                                </div>
+                                <span class="badge badge-brand text-xs" id="badge-categories-count">0 تصنيف</span>
+                            </div>
+
+                            <div id="categories-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                                <div class="col-span-full text-center py-8 text-slate-400 text-xs">جاري تحميل التصنيفات...</div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Banners Management Section -->
+                        <div class="card p-5 bg-white space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-sm">
+                                        <i class="fas fa-images"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-slate-900 text-sm" data-i18n="bannersTitle">البانرات الإعلانية (Banners)</h3>
+                                        <p class="text-[11px] text-slate-500">بانرات العروض المرتبطة بإعلانات الوحدات (تتكون من: ID، الصورة، معرف الإعلان advertisementId)</p>
+                                    </div>
+                                </div>
+                                <span class="badge badge-brand text-xs" id="badge-banners-count">0 بانر</span>
+                            </div>
+
+                            <div id="banners-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                <div class="col-span-full text-center py-8 text-slate-400 text-xs">جاري تحميل البانرات الإعلانية...</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 5. SYSTEM & API CONSOLE VIEW -->
+                    <section id="view-system" class="tab-view hidden space-y-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900" data-i18n="systemStatus">فحص النظام والـ APIs</h2>
+                            <p class="text-xs text-slate-500">أدوات فحص صحة الخادم وقاعدة البيانات ونقاط الاتصال</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="card p-5 bg-white space-y-4">
+                                <h3 class="font-bold text-slate-900 text-sm">فحص نقاط الاتصال المباشرة</h3>
+                                <div class="space-y-2">
+                                    <button onclick="pingMainApi()" class="btn-secondary w-full text-xs justify-between">
+                                        <span><i class="fas fa-server text-[#2D4F2E] me-2"></i> GET / (Main API Root)</span>
+                                        <span class="badge badge-brand">فحص الآن</span>
+                                    </button>
+                                    <button onclick="pingAdminApi()" class="btn-secondary w-full text-xs justify-between">
+                                        <span><i class="fas fa-shield-halved text-[#2D4F2E] me-2"></i> GET /api-status (Admin API)</span>
+                                        <span class="badge badge-brand">فحص الآن</span>
+                                    </button>
+                                    <button onclick="loadStats()" class="btn-secondary w-full text-xs justify-between">
+                                        <span><i class="fas fa-database text-emerald-600 me-2"></i> GET /api/v1/admin/users/stats</span>
+                                        <span class="badge badge-success">فحص قاعدة البيانات</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="card p-5 bg-white space-y-3 text-xs">
+                                <h3 class="font-bold text-slate-900 text-sm pb-2 border-b border-slate-100">بيانات التكوين المباشر</h3>
+                                <div class="flex justify-between py-1">
+                                    <span class="text-slate-500">Main Server Port:</span>
+                                    <span class="text-slate-900 font-mono font-bold">3000</span>
+                                </div>
+                                <div class="flex justify-between py-1">
+                                    <span class="text-slate-500">Admin Server Port:</span>
+                                    <span class="text-slate-900 font-mono font-bold">4000</span>
+                                </div>
+                                <div class="flex justify-between py-1">
+                                    <span class="text-slate-500">Dashboard Mounted At:</span>
+                                    <span class="text-[#2D4F2E] font-mono font-bold">/admin & /dashboard</span>
+                                </div>
+                                <div class="flex justify-between py-1">
+                                    <span class="text-slate-500">Brand Color:</span>
+                                    <span class="text-[#2D4F2E] font-mono font-bold">#2D4F2E</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ─── USER MODAL (ADD / EDIT) ────────────────────────────────────────── -->
+    <div id="user-modal" class="modal-overlay">
+        <div class="modal-content p-6 bg-white">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                <h3 id="user-modal-title" class="font-bold text-slate-900 text-base">إضافة مستخدم</h3>
+                <button onclick="closeModal('user-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+            </div>
+
+            <form id="user-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="name">الاسم</label>
+                    <input type="text" id="user-modal-name" class="form-input text-xs" placeholder="مثال: أحمد محمد">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="email">البريد الإلكتروني</label>
+                    <input type="email" id="user-modal-email" required class="form-input text-xs" placeholder="user@example.com">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="phone">الهاتف</label>
+                    <input type="text" id="user-modal-phone" class="form-input text-xs" placeholder="+201000000000">
+                </div>
+
+                <div id="user-modal-password-container">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="password">كلمة المرور</label>
+                    <input type="password" id="user-modal-password" class="form-input text-xs" placeholder="•••••••• (8 أحرف على الأقل)">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="role">الصلاحية</label>
+                        <select id="user-modal-role" class="form-select text-xs">
+                            <option value="user">مستخدم (User)</option>
+                            <option value="admin">مدير (Admin)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-4 pt-5">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-medium">
+                            <input type="checkbox" id="user-modal-active" checked class="rounded border-slate-300 text-[#2D4F2E] focus:ring-[#2D4F2E]">
+                            <span data-i18n="active">نشط</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-medium">
+                            <input type="checkbox" id="user-modal-verified" checked class="rounded border-slate-300 text-[#2D4F2E] focus:ring-[#2D4F2E]">
+                            <span data-i18n="verified">موثق</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('user-modal')" class="btn-secondary text-xs" data-i18n="cancel">إلغاء</button>
+                    <button type="submit" class="gold-btn text-xs" data-i18n="save">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── ONBOARDING MODAL (ADD / EDIT) ──────────────────────────────────── -->
+    <div id="onboarding-modal" class="modal-overlay">
+        <div class="modal-content p-6 bg-white">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                <h3 id="onboarding-modal-title" class="font-bold text-slate-900 text-base">إضافة شاشة ترحيب</h3>
+                <button onclick="closeModal('onboarding-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+            </div>
+
+            <form id="onboarding-form" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-[#2D4F2E] mb-1" data-i18n="titleEn">العنوان (English)</label>
+                        <input type="text" id="onboarding-title-en" required class="form-input text-xs" placeholder="Welcome to Aurevia">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-[#2D4F2E] mb-1" data-i18n="titleAr">العنوان (العربية)</label>
+                        <input type="text" id="onboarding-title-ar" required class="form-input text-xs" placeholder="مرحباً بك في كوبا">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="descEn">الوصف (English)</label>
+                        <textarea id="onboarding-desc-en" rows="3" class="form-textarea text-xs" placeholder="Discover luxury fragrances..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="descAr">الوصف (العربية)</label>
+                        <textarea id="onboarding-desc-ar" rows="3" class="form-textarea text-xs" placeholder="اكتشف أفخم العطور والمنتجات..."></textarea>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="order">الترتيب</label>
+                        <input type="number" id="onboarding-order" value="0" min="0" class="form-input text-xs">
+                    </div>
+
+                    <div class="flex items-center pt-5">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-medium">
+                            <input type="checkbox" id="onboarding-active" checked class="rounded border-slate-300 text-[#2D4F2E] focus:ring-[#2D4F2E]">
+                            <span data-i18n="active">نشط ومعروض للمستخدمين</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="image">صورة الشاشة</label>
+                    <input type="file" id="onboarding-image" accept="image/*" class="form-input text-xs p-2">
+                    <div id="onboarding-modal-preview"></div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('onboarding-modal')" class="btn-secondary text-xs" data-i18n="cancel">إلغاء</button>
+                    <button type="submit" class="gold-btn text-xs" data-i18n="save">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── CATEGORY MODAL (ADD / EDIT) ──────────────────────────────────── -->
+    <div id="category-modal" class="modal-overlay">
+        <div class="modal-content p-6 bg-white max-w-md">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                <h3 id="category-modal-title" class="font-bold text-slate-900 text-base" data-i18n="addCategory">إضافة تصنيف جديد</h3>
+                <button onclick="closeModal('category-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+            </div>
+
+            <form id="category-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="categoryName">اسم التصنيف (مثل: فنادق، شاليهات...)</label>
+                    <input type="text" id="category-modal-name" required class="form-input text-xs" placeholder="مثال: فنادق، شقق ساحلية، شاليهات...">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="categoryImage">صورة التصنيف</label>
+                    <div class="space-y-2">
+                        <input type="file" id="category-modal-image-file" accept="image/*" class="form-input text-xs p-2">
+                        <div class="relative flex items-center">
+                            <span class="text-[11px] text-slate-400 bg-white px-2 absolute right-3">أو رابط مباشر</span>
+                            <div class="w-full border-t border-slate-200"></div>
+                        </div>
+                        <input type="url" id="category-modal-image-url" class="form-input text-xs" placeholder="https://example.com/category-image.jpg">
+                    </div>
+                    <div id="category-modal-preview" class="mt-2"></div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('category-modal')" class="btn-secondary text-xs" data-i18n="cancel">إلغاء</button>
+                    <button type="submit" class="gold-btn text-xs" data-i18n="save">حفظ التصنيف</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── BANNER MODAL (ADD / EDIT) ────────────────────────────────────── -->
+    <div id="banner-modal" class="modal-overlay">
+        <div class="modal-content p-6 bg-white max-w-lg">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                <h3 id="banner-modal-title" class="font-bold text-slate-900 text-base" data-i18n="addBanner">إضافة بانر جديد</h3>
+                <button onclick="closeModal('banner-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+            </div>
+
+            <form id="banner-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="linkedAd">الإعلان المرتبط بالبانر (يفتح عند الضغط)</label>
+                    <select id="banner-modal-ad-select" class="form-select text-xs mb-2" onchange="syncBannerAdInput()">
+                        <option value="">-- اختر الإعلان من القائمة --</option>
+                    </select>
+                    <div class="relative">
+                        <input type="text" id="banner-modal-ad-id" required class="form-input text-xs font-mono" placeholder="معرّف الإعلان (advertisementId) مثل 660...">
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1">يتم التحقق من وجود الإعلان في قاعدة البيانات قبل حفظ البانر.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="bannerImage">صورة البانر</label>
+                    <div class="space-y-2">
+                        <input type="file" id="banner-modal-image-file" accept="image/*" class="form-input text-xs p-2">
+                        <div class="relative flex items-center">
+                            <span class="text-[11px] text-slate-400 bg-white px-2 absolute right-3">أو رابط صورة خارجي</span>
+                            <div class="w-full border-t border-slate-200"></div>
+                        </div>
+                        <input type="url" id="banner-modal-image-url" class="form-input text-xs" placeholder="https://example.com/banner-hero.jpg">
+                    </div>
+                    <div id="banner-modal-preview" class="mt-2"></div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('banner-modal')" class="btn-secondary text-xs" data-i18n="cancel">إلغاء</button>
+                    <button type="submit" class="gold-btn text-xs" data-i18n="save">حفظ البانر</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script src="js/app.js"></script>
+</body>
+</html>

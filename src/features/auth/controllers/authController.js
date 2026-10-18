@@ -7,7 +7,9 @@ const { sendVerificationEmail, sendPasswordResetOtpEmail } = require('../../../u
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
 const randomToken = () => {
-    const raw = crypto.randomBytes(32).toString('hex');
+    // Use base64url encoding to produce a shorter, URL-safe token (~43 chars vs 64 hex chars)
+    // This avoids email clients truncating long URLs
+    const raw = crypto.randomBytes(32).toString('base64url');
     return { raw, hashed: hashToken(raw) };
 };
 

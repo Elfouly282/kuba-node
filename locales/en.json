@@ -14,7 +14,14 @@
         "onboardingScreenCreated": "Onboarding screen created successfully.",
         "onboardingScreenUpdated": "Onboarding screen updated successfully.",
         "onboardingScreenDeleted": "Onboarding screen deleted successfully.",
-        "onboardingScreensReordered": "Onboarding screens reordered successfully."
+        "onboardingScreensReordered": "Onboarding screens reordered successfully.",
+        "categoryCreated": "Category created successfully.",
+        "categoryUpdated": "Category updated successfully.",
+        "categoryDeleted": "Category deleted successfully.",
+        "bannerCreated": "Banner created successfully.",
+        "bannerUpdated": "Banner updated successfully.",
+        "bannerDeleted": "Banner deleted successfully.",
+        "advertisementCreated": "Advertisement created successfully."
     },
     "errors": {
         "somethingWentWrong": "Something went wrong. Please try again later.",
@@ -46,7 +53,15 @@
         "userDisabled": "This account has been disabled. Please contact support.",
         "invalidFirebaseToken": "Invalid Google authentication token.",
         "invalidEmail": "Please provide a valid email address.",
-        "passwordTooShort": "Password must be at least 8 characters long."
+        "passwordTooShort": "Password must be at least 8 characters long.",
+        "onboardingScreenNotFound": "The requested onboarding screen was not found.",
+        "categoryNotFound": "The requested category was not found.",
+        "bannerNotFound": "The requested banner was not found.",
+        "advertisementNotFound": "The selected advertisement does not exist in the database.",
+        "invalidAdvertisementId": "Invalid advertisement ID provided.",
+        "invalidCategoryId": "Invalid category ID provided.",
+        "invalidBannerId": "Invalid banner ID provided.",
+        "imageRequired": "Image is required (please upload an image file or provide an image URL)."
     },
     "validation": {
         "nameRequired": "Name is required.",
@@ -58,6 +73,9 @@
         "titleRequired": "Title is required.",
         "titleTooLong": "Title cannot exceed 120 characters.",
         "descriptionTooLong": "Description cannot exceed 500 characters.",
-        "onboardingScreenNotFound": "Onboarding screen not found."
+        "onboardingScreenNotFound": "Onboarding screen not found.",
+        "categoryRequired": "Category is required.",
+        "advertisementRequired": "Advertisement ID is required.",
+        "imageRequired": "Image is required."
     }
 }

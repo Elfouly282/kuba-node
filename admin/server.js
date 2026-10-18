@@ -1,3 +1,8 @@
+const dns = require('dns');
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch (_) {}
+
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', 'config.env') });
 
@@ -12,6 +17,10 @@ const APIError = require('./utils/apiError');
 
 const authRoutes = require('./features/auth/routes/authRoutes');
 const onboardingRoutes = require('./features/onboarding/routes/onboardingRoutes');
+const userRoutes = require('./features/users/routes/userRoutes');
+const categoryRoutes = require('./features/categories/routes/categoryRoutes');
+const bannerRoutes = require('./features/banners/routes/bannerRoutes');
+const advertisementRoutes = require('./features/advertisements/routes/advertisementRoutes');
 
 dbConnection();
 
@@ -29,10 +38,30 @@ app.use(i18nMiddleware);
 
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
+// Serve Dashboard UI
+app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, '..', 'dashboard', 'index.html')));
+app.get('/admin/', (_req, res) => res.sendFile(path.join(__dirname, '..', 'dashboard', 'index.html')));
+app.use('/admin', express.static(path.join(__dirname, '..', 'dashboard')));
+app.use('/dashboard', express.static(path.join(__dirname, '..', 'dashboard')));
+
+// Admin APIs
 app.use('/api/v1/admin/auth', authRoutes);
 app.use('/api/v1/admin/onboarding', onboardingRoutes);
+app.use('/api/v1/admin/users', userRoutes);
+app.use('/api/v1/admin/categories', categoryRoutes);
+app.use('/api/v1/admin/banners', bannerRoutes);
+app.use('/api/v1/admin/advertisements', advertisementRoutes);
+
+// Mirror routes under client-style paths for dashboard convenience
+app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1/banners', bannerRoutes);
+app.use('/api/v1/advertisements', advertisementRoutes);
 
 app.get('/', (_req, res) => {
+    res.redirect('/admin');
+});
+
+app.get('/api-status', (_req, res) => {
     res.status(200).json({
         status: 'success',
         message: 'Admin API is running successfully',
@@ -48,6 +77,7 @@ app.use(globalErrorHandler);
 const PORT = process.env.ADMIN_PORT || 4000;
 const server = app.listen(PORT, () => {
     console.log(`Admin server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    console.log(`Admin Dashboard available at: http://localhost:${PORT}/admin`);
 });
 
 process.on('unhandledRejection', (err) => {
@@ -61,3 +91,4 @@ process.on('uncaughtException', (err) => {
 });
 
 module.exports = app;
+

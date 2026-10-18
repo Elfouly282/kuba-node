@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const mongoose = require('mongoose');
 const OnboardingScreen = require('../../../../src/features/onboarding/models/onboardingScreenModel');
 const APIError = require('../../../utils/apiError');
 
@@ -15,6 +16,15 @@ const deleteImageFile = (imagePath) => {
 
 exports.getAll = async (req, res, next) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(200).json({
+                status: 'success',
+                results: 0,
+                data: { screens: [] },
+                dbConnected: false,
+            });
+        }
+
         const screens = await OnboardingScreen
             .find()
             .setOptions({ includeInactive: true })

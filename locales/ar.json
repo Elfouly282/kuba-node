@@ -14,7 +14,14 @@
         "onboardingScreenCreated": "تم إنشاء شاشة الترحيب بنجاح.",
         "onboardingScreenUpdated": "تم تحديث شاشة الترحيب بنجاح.",
         "onboardingScreenDeleted": "تم حذف شاشة الترحيب بنجاح.",
-        "onboardingScreensReordered": "تم إعادة ترتيب شاشات الترحيب بنجاح."
+        "onboardingScreensReordered": "تم إعادة ترتيب شاشات الترحيب بنجاح.",
+        "categoryCreated": "تم إنشاء التصنيف بنجاح.",
+        "categoryUpdated": "تم تحديث التصنيف بنجاح.",
+        "categoryDeleted": "تم حذف التصنيف بنجاح.",
+        "bannerCreated": "تم إنشاء البانر بنجاح.",
+        "bannerUpdated": "تم تحديث البانر بنجاح.",
+        "bannerDeleted": "تم حذف البانر بنجاح.",
+        "advertisementCreated": "تم إنشاء الإعلان بنجاح."
     },
     "errors": {
         "somethingWentWrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.",
@@ -46,7 +53,15 @@
         "userDisabled": "تم تعطيل هذا الحساب. يرجى التواصل مع الدعم.",
         "invalidFirebaseToken": "رمز مصادقة Google غير صالح.",
         "invalidEmail": "يرجى تقديم بريد إلكتروني صالح.",
-        "passwordTooShort": "يجب أن تكون كلمة المرور 8 أحرف على الأقل."
+        "passwordTooShort": "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
+        "onboardingScreenNotFound": "شاشة الترحيب المطلوبة غير موجودة.",
+        "categoryNotFound": "التصنيف المطلوب غير موجود.",
+        "bannerNotFound": "البانر المطلوب غير موجود.",
+        "advertisementNotFound": "الإعلان المحدد غير موجود في قاعدة البيانات.",
+        "invalidAdvertisementId": "معرف الإعلان المحدد غير صالح.",
+        "invalidCategoryId": "معرف التصنيف المحدد غير صالح.",
+        "invalidBannerId": "معرف البانر المحدد غير صالح.",
+        "imageRequired": "الصورة مطلوبة (يرجى رفع ملف صورة أو توفير رابط الصورة)."
     },
     "validation": {
         "nameRequired": "الاسم مطلوب.",
@@ -58,6 +73,9 @@
         "titleRequired": "العنوان مطلوب.",
         "titleTooLong": "لا يمكن أن يتجاوز العنوان 120 حرفاً.",
         "descriptionTooLong": "لا يمكن أن يتجاوز الوصف 500 حرف.",
-        "onboardingScreenNotFound": "شاشة الترحيب غير موجودة."
+        "onboardingScreenNotFound": "شاشة الترحيب غير موجودة.",
+        "categoryRequired": "التصنيف مطلوب.",
+        "advertisementRequired": "معرف الإعلان مطلوب.",
+        "imageRequired": "الصورة مطلوبة."
     }
 }
