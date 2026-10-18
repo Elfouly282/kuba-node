@@ -2,7 +2,7 @@
 const dns = require('dns');
 try {
     dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
-} catch (_) {}
+} catch (_) { }
 
 const path = require('path');
 
@@ -25,6 +25,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 
 const dbConnection = require('./config/database');
+const { getUploadsRoot } = require('./config/uploadsPath');
 const { i18nMiddleware } = require('../utils/i18n');
 const globalErrorHandler = require('./middleware/errorMiddleware');
 const APIError = require('./utils/apiError');
@@ -67,7 +68,7 @@ if (process.env.NODE_ENV === 'development') {
 
 app.use(i18nMiddleware);
 
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.use('/uploads', express.static(getUploadsRoot()));
 
 // Serve Dashboard UI
 app.use('/admin', express.static(path.join(__dirname, '..', 'dashboard')));

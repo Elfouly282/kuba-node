@@ -1,6 +1,18 @@
 const mongoose = require('mongoose');
 const Advertisement = require('../models/advertisementModel');
 const APIError = require('../../../utils/apiError');
+const { getImageUrl, getRelativeImagePath } = require('../../../utils/imageUrl');
+
+const formatAdvertisement = (doc) => {
+    if (!doc) return null;
+    const obj = typeof doc.toJSON === 'function' ? doc.toJSON() : { ...doc };
+    if (obj.image) obj.image = getImageUrl(obj.image);
+    // also transform populated category image if present
+    if (obj.category && obj.category.image) {
+        obj.category.image = getImageUrl(obj.category.image);
+    }
+    return obj;
+};
 
 // ─── GET ALL ADVERTISEMENTS ───────────────────────────────────────────────────
 exports.getAll = async (req, res, next) => {
@@ -27,7 +39,7 @@ exports.getAll = async (req, res, next) => {
         res.status(200).json({
             status: 'success',
             results: advertisements.length,
-            data: { advertisements },
+            data: { advertisements: advertisements.map(formatAdvertisement) },
         });
     } catch (err) {
         next(err);
@@ -50,7 +62,7 @@ exports.getOne = async (req, res, next) => {
 
         res.status(200).json({
             status: 'success',
-            data: { advertisement },
+            data: { advertisement: formatAdvertisement(advertisement) },
         });
     } catch (err) {
         next(err);
@@ -73,13 +85,13 @@ exports.create = async (req, res, next) => {
             price: price ? Number(price) : 0,
             location: location ? location.trim() : '',
             category: category && mongoose.Types.ObjectId.isValid(category) ? category : null,
-            image: image || (req.file ? `advertisements/${req.file.filename}` : ''),
+            image: image ? getRelativeImagePath(image) : (req.file ? `advertisements/${req.file.filename}` : ''),
         });
 
         res.status(201).json({
             status: 'success',
             message: req.t ? req.t('messages.advertisementCreated') : 'Advertisement created successfully.',
-            data: { advertisement },
+            data: { advertisement: formatAdvertisement(advertisement) },
         });
     } catch (err) {
         next(err);
@@ -108,14 +120,14 @@ exports.update = async (req, res, next) => {
         if (req.file) {
             advertisement.image = `advertisements/${req.file.filename}`;
         } else if (req.body.image) {
-            advertisement.image = req.body.image.trim();
+            advertisement.image = getRelativeImagePath(req.body.image.trim());
         }
 
         await advertisement.save();
 
         res.status(200).json({
             status: 'success',
-            data: { advertisement },
+            data: { advertisement: formatAdvertisement(advertisement) },
         });
     } catch (err) {
         next(err);

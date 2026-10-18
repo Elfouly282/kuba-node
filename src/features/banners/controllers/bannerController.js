@@ -5,6 +5,7 @@ const Banner = require('../models/bannerModel');
 const Advertisement = require('../../advertisements/models/advertisementModel');
 const APIError = require('../../../utils/apiError');
 const { getUploadsRoot } = require('../../../config/uploadsPath');
+const { getImageUrl, getRelativeImagePath } = require('../../../utils/imageUrl');
 
 const deleteImageFile = (imagePath) => {
     if (!imagePath || imagePath.startsWith('http://') || imagePath.startsWith('https://')) return;
@@ -21,7 +22,7 @@ const formatBanner = (doc) => {
     const obj = typeof doc.toObject === 'function' ? doc.toObject() : { ...doc };
     return {
         id: (obj._id || obj.id).toString(),
-        image: obj.image,
+        image: getImageUrl(obj.image),
         advertisementId: (obj.advertisementId?._id || obj.advertisementId || '').toString(),
     };
 };
@@ -91,7 +92,7 @@ exports.create = async (req, res, next) => {
         if (req.file) {
             image = `banners/${req.file.filename}`;
         } else if (req.body.image) {
-            image = req.body.image.trim();
+            image = getRelativeImagePath(req.body.image.trim());
         }
 
         if (!image) {
@@ -146,9 +147,10 @@ exports.update = async (req, res, next) => {
             deleteImageFile(banner.image);
             banner.image = `banners/${req.file.filename}`;
         } else if (req.body.image !== undefined && req.body.image.trim() !== '') {
-            if (banner.image !== req.body.image.trim()) {
+            const newRelative = getRelativeImagePath(req.body.image.trim());
+            if (banner.image !== newRelative) {
                 deleteImageFile(banner.image);
-                banner.image = req.body.image.trim();
+                banner.image = newRelative;
             }
         }
 

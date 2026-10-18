@@ -4,6 +4,14 @@ const mongoose = require('mongoose');
 const Category = require('../models/categoryModel');
 const APIError = require('../../../utils/apiError');
 const { getUploadsRoot } = require('../../../config/uploadsPath');
+const { getImageUrl, getRelativeImagePath } = require('../../../utils/imageUrl');
+
+const formatCategory = (doc) => {
+    if (!doc) return null;
+    const obj = typeof doc.toJSON === 'function' ? doc.toJSON() : { ...doc };
+    obj.image = getImageUrl(obj.image);
+    return obj;
+};
 
 const deleteImageFile = (imagePath) => {
     if (!imagePath || imagePath.startsWith('http://') || imagePath.startsWith('https://')) return;
@@ -26,7 +34,8 @@ exports.getAll = async (_req, res, next) => {
             });
         }
 
-        const categories = await Category.find().sort({ createdAt: -1 });
+        const rawCategories = await Category.find().sort({ createdAt: -1 });
+        const categories = rawCategories.map(formatCategory);
 
         res.status(200).json({
             status: 'success',
@@ -51,7 +60,7 @@ exports.getOne = async (req, res, next) => {
 
         res.status(200).json({
             status: 'success',
-            data: { category },
+            data: { category: formatCategory(category) },
         });
     } catch (err) {
         next(err);
@@ -69,7 +78,7 @@ exports.create = async (req, res, next) => {
         if (req.file) {
             image = `categories/${req.file.filename}`;
         } else if (req.body.image) {
-            image = req.body.image.trim();
+            image = getRelativeImagePath(req.body.image.trim());
         }
 
         if (!image) {
@@ -81,7 +90,7 @@ exports.create = async (req, res, next) => {
         res.status(201).json({
             status: 'success',
             message: req.t ? req.t('messages.categoryCreated') : 'Category created successfully.',
-            data: { category },
+            data: { category: formatCategory(category) },
         });
     } catch (err) {
         next(err);
@@ -111,9 +120,10 @@ exports.update = async (req, res, next) => {
             deleteImageFile(category.image);
             category.image = `categories/${req.file.filename}`;
         } else if (req.body.image !== undefined && req.body.image.trim() !== '') {
-            if (category.image !== req.body.image.trim()) {
+            const newRelative = getRelativeImagePath(req.body.image.trim());
+            if (category.image !== newRelative) {
                 deleteImageFile(category.image);
-                category.image = req.body.image.trim();
+                category.image = newRelative;
             }
         }
 
@@ -122,7 +132,7 @@ exports.update = async (req, res, next) => {
         res.status(200).json({
             status: 'success',
             message: req.t ? req.t('messages.categoryUpdated') : 'Category updated successfully.',
-            data: { category },
+            data: { category: formatCategory(category) },
         });
     } catch (err) {
         next(err);

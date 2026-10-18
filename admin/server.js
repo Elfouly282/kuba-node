@@ -1,7 +1,7 @@
 const dns = require('dns');
 try {
-  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
-} catch (_) {}
+    dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch (_) { }
 
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', 'config.env') });
@@ -11,6 +11,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 
 const dbConnection = require('../src/config/database');
+const { getUploadsRoot } = require('../src/config/uploadsPath');
 const { i18nMiddleware } = require('../utils/i18n');
 const globalErrorHandler = require('./middleware/errorMiddleware');
 const APIError = require('./utils/apiError');
@@ -36,7 +37,7 @@ if (process.env.NODE_ENV === 'development') {
 
 app.use(i18nMiddleware);
 
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.use('/uploads', express.static(getUploadsRoot()));
 
 // Serve Dashboard UI
 app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, '..', 'dashboard', 'index.html')));
