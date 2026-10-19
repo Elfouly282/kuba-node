@@ -420,7 +420,9 @@ function loadCurrentTab() {
     } else if (state.currentTab === 'onboarding') {
         loadOnboarding();
     } else if (state.currentTab === 'categories') {
-        loadCategoriesAndBanners();
+        loadCategories();
+    } else if (state.currentTab === 'banners') {
+        loadBannersTab();
     }
 }
 
@@ -460,9 +462,6 @@ function renderStats() {
     document.getElementById('info-env').textContent = s.environment || 'development';
     document.getElementById('info-time').textContent = new Date(s.serverTime).toLocaleTimeString();
 
-    // Render beautiful dashboard charts
-    renderDashboardCharts(s);
-
     // Render recent users
     const recentList = document.getElementById('recent-users-list');
     if (recentList && s.recentUsers) {
@@ -487,313 +486,6 @@ function renderStats() {
                 </div>
             `).join('');
         }
-    }
-}
-
-let _dashboardCharts = {};
-
-function renderDashboardCharts(s) {
-    if (typeof Chart === 'undefined') return;
-
-    try {
-        // Set Chart Defaults
-        Chart.defaults.font.family = "'Cairo', 'Outfit', system-ui, sans-serif";
-        Chart.defaults.color = '#64748b';
-
-        // 1. User Growth Chart (Line / Area)
-        const growthCanvas = document.getElementById('chart-user-growth');
-        if (growthCanvas) {
-            if (_dashboardCharts.growth) {
-                _dashboardCharts.growth.destroy();
-            }
-
-            const growthData = s?.charts?.userGrowth || [];
-            const monthNamesAr = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-            const now = new Date();
-            const fallbackLabels = [];
-            for (let i = 5; i >= 0; i--) {
-                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                fallbackLabels.push(monthNamesAr[d.getMonth()]);
-            }
-
-            const labels = growthData.length > 0 ? growthData.map(g => g.label) : fallbackLabels;
-            let counts = growthData.length > 0 ? growthData.map(g => g.count) : [0, 0, 0, 0, 0, 0];
-
-            // If all 0 but we have total users, distribute nicely
-            const totalCounts = counts.reduce((a, b) => a + b, 0);
-            if (totalCounts === 0 && (s.totalUsers || 0) > 0) {
-                const total = s.totalUsers;
-                counts = [
-                    Math.max(1, Math.round(total * 0.1)),
-                    Math.max(1, Math.round(total * 0.18)),
-                    Math.max(2, Math.round(total * 0.28)),
-                    Math.max(3, Math.round(total * 0.45)),
-                    Math.max(5, Math.round(total * 0.7)),
-                    total
-                ];
-            }
-
-            const ctx = growthCanvas.getContext('2d');
-            const gradient = ctx.createLinearGradient(0, 0, 0, 260);
-            gradient.addColorStop(0, 'rgba(45, 79, 46, 0.35)');
-            gradient.addColorStop(1, 'rgba(45, 79, 46, 0.01)');
-
-            _dashboardCharts.growth = new Chart(growthCanvas, {
-                type: 'line',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: 'المستخدمون الجدد',
-                        data: counts,
-                        borderColor: '#2D4F2E',
-                        borderWidth: 3,
-                        backgroundColor: gradient,
-                        fill: true,
-                        tension: 0.38,
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#2D4F2E',
-                        pointBorderWidth: 2.5,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        pointHoverBackgroundColor: '#2D4F2E',
-                        pointHoverBorderColor: '#ffffff',
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            rtl: true,
-                            backgroundColor: '#1e293b',
-                            padding: 10,
-                            cornerRadius: 8,
-                            titleFont: { size: 12, weight: 'bold' },
-                            bodyFont: { size: 12 },
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: { font: { size: 11 } }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0,
-                                font: { size: 11 }
-                            },
-                            grid: {
-                                color: '#f1f5f9'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // 2. Categories Doughnut Chart
-        const categoriesCanvas = document.getElementById('chart-categories');
-        if (categoriesCanvas) {
-            if (_dashboardCharts.categories) {
-                _dashboardCharts.categories.destroy();
-            }
-
-            let catData = s?.charts?.adsByCategory || [];
-            if (catData.length === 0) {
-                const totalAds = s.totalAdvertisements || 6;
-                catData = [
-                    { label: 'شاليهات فاخرة', count: Math.max(1, Math.round(totalAds * 0.45)) },
-                    { label: 'فنادق ومنتجعات', count: Math.max(1, Math.round(totalAds * 0.3)) },
-                    { label: 'شقق سكنية', count: Math.max(1, Math.round(totalAds * 0.15)) },
-                    { label: 'يخوت وأنشطة', count: Math.max(1, Math.round(totalAds * 0.1)) },
-                ];
-            }
-
-            const catLabels = catData.map(c => c.label);
-            const catCounts = catData.map(c => c.count);
-            const catColors = [
-                '#2D4F2E',
-                '#0d9488',
-                '#0284c7',
-                '#6366f1',
-                '#d97706',
-                '#e11d48',
-            ];
-
-            _dashboardCharts.categories = new Chart(categoriesCanvas, {
-                type: 'doughnut',
-                data: {
-                    labels: catLabels,
-                    datasets: [{
-                        data: catCounts,
-                        backgroundColor: catColors.slice(0, catLabels.length),
-                        borderColor: '#ffffff',
-                        borderWidth: 2,
-                        hoverOffset: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            rtl: true,
-                            backgroundColor: '#1e293b',
-                            padding: 10,
-                            cornerRadius: 8
-                        }
-                    }
-                }
-            });
-
-            // Custom Legend
-            const legendContainer = document.getElementById('categories-chart-legend');
-            if (legendContainer) {
-                legendContainer.innerHTML = catLabels.map((lbl, idx) => `
-                    <div class="flex items-center gap-1.5 overflow-hidden text-ellipsis whitespace-nowrap">
-                        <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${catColors[idx % catColors.length]}"></span>
-                        <span class="text-slate-600 truncate font-medium">${lbl}</span>
-                        <span class="text-slate-400 font-bold ms-auto">(${catCounts[idx]})</span>
-                    </div>
-                `).join('');
-            }
-        }
-
-        // 3. Regions Bar Chart
-        const regionsCanvas = document.getElementById('chart-regions');
-        if (regionsCanvas) {
-            if (_dashboardCharts.regions) {
-                _dashboardCharts.regions.destroy();
-            }
-
-            let regData = s?.charts?.adsByRegion || [];
-            if (regData.length === 0) {
-                regData = [
-                    { label: 'الساحل الشمالي', count: 8 },
-                    { label: 'العين السخنة', count: 5 },
-                    { label: 'شرم الشيخ', count: 4 },
-                    { label: 'الجونة', count: 3 },
-                    { label: 'الغردقة', count: 2 },
-                ];
-            }
-
-            const regLabels = regData.map(r => r.label);
-            const regCounts = regData.map(r => r.count);
-
-            _dashboardCharts.regions = new Chart(regionsCanvas, {
-                type: 'bar',
-                data: {
-                    labels: regLabels,
-                    datasets: [{
-                        label: 'عدد الوحدات',
-                        data: regCounts,
-                        backgroundColor: '#10b981',
-                        hoverBackgroundColor: '#059669',
-                        borderRadius: 8,
-                        barThickness: 24,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            rtl: true,
-                            backgroundColor: '#1e293b',
-                            cornerRadius: 8,
-                            padding: 10
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: { font: { size: 11 } }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: { precision: 0, font: { size: 11 } },
-                            grid: { color: '#f1f5f9' }
-                        }
-                    }
-                }
-            });
-        }
-
-        // 4. User Status & Accounts
-        const statusCanvas = document.getElementById('chart-user-status');
-        if (statusCanvas) {
-            if (_dashboardCharts.status) {
-                _dashboardCharts.status.destroy();
-            }
-
-            const uTypes = s?.charts?.userTypes || {
-                active: s.activeUsers || 0,
-                inactive: s.inactiveUsers || 0,
-                verified: s.verifiedUsers || 0,
-                google: s.googleUsers || 0,
-                local: s.localUsers || 0,
-            };
-
-            const statusLabels = ['حساب نشط', 'حساب معطل', 'بريد موثق', 'تسجيل Google', 'حساب محلي'];
-            const statusValues = [
-                uTypes.active || 0,
-                uTypes.inactive || 0,
-                uTypes.verified || 0,
-                uTypes.google || 0,
-                uTypes.local || 0,
-            ];
-
-            _dashboardCharts.status = new Chart(statusCanvas, {
-                type: 'bar',
-                data: {
-                    labels: statusLabels,
-                    datasets: [{
-                        data: statusValues,
-                        backgroundColor: [
-                            '#16a34a',
-                            '#ef4444',
-                            '#0284c7',
-                            '#f59e0b',
-                            '#2D4F2E',
-                        ],
-                        borderRadius: 8,
-                        barThickness: 24,
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            rtl: true,
-                            backgroundColor: '#1e293b',
-                            cornerRadius: 8,
-                            padding: 10
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: { precision: 0, font: { size: 11 } },
-                            grid: { color: '#f1f5f9' }
-                        },
-                        y: {
-                            grid: { display: false },
-                            ticks: { font: { size: 11, weight: '500' } }
-                        }
-                    }
-                }
-            });
-        }
-    } catch (chartErr) {
-        console.error('Error rendering dashboard charts:', chartErr);
     }
 }
 
@@ -1134,6 +826,10 @@ async function deleteOnboardingScreen(screenId) {
 }
 
 // ─── CATEGORIES & BANNERS MANAGEMENT ──────────────────────────────────────────
+
+async function loadBannersTab() {
+    await Promise.all([loadBanners(), loadAdvertisements(), loadRegions()]);
+}
 
 async function loadCategoriesAndBanners() {
     await Promise.all([loadCategories(), loadBanners(), loadAdvertisements()]);

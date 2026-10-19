@@ -1407,7 +1407,7 @@
               "mode": "formdata",
               "formdata": [
                 {
-                  "key": "title",
+                  "key": "titleEn",
                   "value": "Welcome to Kuba",
                   "type": "text"
                 },
@@ -1417,7 +1417,7 @@
                   "type": "text"
                 },
                 {
-                  "key": "description",
+                  "key": "descriptionEn",
                   "value": "Find your perfect vacation rental.",
                   "type": "text"
                 },
@@ -1444,7 +1444,7 @@
                 }
               ]
             },
-            "description": "Create a new onboarding screen. Accepts multipart/form-data with image upload.\nRequires: admin Bearer token"
+            "description": "Create a new onboarding screen. Accepts multipart/form-data with image upload.\nRequired: titleEn, titleAr\nRequires: admin Bearer token"
           }
         },
         {
@@ -1478,8 +1478,28 @@
               "mode": "formdata",
               "formdata": [
                 {
-                  "key": "title",
-                  "value": "Updated Title",
+                  "key": "titleEn",
+                  "value": "Updated English Title",
+                  "type": "text"
+                },
+                {
+                  "key": "titleAr",
+                  "value": "العنوان المحدث",
+                  "type": "text"
+                },
+                {
+                  "key": "descriptionEn",
+                  "value": "Updated description.",
+                  "type": "text"
+                },
+                {
+                  "key": "descriptionAr",
+                  "value": "الوصف المحدث.",
+                  "type": "text"
+                },
+                {
+                  "key": "order",
+                  "value": "1",
                   "type": "text"
                 },
                 {
@@ -1495,7 +1515,7 @@
                 }
               ]
             },
-            "description": "Update an onboarding screen. Fields are optional.\nRequires: admin Bearer token"
+            "description": "Update an onboarding screen. All fields optional.\nRequires: admin Bearer token"
           }
         },
         {
@@ -1556,14 +1576,14 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ids\": [\"<ID_1>\", \"<ID_2>\", \"<ID_3>\"]\n}",
+              "raw": "{\n  \"order\": [\n    { \"id\": \"<ID_1>\", \"order\": 0 },\n    { \"id\": \"<ID_2>\", \"order\": 1 },\n    { \"id\": \"<ID_3>\", \"order\": 2 }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "Set the display order of onboarding screens by passing an ordered array of IDs.\nRequires: admin Bearer token"
+            "description": "Set the display order of onboarding screens.\nSend an array of objects, each with the screen id and its new order index.\nRequires: admin Bearer token"
           }
         }
       ]

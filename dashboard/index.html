@@ -12,8 +12,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Custom Style -->
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -111,7 +109,11 @@
                     </a>
                     <a href="#" class="nav-link" data-tab="categories">
                         <i class="fas fa-layer-group w-5 text-center text-[#2D4F2E]"></i>
-                        <span data-i18n="categoriesBanners">الفئات والبانرات</span>
+                        <span data-i18n="categoriesTitle">التصنيفات</span>
+                    </a>
+                    <a href="#" class="nav-link" data-tab="banners">
+                        <i class="fas fa-images w-5 text-center text-[#2D4F2E]"></i>
+                        <span data-i18n="bannersTitle">البانرات الإعلانية</span>
                     </a>
                     <a href="#" class="nav-link" data-tab="system">
                         <i class="fas fa-terminal w-5 text-center text-[#2D4F2E]"></i>
@@ -181,7 +183,7 @@
                         <!-- KPI Stats: Perfectly Balanced 3x3 Grid -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <!-- 1. إجمالي المستخدمين -->
-                            <div class="card p-4 bg-white hover:border-[#2D4F2E]/40 hover:shadow-md transition">
+                            <div onclick="switchTab('users')" class="card p-4 bg-white hover:border-[#2D4F2E]/40 hover:shadow-md transition cursor-pointer">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-500" data-i18n="totalUsers">إجمالي المستخدمين</span>
                                     <div class="w-9 h-9 rounded-xl bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center shadow-sm">
@@ -196,7 +198,7 @@
                             </div>
 
                             <!-- 2. المستخدمون النشطون -->
-                            <div class="card p-4 bg-white hover:border-indigo-400 hover:shadow-md transition">
+                            <div onclick="switchTab('users')" class="card p-4 bg-white hover:border-indigo-400 hover:shadow-md transition cursor-pointer">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-500" data-i18n="activeUsers">المستخدمون النشطون</span>
                                     <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
@@ -211,7 +213,7 @@
                             </div>
 
                             <!-- 3. الحجوزات -->
-                            <div class="card p-4 bg-white hover:border-cyan-400 hover:shadow-md transition">
+                            <div onclick="switchTab('advertisements')" class="card p-4 bg-white hover:border-cyan-400 hover:shadow-md transition cursor-pointer">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-500">الحجوزات والطلبات</span>
                                     <div class="w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shadow-sm">
@@ -226,7 +228,7 @@
                             </div>
 
                             <!-- 4. الإعلانات والشاليهات -->
-                            <div class="card p-4 bg-white hover:border-teal-400 hover:shadow-md transition">
+                            <div onclick="switchTab('advertisements')" class="card p-4 bg-white hover:border-teal-400 hover:shadow-md transition cursor-pointer">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-500" data-i18n="advertisements">الإعلانات والشاليهات</span>
                                     <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shadow-sm">
@@ -241,7 +243,7 @@
                             </div>
 
                             <!-- 5. المناطق -->
-                            <div class="card p-4 bg-white hover:border-emerald-400 hover:shadow-md transition">
+                            <div onclick="switchTab('regions')" class="card p-4 bg-white hover:border-emerald-400 hover:shadow-md transition cursor-pointer">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-500" data-i18n="regions">المناطق المعتمدة</span>
                                     <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm">
@@ -256,7 +258,7 @@
                             </div>
 
                             <!-- 6. أنواع الوحدات -->
-                            <div class="card p-4 bg-white hover:border-emerald-500 hover:shadow-md transition">
+                            <div onclick="switchTab('unit-types')" class="card p-4 bg-white hover:border-emerald-500 hover:shadow-md transition cursor-pointer">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-500">أنواع الوحدات</span>
                                     <div class="w-9 h-9 rounded-xl bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center shadow-sm">
@@ -271,7 +273,7 @@
                             </div>
 
                             <!-- 7. التصنيفات -->
-                            <div class="card p-4 bg-white hover:border-blue-400 hover:shadow-md transition">
+                            <div onclick="switchTab('categories')" class="card p-4 bg-white hover:border-blue-400 hover:shadow-md transition cursor-pointer">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-500" data-i18n="categoriesTitle">التصنيفات</span>
                                     <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm">
@@ -286,7 +288,7 @@
                             </div>
 
                             <!-- 8. البانرات -->
-                            <div class="card p-4 bg-white hover:border-rose-400 hover:shadow-md transition">
+                            <div onclick="switchTab('banners')" class="card p-4 bg-white hover:border-rose-400 hover:shadow-md transition cursor-pointer">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-500" data-i18n="bannersTitle">البانرات الإعلانية</span>
                                     <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm">
@@ -301,7 +303,7 @@
                             </div>
 
                             <!-- 9. شاشات الترحيب -->
-                            <div class="card p-4 bg-white hover:border-purple-400 hover:shadow-md transition">
+                            <div onclick="switchTab('onboarding')" class="card p-4 bg-white hover:border-purple-400 hover:shadow-md transition cursor-pointer">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-500" data-i18n="totalOnboarding">شاشات الترحيب</span>
                                     <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-sm">
@@ -312,92 +314,6 @@
                                 <div class="text-[11px] text-purple-600 font-semibold mt-1 flex items-center gap-1">
                                     <i class="fas fa-compass"></i>
                                     <span>شاشات Onboarding</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- ─── Analytics & Charts Section ──────────────────────────────── -->
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <!-- Chart 1: User Growth Line Chart (spans 2 cols) -->
-                            <div class="card p-5 bg-white lg:col-span-2 shadow-sm border border-slate-200/90 rounded-2xl flex flex-col justify-between">
-                                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-3 border-b border-slate-100 gap-2">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center text-base shadow-sm">
-                                            <i class="fas fa-chart-line"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-slate-900 text-sm">حركة نمو وتسجيل المستخدمين</h3>
-                                            <p class="text-[11px] text-slate-500">معدل انضمام الأعضاء الجدد شهرياً للمنصة</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="badge badge-brand text-[11px] py-1 px-2.5">
-                                            <i class="fas fa-calendar-alt me-1"></i> آخر 6 أشهر
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="relative w-full" style="height: 280px;">
-                                    <canvas id="chart-user-growth"></canvas>
-                                </div>
-                            </div>
-
-                            <!-- Chart 2: Categories Doughnut Chart (spans 1 col) -->
-                            <div class="card p-5 bg-white shadow-sm border border-slate-200/90 rounded-2xl flex flex-col justify-between">
-                                <div class="flex items-center justify-between pb-4 mb-3 border-b border-slate-100">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center text-base shadow-sm">
-                                            <i class="fas fa-chart-pie"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-slate-900 text-sm">توزيع الوحدات والتصنيفات</h3>
-                                            <p class="text-[11px] text-slate-500">نسبة الشاليهات والوحدات حسب التصنيف</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="relative w-full flex items-center justify-center" style="height: 220px;">
-                                    <canvas id="chart-categories"></canvas>
-                                </div>
-                                <div id="categories-chart-legend" class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-1.5 text-[11px]"></div>
-                            </div>
-                        </div>
-
-                        <!-- Secondary Analytics Row: Regions & User Status -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <!-- Chart 3: Regions Bar Chart -->
-                            <div class="card p-5 bg-white shadow-sm border border-slate-200/90 rounded-2xl">
-                                <div class="flex items-center justify-between pb-4 mb-3 border-b border-slate-100">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-base shadow-sm">
-                                            <i class="fas fa-map-location-dot"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-slate-900 text-sm">كثافة الوحدات في المناطق</h3>
-                                            <p class="text-[11px] text-slate-500">أكثر المناطق احتواءً على شاليهات وإعلانات</p>
-                                        </div>
-                                    </div>
-                                    <span class="badge badge-success text-[10px]">المناطق الأعلى</span>
-                                </div>
-                                <div class="relative w-full" style="height: 240px;">
-                                    <canvas id="chart-regions"></canvas>
-                                </div>
-                            </div>
-
-                            <!-- Chart 4: Users Accounts & Status -->
-                            <div class="card p-5 bg-white shadow-sm border border-slate-200/90 rounded-2xl">
-                                <div class="flex items-center justify-between pb-4 mb-3 border-b border-slate-100">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-base shadow-sm">
-                                            <i class="fas fa-shield-halved"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-slate-900 text-sm">حالة المستخدمين ومصادر التسجيل</h3>
-                                            <p class="text-[11px] text-slate-500">الحسابات النشطة، توثيق البريد، ومصادر الحسابات</p>
-                                        </div>
-                                    </div>
-                                    <span class="badge badge-brand text-[10px]">مباشر</span>
-                                </div>
-                                <div class="relative w-full" style="height: 240px;">
-                                    <canvas id="chart-user-status"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -567,30 +483,26 @@
                         </div>
                     </section>
 
-                    <!-- 4. CATEGORIES & BANNERS VIEW -->
+                    <!-- 4. CATEGORIES VIEW -->
                     <section id="view-categories" class="tab-view hidden space-y-6">
                         <!-- Header with Quick Actions -->
                         <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                             <div>
-                                <h2 class="text-lg font-bold text-slate-900" data-i18n="categoriesBanners">إدارة التصنيفات والبانرات الإعلانية</h2>
-                                <p class="text-xs text-slate-500">إدارة تصنيفات التطبيق (فنادق، شقق ساحلية، شاليهات...) والبانرات المرتبطة بإعلانات الحجز</p>
+                                <h2 class="text-lg font-bold text-slate-900" data-i18n="categoriesTitle">إدارة التصنيفات (Categories)</h2>
+                                <p class="text-xs text-slate-500">إدارة تصنيفات التطبيق (فنادق، شقق ساحلية، شاليهات...) وتنظيم عرضها للمستخدمين</p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button onclick="openAddCategoryModal()" class="gold-btn text-xs">
                                     <i class="fas fa-plus"></i>
                                     <span data-i18n="addCategory">إضافة تصنيف</span>
                                 </button>
-                                <button onclick="openAddBannerModal()" class="btn-secondary text-xs">
-                                    <i class="fas fa-plus text-[#2D4F2E]"></i>
-                                    <span data-i18n="addBanner">إضافة بانر</span>
-                                </button>
-                                <button onclick="loadCategoriesAndBanners()" class="btn-secondary text-xs" title="تحديث">
+                                <button onclick="loadCategories()" class="btn-secondary text-xs" title="تحديث">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- 1. Categories Management Section -->
+                        <!-- Categories Management Section -->
                         <div class="card p-5 bg-white space-y-4">
                             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                                 <div class="flex items-center gap-2">
@@ -598,8 +510,8 @@
                                         <i class="fas fa-layer-group"></i>
                                     </div>
                                     <div>
-                                        <h3 class="font-bold text-slate-900 text-sm" data-i18n="categoriesTitle">التصنيفات (Categories)</h3>
-                                        <p class="text-[11px] text-slate-500">تصنيفات الوحدات المتاحة في التطبيق (تتكون من: ID، الاسم، الصورة)</p>
+                                        <h3 class="font-bold text-slate-900 text-sm" data-i18n="categoriesTitle">التصنيفات المعتمدة</h3>
+                                        <p class="text-[11px] text-slate-500">تصنيفات الوحدات المتاحة في التطبيق (الاسم، الصورة، والمعرف)</p>
                                     </div>
                                 </div>
                                 <span class="badge badge-brand text-xs" id="badge-categories-count">0 تصنيف</span>
@@ -609,17 +521,37 @@
                                 <div class="col-span-full text-center py-8 text-slate-400 text-xs">جاري تحميل التصنيفات...</div>
                             </div>
                         </div>
+                    </section>
 
-                        <!-- 2. Banners Management Section -->
+                    <!-- 5. BANNERS VIEW -->
+                    <section id="view-banners" class="tab-view hidden space-y-6">
+                        <!-- Header with Quick Actions -->
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900" data-i18n="bannersTitle">إدارة البانرات الإعلانية (Banners)</h2>
+                                <p class="text-xs text-slate-500">بانرات العروض الترويجية في واجهة التطبيق وربطها بإعلانات وشاليهات ومناطق محددة</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="openAddBannerModal()" class="gold-btn text-xs">
+                                    <i class="fas fa-plus"></i>
+                                    <span data-i18n="addBanner">إضافة بانر</span>
+                                </button>
+                                <button onclick="loadBannersTab()" class="btn-secondary text-xs" title="تحديث">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Banners Management Section -->
                         <div class="card p-5 bg-white space-y-4">
                             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                                 <div class="flex items-center gap-2">
-                                    <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-sm">
+                                    <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-sm">
                                         <i class="fas fa-images"></i>
                                     </div>
                                     <div>
                                         <h3 class="font-bold text-slate-900 text-sm" data-i18n="bannersTitle">البانرات الإعلانية (Banners)</h3>
-                                        <p class="text-[11px] text-slate-500">بانرات العروض المرتبطة بإعلانات الوحدات (تتكون من: ID، الصورة، معرف الإعلان advertisementId)</p>
+                                        <p class="text-[11px] text-slate-500">بانرات العروض المرتبطة بإعلانات الوحدات (تتكون من: ID، الصورة، معرف الإعلان advertisementId، والمنطقة)</p>
                                     </div>
                                 </div>
                                 <span class="badge badge-brand text-xs" id="badge-banners-count">0 بانر</span>
