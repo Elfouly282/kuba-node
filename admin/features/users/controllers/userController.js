@@ -5,6 +5,8 @@ const Category = require('../../../../src/features/categories/models/categoryMod
 const Banner = require('../../../../src/features/banners/models/bannerModel');
 const Region = require('../../../../src/features/regions/models/regionModel');
 const Advertisement = require('../../../../src/features/advertisements/models/advertisementModel');
+const UnitType = require('../../../../src/features/unit-types/models/unitTypeModel');
+const Booking = require('../../../../src/features/bookings/models/bookingModel');
 const APIError = require('../../../utils/apiError');
 const bcrypt = require('bcrypt');
 
@@ -121,6 +123,8 @@ exports.getUserStats = async (_req, res, next) => {
             Banner.countDocuments(),
             Region.countDocuments(),
             Advertisement.countDocuments(),
+            UnitType.countDocuments(),
+            Booking.countDocuments(),
             User.find()
                 .setOptions({ includeInactive: true })
                 .populate('region', 'name')
@@ -143,6 +147,8 @@ exports.getUserStats = async (_req, res, next) => {
                 totalBanners,
                 totalRegions,
                 totalAdvertisements,
+                totalUnitTypes: totalUnitTypes || 0,
+                totalBookings: totalBookings || 0,
                 recentUsers,
                 serverTime: new Date().toISOString(),
                 environment: process.env.NODE_ENV || 'development',

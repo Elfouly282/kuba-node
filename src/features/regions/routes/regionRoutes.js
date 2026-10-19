@@ -12,15 +12,21 @@ const {
 
 const { uploadSingle } = require('../../../middleware/uploadMiddleware');
 const { protect, restrictTo } = require('../../auth/middleware/authMiddleware');
+const {
+    validateRegionId,
+    validateRegionDataRequest,
+    validateCreateRegion,
+    validateUpdateRegion,
+} = require('../middleware/regionMiddleware');
 
 router.get('/', getAll);
-router.get('/data', getRegionData);
-router.get('/:id/data', getRegionData);
-router.get('/:id', getOne);
+router.get('/data', validateRegionDataRequest, getRegionData);
+router.get('/:id/data', validateRegionDataRequest, getRegionData);
+router.get('/:id', validateRegionId, getOne);
 
-router.post('/', protect, restrictTo('admin'), ...uploadSingle('image', 'regions'), create);
-router.patch('/:id', protect, restrictTo('admin'), ...uploadSingle('image', 'regions'), update);
-router.put('/:id', protect, restrictTo('admin'), ...uploadSingle('image', 'regions'), update);
-router.delete('/:id', protect, restrictTo('admin'), remove);
+router.post('/', protect, restrictTo('admin'), ...uploadSingle('image', 'regions'), validateCreateRegion, create);
+router.patch('/:id', protect, restrictTo('admin'), validateRegionId, ...uploadSingle('image', 'regions'), validateUpdateRegion, update);
+router.put('/:id', protect, restrictTo('admin'), validateRegionId, ...uploadSingle('image', 'regions'), validateUpdateRegion, update);
+router.delete('/:id', protect, restrictTo('admin'), validateRegionId, remove);
 
 module.exports = router;

@@ -11,12 +11,17 @@ const {
 
 const { uploadSingle } = require('../../../middleware/uploadMiddleware');
 const { protect, restrictTo } = require('../../auth/middleware/authMiddleware');
+const {
+    validateAdvertisementId,
+    validateCreateAdvertisement,
+    validateUpdateAdvertisement,
+} = require('../middleware/advertisementMiddleware');
 
 router.get('/', getAll);
-router.get('/:id', getOne);
-router.post('/', protect, restrictTo('admin'), ...uploadSingle('image', 'advertisements'), create);
-router.patch('/:id', protect, restrictTo('admin'), ...uploadSingle('image', 'advertisements'), update);
-router.put('/:id', protect, restrictTo('admin'), ...uploadSingle('image', 'advertisements'), update);
-router.delete('/:id', protect, restrictTo('admin'), remove);
+router.get('/:id', validateAdvertisementId, getOne);
+router.post('/', protect, restrictTo('admin'), ...uploadSingle('image', 'advertisements'), validateCreateAdvertisement, create);
+router.patch('/:id', protect, restrictTo('admin'), validateAdvertisementId, ...uploadSingle('image', 'advertisements'), validateUpdateAdvertisement, update);
+router.put('/:id', protect, restrictTo('admin'), validateAdvertisementId, ...uploadSingle('image', 'advertisements'), validateUpdateAdvertisement, update);
+router.delete('/:id', protect, restrictTo('admin'), validateAdvertisementId, remove);
 
 module.exports = router;

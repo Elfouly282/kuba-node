@@ -36,6 +36,8 @@ const categoryRoutes = require('./features/categories/routes/categoryRoutes');
 const bannerRoutes = require('./features/banners/routes/bannerRoutes');
 const advertisementRoutes = require('./features/advertisements/routes/advertisementRoutes');
 const regionRoutes = require('./features/regions/routes/regionRoutes');
+const unitTypeRoutes = require('./features/unit-types/routes/unitTypeRoutes');
+const bookingRoutes = require('./features/bookings/routes/bookingRoutes');
 
 const adminAuthRoutes = require('../admin/features/auth/routes/authRoutes');
 const adminOnboardingRoutes = require('../admin/features/onboarding/routes/onboardingRoutes');
@@ -44,6 +46,8 @@ const adminCategoryRoutes = require('../admin/features/categories/routes/categor
 const adminBannerRoutes = require('../admin/features/banners/routes/bannerRoutes');
 const adminAdvertisementRoutes = require('../admin/features/advertisements/routes/advertisementRoutes');
 const adminRegionRoutes = require('../admin/features/regions/routes/regionRoutes');
+const adminUnitTypeRoutes = require('../admin/features/unit-types/routes/unitTypeRoutes');
+const adminBookingRoutes = require('../admin/features/bookings/routes/bookingRoutes');
 
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('DB_URI exists:', Boolean(process.env.DB_URI));
@@ -83,6 +87,8 @@ app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/banners', bannerRoutes);
 app.use('/api/v1/advertisements', advertisementRoutes);
 app.use('/api/v1/regions', regionRoutes);
+app.use('/api/v1/unit-types', unitTypeRoutes);
+app.use('/api/v1/bookings', bookingRoutes);
 
 // Admin APIs
 app.use('/api/v1/admin/auth', adminAuthRoutes);
@@ -92,6 +98,8 @@ app.use('/api/v1/admin/categories', adminCategoryRoutes);
 app.use('/api/v1/admin/banners', adminBannerRoutes);
 app.use('/api/v1/admin/advertisements', adminAdvertisementRoutes);
 app.use('/api/v1/admin/regions', adminRegionRoutes);
+app.use('/api/v1/admin/unit-types', adminUnitTypeRoutes);
+app.use('/api/v1/admin/bookings', adminBookingRoutes);
 
 app.get('/', (req, res) => {
     res.status(200).json({

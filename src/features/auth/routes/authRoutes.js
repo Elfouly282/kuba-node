@@ -19,22 +19,32 @@ const {
 } = require('../controllers/authController');
 
 const { protect } = require('../middleware/authMiddleware');
+const {
+    validateSignUp,
+    validateLogin,
+    validateSelectRegion,
+    validateChangePassword,
+    validateForgotPassword,
+    validateVerifyResetOtp,
+    validateResetPassword,
+    validateResendVerification,
+} = require('../middleware/authValidationMiddleware');
 
-router.post('/signup', signUp);
-router.post('/login', login);
+router.post('/signup', validateSignUp, signUp);
+router.post('/login', validateLogin, login);
 router.post('/google', googleLogin);
 router.get('/verify-email/:token', verifyEmail);
-router.post('/resend-verification', resendVerificationEmail);
-router.post('/forgot-password', forgotPassword);
-router.post('/verify-reset-otp', verifyResetOtp);
-router.patch('/reset-password/:token', resetPassword);
+router.post('/resend-verification', validateResendVerification, resendVerificationEmail);
+router.post('/forgot-password', validateForgotPassword, forgotPassword);
+router.post('/verify-reset-otp', validateVerifyResetOtp, verifyResetOtp);
+router.patch('/reset-password/:token', validateResetPassword, resetPassword);
 
 router.post('/logout', protect, logout);
-router.patch('/change-password', protect, changePassword);
+router.patch('/change-password', protect, validateChangePassword, changePassword);
 router.get('/me', protect, getMe);
 router.patch('/update-profile', protect, updateProfile);
-router.post('/select-region', protect, selectRegion);
-router.patch('/select-region', protect, selectRegion);
+router.post('/select-region', protect, validateSelectRegion, selectRegion);
+router.patch('/select-region', protect, validateSelectRegion, selectRegion);
 router.delete('/delete-account', protect, deleteAccount);
 
 module.exports = router;

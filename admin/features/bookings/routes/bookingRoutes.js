@@ -1,0 +1,25 @@
+const express = require('express');
+const router = express.Router();
+
+const {
+    getAll,
+    getOne,
+    create,
+    update,
+    remove,
+    checkAvailability,
+} = require('../controllers/bookingController');
+
+const { protectAdmin } = require('../../../middleware/authMiddleware');
+
+router.use(protectAdmin);
+
+router.get('/check-availability/:advertisementId', checkAvailability);
+router.get('/', getAll);
+router.get('/:id', getOne);
+router.post('/', create);
+router.patch('/:id', update);
+router.put('/:id', update);
+router.delete('/:id', remove);
+
+module.exports = router;

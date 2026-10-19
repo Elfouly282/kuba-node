@@ -11,13 +11,18 @@ const {
 
 const { uploadSingle } = require('../../../middleware/uploadMiddleware');
 const { protect, restrictTo } = require('../../auth/middleware/authMiddleware');
+const {
+    validateBannerId,
+    validateCreateBanner,
+    validateUpdateBanner,
+} = require('../middleware/bannerMiddleware');
 
 router.get('/', getAll);
-router.get('/:id', getOne);
+router.get('/:id', validateBannerId, getOne);
 
-router.post('/', protect, restrictTo('admin'), ...uploadSingle('image', 'banners'), create);
-router.patch('/:id', protect, restrictTo('admin'), ...uploadSingle('image', 'banners'), update);
-router.put('/:id', protect, restrictTo('admin'), ...uploadSingle('image', 'banners'), update);
-router.delete('/:id', protect, restrictTo('admin'), remove);
+router.post('/', protect, restrictTo('admin'), ...uploadSingle('image', 'banners'), validateCreateBanner, create);
+router.patch('/:id', protect, restrictTo('admin'), validateBannerId, ...uploadSingle('image', 'banners'), validateUpdateBanner, update);
+router.put('/:id', protect, restrictTo('admin'), validateBannerId, ...uploadSingle('image', 'banners'), validateUpdateBanner, update);
+router.delete('/:id', protect, restrictTo('admin'), validateBannerId, remove);
 
 module.exports = router;

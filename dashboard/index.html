@@ -99,6 +99,10 @@
                         <i class="fas fa-hotel w-5 text-center text-[#2D4F2E]"></i>
                         <span data-i18n="advertisements">الإعلانات والشاليهات</span>
                     </a>
+                    <a href="#" class="nav-link" data-tab="unit-types">
+                        <i class="fas fa-cubes w-5 text-center text-[#2D4F2E]"></i>
+                        <span data-i18n="unitTypes">أنواع الوحدات</span>
+                    </a>
                     <a href="#" class="nav-link" data-tab="onboarding">
                         <i class="fas fa-mobile-screen w-5 text-center text-[#2D4F2E]"></i>
                         <span data-i18n="onboarding">شاشات الترحيب</span>
@@ -255,13 +259,24 @@
 
                             <div class="card p-4 bg-white">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="verifiedAccounts">الحسابات الموثقة</span>
-                                    <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                                        <i class="fas fa-envelope-circle-check text-xs"></i>
+                                    <span class="text-xs font-bold text-slate-500">أنواع الوحدات</span>
+                                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                                        <i class="fas fa-cubes text-xs"></i>
                                     </div>
                                 </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-verified-users">0</div>
-                                <div class="text-[10px] text-slate-500 font-medium mt-1">تم تأكيد البريد</div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-unit-types">0</div>
+                                <div class="text-[10px] text-emerald-600 font-medium mt-1">شاليهات، فنادق، يخوت...</div>
+                            </div>
+
+                            <div class="card p-4 bg-white">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500">الحجوزات</span>
+                                    <div class="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center">
+                                        <i class="fas fa-calendar-check text-xs"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-bookings">0</div>
+                                <div class="text-[10px] text-cyan-600 font-medium mt-1">طلبات الحجز المسجلة</div>
                             </div>
                         </div>
 
@@ -315,6 +330,9 @@
                                             <i class="fas fa-bullhorn text-[#2D4F2E] me-1"></i> <span data-i18n="addBanner">إضافة بانر</span>
                                         </button>
                                     </div>
+                                    <button onclick="openAddUnitTypeModal()" class="gold-btn w-full text-xs py-2">
+                                        <i class="fas fa-cubes me-1"></i> <span>إضافة نوع وحدة جديد</span>
+                                    </button>
                                     <button onclick="openAddUserModal()" class="btn-secondary w-full text-xs py-2">
                                         <i class="fas fa-user-plus text-[#2D4F2E]"></i> <span data-i18n="addUser">إضافة مستخدم جديد</span>
                                     </button>
@@ -587,6 +605,76 @@
                         <!-- Advertisements Grid -->
                         <div id="advertisements-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             <div class="col-span-full text-center py-8 text-slate-400 text-xs">جاري تحميل الإعلانات والشاليهات...</div>
+                        </div>
+                    </section>
+
+                    <!-- UNIT TYPES MANAGEMENT VIEW -->
+                    <section id="view-unit-types" class="tab-view hidden space-y-4">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900" data-i18n="unitTypes">إدارة أنواع الوحدات والخدمات</h2>
+                                <p class="text-xs text-slate-500">إدارة أنواع الوحدات (شاليه، شقة، غرفة فندقية، يخت، Golf Car...) وتحديد خصائصها الديناميكية ووحدات تسعيرها</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="openAddUnitTypeModal()" class="gold-btn text-xs">
+                                    <i class="fas fa-plus"></i>
+                                    <span>إضافة نوع وحدة جديد</span>
+                                </button>
+                                <button onclick="loadUnitTypes()" class="btn-secondary text-xs" title="تحديث">
+                                    <i class="fas fa-sync-alt"></i>
+                                    <span data-i18n="refresh">تحديث</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Unit Types Grid -->
+                        <div class="card p-5 bg-white space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center font-bold text-sm">
+                                        <i class="fas fa-cubes"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-slate-900 text-sm">أنواع الوحدات المسجلة</h3>
+                                        <p class="text-[11px] text-slate-500">اختر أي نوع وحدة لإدارة خصائصه الديناميكية التي تظهر عند إنشاء إعلان جديد</p>
+                                    </div>
+                                </div>
+                                <span class="badge badge-brand text-xs" id="badge-unit-types-count">0 نوع</span>
+                            </div>
+
+                            <div id="unit-types-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <div class="col-span-full text-center py-8 text-slate-400 text-xs">جاري تحميل أنواع الوحدات...</div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Attributes Panel (Active when a unit type is selected) -->
+                        <div id="unit-type-attributes-section" class="hidden card p-5 bg-white space-y-4 border-2 border-[#2D4F2E]/30">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center font-bold text-sm">
+                                        <i class="fas fa-sliders"></i>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <h3 class="font-bold text-slate-900 text-sm" id="attrs-section-title">خصائص النوع</h3>
+                                            <span class="badge badge-brand text-[10px]" id="attrs-section-badge">0 خاصية</span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-500">الخصائص التي يجب إدخالها عند إنشاء إعلان من هذا النوع (مثل: عدد الغرف، السعة، طاقم، إلخ)</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="openAddAttributeModal()" class="gold-btn text-xs py-1.5 px-3">
+                                        <i class="fas fa-plus"></i> إضافة خاصية جديدة
+                                    </button>
+                                    <button onclick="hideAttributesSection()" class="btn-secondary text-xs p-1.5" title="إغلاق">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="attributes-list" class="space-y-2">
+                                <div class="text-center py-6 text-slate-400 text-xs">لا توجد خصائص مضافة لهذا النوع حتى الآن. اضغط "إضافة خاصية جديدة" لتعريف الأولى.</div>
+                            </div>
                         </div>
                     </section>
 
@@ -893,72 +981,312 @@
         </div>
     </div>
 
-    <!-- ─── ADVERTISEMENT MODAL (ADD / EDIT) ───────────────────────────────── -->
+    <!-- ─── UNIT TYPE MODAL (ADD / EDIT) ─────────────────────────────────── -->
+    <div id="unit-type-modal" class="modal-overlay">
+        <div class="modal-content p-6 bg-white max-w-lg">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                <h3 id="unit-type-modal-title" class="font-bold text-slate-900 text-base">إضافة نوع وحدة جديد</h3>
+                <button onclick="closeModal('unit-type-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+            </div>
+
+            <form id="unit-type-form" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">اسم النوع (English) *</label>
+                        <input type="text" id="unit-type-modal-name" required class="form-input text-xs" placeholder="مثال: Chalet, Yacht, Golf Cart...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الاسم بالعربية *</label>
+                        <input type="text" id="unit-type-modal-name-ar" required class="form-input text-xs" placeholder="مثال: شاليه، يخت، جولف كار...">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">الأقسام المرتبطة</label>
+                    <select id="unit-type-modal-categories" multiple class="form-select text-xs h-24" title="اضغط Ctrl لاختيار أكثر من قسم">
+                    </select>
+                    <p class="text-[11px] text-slate-400 mt-1">اضغط Ctrl (أو Cmd) لاختيار أكثر من قسم ينتمي إليه هذا النوع.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">وحدات التسعير المتاحة</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-slate-700 bg-slate-50 p-2.5 rounded border border-slate-200">
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" name="unit-type-pricing-unit" value="per_night" checked class="rounded text-[#2D4F2E]">
+                            <span>بالليلة (Per Night)</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" name="unit-type-pricing-unit" value="per_hour" class="rounded text-[#2D4F2E]">
+                            <span>بالساعة (Per Hour)</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" name="unit-type-pricing-unit" value="per_day" class="rounded text-[#2D4F2E]">
+                            <span>باليوم (Per Day)</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" name="unit-type-pricing-unit" value="per_trip" class="rounded text-[#2D4F2E]">
+                            <span>بالرحلة (Per Trip)</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" name="unit-type-pricing-unit" value="fixed" class="rounded text-[#2D4F2E]">
+                            <span>سعر ثابت (Fixed)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">وحدة التسعير الافتراضية</label>
+                        <select id="unit-type-modal-default-unit" class="form-select text-xs">
+                            <option value="per_night">بالليلة</option>
+                            <option value="per_hour">بالساعة</option>
+                            <option value="per_day">باليوم</option>
+                            <option value="per_trip">بالرحلة</option>
+                            <option value="fixed">سعر ثابت</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الترتيب</label>
+                        <input type="number" id="unit-type-modal-order" value="0" min="0" class="form-input text-xs">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">الوصف</label>
+                    <textarea id="unit-type-modal-description" rows="2" class="form-textarea text-xs" placeholder="وصف موجز لطبيعة الوحدات..."></textarea>
+                </div>
+
+                <div class="flex items-center justify-between pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-medium">
+                        <input type="checkbox" id="unit-type-modal-active" checked class="rounded border-slate-300 text-[#2D4F2E] focus:ring-[#2D4F2E]">
+                        <span>النوع نشط ومتاح عند إضافة إعلانات</span>
+                    </label>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('unit-type-modal')" class="btn-secondary text-xs" data-i18n="cancel">إلغاء</button>
+                    <button type="submit" class="gold-btn text-xs" data-i18n="save">حفظ نوع الوحدة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── ATTRIBUTE MODAL (ADD / EDIT) ───────────────────────────────────── -->
+    <div id="attribute-modal" class="modal-overlay">
+        <div class="modal-content p-6 bg-white max-w-lg">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                <h3 id="attribute-modal-title" class="font-bold text-slate-900 text-base">إضافة خاصية جديدة</h3>
+                <button onclick="closeModal('attribute-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+            </div>
+
+            <form id="attribute-form" class="space-y-4">
+                <input type="hidden" id="attr-modal-unit-type-id">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">اسم الخاصية (English)</label>
+                        <input type="text" id="attr-modal-name" required class="form-input text-xs" placeholder="مثال: Number of Guests, Bedrooms...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الاسم بالعربية</label>
+                        <input type="text" id="attr-modal-name-ar" class="form-input text-xs" placeholder="مثال: عدد النزلاء، عدد الغرف...">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">مفتاح الخاصية الثابت (Key)</label>
+                        <input type="text" id="attr-modal-key" required class="form-input text-xs font-mono" placeholder="guests, rooms, has_pool...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">نوع البيانات (Data Type)</label>
+                        <select id="attr-modal-datatype" onchange="toggleAttributeOptionsInput()" class="form-select text-xs">
+                            <option value="string">نص (String)</option>
+                            <option value="number">رقم (Number)</option>
+                            <option value="boolean">نعم / لا (Boolean Toggle)</option>
+                            <option value="single_select">قائمة اختيار مفرد (Single Select)</option>
+                            <option value="multi_select">قائمة اختيار متعدد (Multi Select)</option>
+                            <option value="date">تاريخ (Date)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="attr-options-container" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">الخيارات المتاحة (مفصولة بفاصلة)</label>
+                    <input type="text" id="attr-modal-options" class="form-input text-xs" placeholder="مثال: سرير مزدوج, سريرين مفردين, أريكة سرير">
+                    <p class="text-[11px] text-slate-400 mt-1">اكتب الخيارات مفصولة بفاصلة (,) لاختيارها في نموذج الإعلان.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الوحدة (Unit)</label>
+                        <input type="text" id="attr-modal-unit" class="form-input text-xs" placeholder="م²، شخص، كابينة...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الترتيب</label>
+                        <input type="number" id="attr-modal-order" value="0" min="0" class="form-input text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">القيمة الافتراضية</label>
+                        <input type="text" id="attr-modal-default" class="form-input text-xs" placeholder="اختياري">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-xs">
+                    <label class="flex items-center gap-1.5 cursor-pointer font-medium text-slate-700">
+                        <input type="checkbox" id="attr-modal-required" class="rounded text-[#2D4F2E]">
+                        <span>خاصية مطلوبة (Required)</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer font-medium text-slate-700">
+                        <input type="checkbox" id="attr-modal-show-filters" class="rounded text-[#2D4F2E]">
+                        <span>تظهر في البحث والفلاتر</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer font-medium text-slate-700">
+                        <input type="checkbox" id="attr-modal-show-details" checked class="rounded text-[#2D4F2E]">
+                        <span>تظهر في تفاصيل الإعلان</span>
+                    </label>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('attribute-modal')" class="btn-secondary text-xs" data-i18n="cancel">إلغاء</button>
+                    <button type="submit" class="gold-btn text-xs" data-i18n="save">حفظ الخاصية</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── ADVERTISEMENT MODAL (ADD / EDIT) - FULLY UPGRADED ──────────────── -->
     <div id="advertisement-modal" class="modal-overlay">
-        <div class="modal-content p-6 bg-white max-w-xl">
+        <div class="modal-content p-6 bg-white max-w-2xl">
             <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
                 <h3 id="advertisement-modal-title" class="font-bold text-slate-900 text-base" data-i18n="addAdvertisement">إضافة إعلان جديد</h3>
                 <button onclick="closeModal('advertisement-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
             </div>
 
             <form id="advertisement-form" class="space-y-4">
+                <!-- 1. Basic Info -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adTitle">عنوان الإعلان</label>
-                    <input type="text" id="ad-modal-title" required class="form-input text-xs" placeholder="مثال: شاليه فاخر بفيو بحري مميز بالساحل الشمالي">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adTitle">عنوان الإعلان *</label>
+                    <input type="text" id="ad-modal-title" required class="form-input text-xs" placeholder="مثال: شاليه فاخر بفيو بحري في هاسيندا باي">
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adType">نوع الوحدة</label>
-                        <select id="ad-modal-type" class="form-select text-xs">
-                            <option value="chalet">شاليه (Chalet)</option>
-                            <option value="apartment">شقة (Apartment)</option>
-                            <option value="hotel">فندق (Hotel)</option>
-                            <option value="villa">فيلا (Villa)</option>
-                            <option value="resort">منتجع (Resort)</option>
-                            <option value="unit">وحدة سكنية (Unit)</option>
-                            <option value="other">أخرى (Other)</option>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">القسم (Category) *</label>
+                        <select id="ad-modal-category" required class="form-select text-xs">
+                            <option value="">-- اختر القسم --</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adRegion">المنطقة التابع لها</label>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">نوع الوحدة (Unit Type) *</label>
+                        <select id="ad-modal-unit-type" onchange="onAdUnitTypeChanged()" class="form-select text-xs">
+                            <option value="">-- اختر نوع الوحدة --</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">المنطقة (Region)</label>
                         <select id="ad-modal-region" class="form-select text-xs">
                             <option value="">-- اختر المنطقة --</option>
                         </select>
                     </div>
                 </div>
 
+                <!-- 2. Dynamic Attributes Section (Generated dynamically based on selected Unit Type) -->
+                <div id="ad-attributes-wrapper" class="hidden bg-[#f4f7f4] border border-[#c2d6c3] p-4 rounded-xl space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-[#c2d6c3]">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-sliders text-[#2D4F2E] text-xs"></i>
+                            <span class="text-xs font-bold text-slate-900">خصائص نوع الوحدة المحدد</span>
+                        </div>
+                        <span class="text-[11px] text-slate-500" id="ad-attr-helper-text">يتم ملء الخصائص بحسب مواصفات الوحدة</span>
+                    </div>
+                    <div id="ad-dynamic-attributes-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <!-- Injected via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- 3. Advanced Pricing & Discounts Section -->
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-tag text-[#2D4F2E] text-xs"></i>
+                            <span class="text-xs font-bold text-slate-900">التسعير والخصومات</span>
+                        </div>
+                        <span class="badge badge-brand text-[10px]" id="ad-pricing-summary-badge">السعر النهائي: 0 ج.م</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">السعر الأساسي *</label>
+                            <input type="number" id="ad-modal-base-price" oninput="calculateAdFinalPrice()" min="0" step="any" required class="form-input text-xs" placeholder="مثال: 4500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">وحدة التسعير *</label>
+                            <select id="ad-modal-pricing-unit" class="form-select text-xs">
+                                <option value="per_night">بالليلة (Per Night)</option>
+                                <option value="per_hour">بالساعة (Per Hour)</option>
+                                <option value="per_day">باليوم (Per Day)</option>
+                                <option value="per_trip">بالرحلة (Per Trip)</option>
+                                <option value="fixed">سعر ثابت (Fixed)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">الحد الأدنى للحجز</label>
+                            <input type="number" id="ad-modal-min-duration" value="1" min="1" class="form-input text-xs">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">نوع الخصم (اختياري)</label>
+                            <select id="ad-modal-discount-type" onchange="calculateAdFinalPrice()" class="form-select text-xs">
+                                <option value="none">بدون خصم</option>
+                                <option value="percentage">نسبة مئوية (%)</option>
+                                <option value="fixed">مبلغ ثابت (ج.م)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">قيمة الخصم</label>
+                            <input type="number" id="ad-modal-discount-value" oninput="calculateAdFinalPrice()" value="0" min="0" step="any" class="form-input text-xs" placeholder="مثال: 15 أو 500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">السعر النهائي بعد الخصم</label>
+                            <input type="number" id="ad-modal-final-price" readonly class="form-input text-xs bg-slate-100 font-bold text-[#2D4F2E]" placeholder="يُحسب تلقائياً">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Location & Address -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adCategory">التصنيف</label>
-                        <select id="ad-modal-category" class="form-select text-xs">
-                            <option value="">-- اختر التصنيف --</option>
-                        </select>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الموقع / المدينة</label>
+                        <input type="text" id="ad-modal-location" class="form-input text-xs" placeholder="مثال: الساحل الشمالي - الكيلو 124">
                     </div>
-
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adPrice">السعر (ج.م)</label>
-                        <input type="number" id="ad-modal-price" min="0" step="any" class="form-input text-xs" placeholder="مثال: 3500">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">العنوان التفصيلي</label>
+                        <input type="text" id="ad-modal-address" class="form-input text-xs" placeholder="مثال: قرية هاسيندا باي، فيلا رقم 42">
                     </div>
                 </div>
 
+                <!-- 5. Description -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adLocation">الموقع / العنوان التفصيلي</label>
-                    <input type="text" id="ad-modal-location" class="form-input text-xs" placeholder="مثال: الكيلو 124، هاسيندا باي، الساحل الشمالي">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adDescription">الوصف والتفاصيل</label>
+                    <textarea id="ad-modal-description" rows="2" class="form-textarea text-xs" placeholder="اكتب تفاصيل الوحدة والخدمات والمرافق المتوفرة..."></textarea>
                 </div>
 
+                <!-- 6. Images Upload -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adDescription">الوصف</label>
-                    <textarea id="ad-modal-description" rows="3" class="form-textarea text-xs" placeholder="اكتب تفاصيل الوحدة، عدد الغرف، المرافق، المميزات..."></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adImage">صورة الإعلان</label>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">صورة أو صور الإعلان</label>
                     <div class="space-y-2">
                         <input type="file" id="ad-modal-image-file" accept="image/*" class="form-input text-xs p-2">
                         <div class="relative flex items-center">
-                            <span class="text-[11px] text-slate-400 bg-white px-2 absolute right-3">أو رابط صورة خارجي</span>
+                            <span class="text-[11px] text-slate-400 bg-white px-2 absolute right-3">أو رابط صورة مباشر</span>
                             <div class="w-full border-t border-slate-200"></div>
                         </div>
                         <input type="url" id="ad-modal-image-url" class="form-input text-xs" placeholder="https://example.com/ad-image.jpg">
