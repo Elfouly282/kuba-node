@@ -12,6 +12,11 @@ const bannerSchema = new mongoose.Schema(
             ref: 'Advertisement',
             required: [true, 'validation.advertisementRequired'],
         },
+        region: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Region',
+            default: null,
+        },
     },
     {
         timestamps: true,

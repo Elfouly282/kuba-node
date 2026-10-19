@@ -16,7 +16,6 @@ exports.login = async (req, res, next) => {
         const defaultAdminEmail = (process.env.ADMIN_EMAIL || 'admin@kuba-app.com').toLowerCase().trim();
         const defaultAdminPassword = process.env.ADMIN_PASSWORD || 'Admin@123456';
 
-        // ─── 1. Instant Local Admin Authentication (Bypasses remote DB delays) ──
         const isLocalAdmin = (
             normalizedEmail === defaultAdminEmail ||
             normalizedEmail === 'admin@kuba.com' ||
@@ -32,7 +31,6 @@ exports.login = async (req, res, next) => {
                 role: 'admin',
             });
 
-            // If database is connected, ensure admin record exists in DB in background
             if (mongoose.connection.readyState === 1) {
                 User.findOne({ email: normalizedEmail })
                     .setOptions({ includeInactive: true })
@@ -66,7 +64,6 @@ exports.login = async (req, res, next) => {
             });
         }
 
-        // ─── 2. Database User Authentication ──────────────────────────────────
         if (mongoose.connection.readyState !== 1) {
             return next(new APIError('errors.invalidCredentials', 401));
         }

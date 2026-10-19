@@ -78,6 +78,24 @@ const I18N = {
         linkedAd: 'الإعلان المرتبط',
         confirmDeleteCategory: 'هل أنت متأكد من رغبتك في حذف هذا التصنيف نهائياً؟',
         confirmDeleteBanner: 'هل أنت متأكد من رغبتك في حذف هذا البانر نهائياً؟',
+        regions: 'المناطق',
+        regionsSubtitle: 'إدارة المناطق والمدن المعتمدة بالتطبيق لتصفية الشاليهات والإعلانات',
+        addRegion: 'إضافة منطقة جديدة',
+        regionName: 'اسم المنطقة',
+        regionImage: 'صورة المنطقة',
+        confirmDeleteRegion: 'هل أنت متأكد من رغبتك في حذف هذه المنطقة نهائياً؟',
+        advertisements: 'الإعلانات والشاليهات',
+        advertisementsSubtitle: 'إدارة إعلانات الوحدات، الشقق، والشاليهات التابعة لكل منطقة وتصنيف',
+        addAdvertisement: 'إضافة إعلان جديد',
+        adTitle: 'عنوان الإعلان',
+        adType: 'نوع الوحدة',
+        adPrice: 'السعر (ج.م)',
+        adLocation: 'الموقع',
+        adRegion: 'المنطقة',
+        adCategory: 'التصنيف',
+        adDescription: 'الوصف',
+        adImage: 'صورة الإعلان',
+        confirmDeleteAdvertisement: 'هل أنت متأكد من رغبتك في حذف هذا الإعلان نهائياً؟',
         apiTestSuccess: 'الـ API يعمل بنجاح!',
         apiTestFail: 'فشل الاتصال بالـ API',
         testMainApi: 'فحص API الرئيسي (:3000)',
@@ -164,6 +182,24 @@ const I18N = {
         linkedAd: 'Linked Advertisement',
         confirmDeleteCategory: 'Are you sure you want to delete this category?',
         confirmDeleteBanner: 'Are you sure you want to delete this banner?',
+        regions: 'Regions',
+        regionsSubtitle: 'Manage regions and cities for filtering chalets, ads and banners',
+        addRegion: 'Add Region',
+        regionName: 'Region Name',
+        regionImage: 'Region Image',
+        confirmDeleteRegion: 'Are you sure you want to delete this region permanently?',
+        advertisements: 'Advertisements & Chalets',
+        advertisementsSubtitle: 'Manage units, chalets and advertisements per region and category',
+        addAdvertisement: 'Add Advertisement',
+        adTitle: 'Advertisement Title',
+        adType: 'Unit Type',
+        adPrice: 'Price (EGP)',
+        adLocation: 'Location',
+        adRegion: 'Region',
+        adCategory: 'Category',
+        adDescription: 'Description',
+        adImage: 'Image',
+        confirmDeleteAdvertisement: 'Are you sure you want to delete this advertisement permanently?',
         apiTestSuccess: 'API is running successfully!',
         apiTestFail: 'Failed to connect to API',
         testMainApi: 'Test Main API (:3000)',
@@ -189,10 +225,13 @@ const state = {
     categories: [],
     banners: [],
     advertisements: [],
+    regions: [],
     editingUserId: null,
     editingScreenId: null,
     editingCategoryId: null,
     editingBannerId: null,
+    editingRegionId: null,
+    editingAdvertisementId: null,
 };
 
 // ─── HELPERS & API ────────────────────────────────────────────────────────────
@@ -365,6 +404,10 @@ function loadCurrentTab() {
         loadStats();
     } else if (state.currentTab === 'users') {
         loadUsers();
+    } else if (state.currentTab === 'regions') {
+        loadRegions();
+    } else if (state.currentTab === 'advertisements') {
+        loadAdvertisementsTab();
     } else if (state.currentTab === 'onboarding') {
         loadOnboarding();
     } else if (state.currentTab === 'categories') {
@@ -396,6 +439,10 @@ function renderStats() {
     if (statCategories) statCategories.textContent = s.totalCategories || 0;
     const statBanners = document.getElementById('stat-banners');
     if (statBanners) statBanners.textContent = s.totalBanners || 0;
+    const statRegions = document.getElementById('stat-regions');
+    if (statRegions) statRegions.textContent = s.totalRegions || 0;
+    const statAds = document.getElementById('stat-advertisements');
+    if (statAds) statAds.textContent = s.totalAdvertisements || 0;
 
     document.getElementById('info-env').textContent = s.environment || 'development';
     document.getElementById('info-time').textContent = new Date(s.serverTime).toLocaleTimeString();
@@ -971,6 +1018,8 @@ function renderBanners() {
         const linkedAd = state.advertisements.find(a => (a.id || a._id) === adId);
         const adTitle = linkedAd ? linkedAd.title : 'إعلان مرتبط في التطبيق';
 
+        const regionName = typeof banner.region === 'object' && banner.region ? banner.region.name : null;
+
         return `
             <div class="card p-3 bg-white border border-slate-200 hover:border-[#2D4F2E] transition flex flex-col justify-between">
                 <div>
@@ -979,6 +1028,7 @@ function renderBanners() {
                         <span class="absolute top-2 start-2 badge badge-brand text-[10px] shadow">
                             <i class="fas fa-bullhorn me-1"></i> بانر إعلاني
                         </span>
+                        ${regionName ? `<span class="absolute top-2 end-2 badge bg-emerald-700 text-white text-[10px] shadow"><i class="fas fa-map-marker-alt me-1"></i> ${regionName}</span>` : `<span class="absolute top-2 end-2 badge bg-slate-800 text-white text-[10px] shadow">عام للكل</span>`}
                     </div>
 
                     <div class="space-y-1.5 text-xs">
@@ -1015,6 +1065,7 @@ function openAddBannerModal() {
     document.getElementById('banner-form').reset();
     document.getElementById('banner-modal-preview').innerHTML = '';
     populateBannerAdSelect();
+    populateRegionSelects();
     document.getElementById('banner-modal').classList.add('active');
 }
 
@@ -1026,11 +1077,18 @@ function openEditBannerModal(bannerId) {
     document.getElementById('banner-modal-title').textContent = `${t('edit')}: بانر (${bannerId.slice(-6)})`;
     
     populateBannerAdSelect();
+    populateRegionSelects();
     const select = document.getElementById('banner-modal-ad-select');
     const input = document.getElementById('banner-modal-ad-id');
     const adId = banner.advertisementId;
     if (select) select.value = adId;
     if (input) input.value = adId;
+
+    const regSelect = document.getElementById('banner-modal-region-select');
+    if (regSelect) {
+        const regId = typeof banner.region === 'object' && banner.region ? (banner.region.id || banner.region._id) : (banner.region || '');
+        regSelect.value = regId || '';
+    }
 
     const urlInput = document.getElementById('banner-modal-image-url');
     if (banner.image?.startsWith('http')) {
@@ -1049,6 +1107,7 @@ function openEditBannerModal(bannerId) {
 async function handleBannerFormSubmit(e) {
     e.preventDefault();
     const advertisementId = document.getElementById('banner-modal-ad-id').value.trim();
+    const region = document.getElementById('banner-modal-region-select')?.value.trim() || '';
     const imageFile = document.getElementById('banner-modal-image-file').files[0];
     const imageUrl = document.getElementById('banner-modal-image-url').value.trim();
 
@@ -1062,11 +1121,12 @@ async function handleBannerFormSubmit(e) {
     if (imageFile) {
         payload = new FormData();
         payload.append('advertisementId', advertisementId);
+        if (region) payload.append('region', region);
         payload.append('image', imageFile);
     } else if (imageUrl) {
-        payload = JSON.stringify({ advertisementId, image: imageUrl });
+        payload = JSON.stringify({ advertisementId, image: imageUrl, region: region || null });
     } else if (state.editingBannerId) {
-        payload = JSON.stringify({ advertisementId });
+        payload = JSON.stringify({ advertisementId, region: region || null });
     } else {
         showToast('يرجى اختيار ملف صورة للبانر أو إدخال رابط الصورة المباشر', 'error');
         return;
@@ -1099,6 +1159,437 @@ async function deleteBanner(bannerId) {
         await apiFetch(`/api/v1/admin/banners/${bannerId}`, { method: 'DELETE' });
         showToast('تم حذف البانر بنجاح', 'success');
         loadBanners();
+    } catch (err) {}
+}
+
+// ─── REGIONS MANAGEMENT ───────────────────────────────────────────────────────
+
+async function loadRegions() {
+    try {
+        const res = await apiFetch('/api/v1/admin/regions');
+        state.regions = res.data?.regions || [];
+        renderRegions();
+        populateRegionSelects();
+    } catch (err) {
+        console.error('Error loading regions:', err);
+    }
+}
+
+function renderRegions() {
+    const grid = document.getElementById('regions-grid');
+    const badge = document.getElementById('badge-regions-count');
+    if (badge) badge.textContent = `${state.regions.length} ${t('regions')}`;
+
+    if (!grid) return;
+
+    if (state.regions.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-xs">لا توجد مناطق مضافة حالياً. يمكنك إضافة منطقة جديدة بالضغط على زر "إضافة منطقة جديدة".</div>`;
+        return;
+    }
+
+    grid.innerHTML = state.regions.map(region => {
+        const regId = region.id || region._id;
+        const imgSrc = region.image?.startsWith('http') ? region.image : (region.image ? `/uploads/${region.image}` : 'https://placehold.co/400x250?text=Region+Image');
+        const isActive = region.active !== false;
+
+        return `
+            <div class="card p-3 bg-white border border-slate-200 hover:border-[#2D4F2E] transition group relative flex flex-col justify-between">
+                <div>
+                    <div class="h-32 w-full rounded-lg overflow-hidden bg-slate-100 mb-2 relative">
+                        <img src="${imgSrc}" alt="${region.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/400x250?text=Region+Image'">
+                        <span class="absolute top-2 start-2 badge ${isActive ? 'badge-success' : 'badge-danger'} text-[10px] shadow">
+                            ${isActive ? 'نشطة' : 'معطلة'}
+                        </span>
+                    </div>
+                    <div class="font-bold text-slate-900 text-sm mb-1 flex items-center justify-between">
+                        <span>${region.name}</span>
+                        <span class="text-[10px] text-slate-400 font-mono">#${region.order || 0}</span>
+                    </div>
+                    <div class="text-[10px] text-slate-400 font-mono truncate" title="ID: ${regId}">ID: ${regId}</div>
+                </div>
+                <div class="flex items-center justify-end gap-1.5 pt-3 mt-2 border-t border-slate-100">
+                    <button onclick="openEditRegionModal('${regId}')" class="p-1.5 text-xs text-blue-600 hover:bg-blue-50 rounded" title="${t('edit')}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteRegion('${regId}')" class="p-1.5 text-xs text-red-600 hover:bg-red-50 rounded" title="${t('delete')}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openAddRegionModal() {
+    state.editingRegionId = null;
+    document.getElementById('region-modal-title').textContent = t('addRegion');
+    document.getElementById('region-form').reset();
+    document.getElementById('region-modal-active').checked = true;
+    document.getElementById('region-modal-order').value = state.regions.length;
+    document.getElementById('region-modal-preview').innerHTML = '';
+    document.getElementById('region-modal').classList.add('active');
+}
+
+function openEditRegionModal(regionId) {
+    const region = state.regions.find(r => (r.id || r._id) === regionId);
+    if (!region) return;
+
+    state.editingRegionId = regionId;
+    document.getElementById('region-modal-title').textContent = `${t('edit')}: ${region.name}`;
+    document.getElementById('region-modal-name').value = region.name || '';
+    document.getElementById('region-modal-order').value = region.order || 0;
+    document.getElementById('region-modal-active').checked = region.active !== false;
+
+    const urlInput = document.getElementById('region-modal-image-url');
+    if (region.image?.startsWith('http')) {
+        urlInput.value = region.image;
+    } else {
+        urlInput.value = '';
+    }
+
+    const preview = document.getElementById('region-modal-preview');
+    const imgSrc = region.image?.startsWith('http') ? region.image : (region.image ? `/uploads/${region.image}` : '');
+    preview.innerHTML = imgSrc ? `<img src="${imgSrc}" class="h-20 w-auto rounded border border-slate-300 object-cover mt-2">` : '';
+
+    document.getElementById('region-modal').classList.add('active');
+}
+
+async function handleRegionFormSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('region-modal-name').value.trim();
+    const order = document.getElementById('region-modal-order').value || 0;
+    const active = document.getElementById('region-modal-active').checked;
+    const imageFile = document.getElementById('region-modal-image-file').files[0];
+    const imageUrl = document.getElementById('region-modal-image-url').value.trim();
+
+    if (!name) {
+        showToast('يرجى إدخال اسم المنطقة', 'error');
+        return;
+    }
+
+    let payload;
+
+    if (imageFile) {
+        payload = new FormData();
+        payload.append('name', name);
+        payload.append('order', order);
+        payload.append('active', active);
+        payload.append('image', imageFile);
+    } else if (imageUrl) {
+        payload = JSON.stringify({ name, order, active, image: imageUrl });
+    } else {
+        payload = JSON.stringify({ name, order, active });
+    }
+
+    try {
+        if (state.editingRegionId) {
+            await apiFetch(`/api/v1/admin/regions/${state.editingRegionId}`, {
+                method: 'PATCH',
+                body: payload,
+            });
+            showToast('تم تحديث المنطقة بنجاح', 'success');
+        } else {
+            await apiFetch('/api/v1/admin/regions', {
+                method: 'POST',
+                body: payload,
+            });
+            showToast('تمت إضافة المنطقة بنجاح', 'success');
+        }
+
+        closeModal('region-modal');
+        loadRegions();
+    } catch (err) {}
+}
+
+async function deleteRegion(regionId) {
+    if (!confirm(t('confirmDeleteRegion'))) return;
+
+    try {
+        await apiFetch(`/api/v1/admin/regions/${regionId}`, { method: 'DELETE' });
+        showToast('تم حذف المنطقة بنجاح', 'success');
+        loadRegions();
+    } catch (err) {}
+}
+
+function populateRegionSelects() {
+    const filterSelect = document.getElementById('ad-filter-region');
+    const adModalSelect = document.getElementById('ad-modal-region');
+    const bannerModalSelect = document.getElementById('banner-modal-region-select');
+
+    const optionsHtml = state.regions.map(r => {
+        const id = r.id || r._id;
+        return `<option value="${id}">${r.name}</option>`;
+    }).join('');
+
+    if (filterSelect) {
+        const currentVal = filterSelect.value;
+        filterSelect.innerHTML = '<option value="">كل المناطق</option>' + optionsHtml;
+        if (currentVal) filterSelect.value = currentVal;
+    }
+
+    if (adModalSelect) {
+        const currentVal = adModalSelect.value;
+        adModalSelect.innerHTML = '<option value="">-- اختر المنطقة --</option>' + optionsHtml;
+        if (currentVal) adModalSelect.value = currentVal;
+    }
+
+    if (bannerModalSelect) {
+        const currentVal = bannerModalSelect.value;
+        bannerModalSelect.innerHTML = '<option value="">-- عام (يظهر لجميع المناطق) --</option>' + optionsHtml;
+        if (currentVal) bannerModalSelect.value = currentVal;
+    }
+}
+
+// ─── ADVERTISEMENTS MANAGEMENT ───────────────────────────────────────────────
+
+async function loadAdvertisementsTab() {
+    try {
+        const search = document.getElementById('ad-search-input')?.value.trim() || '';
+        const region = document.getElementById('ad-filter-region')?.value || '';
+        const type = document.getElementById('ad-filter-type')?.value || '';
+        const active = document.getElementById('ad-filter-active')?.value || '';
+
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        if (region) params.append('region', region);
+        if (type) params.append('type', type);
+        if (active) params.append('active', active);
+
+        const queryStr = params.toString() ? `?${params.toString()}` : '';
+        const res = await apiFetch(`/api/v1/admin/advertisements${queryStr}`);
+        state.advertisements = res.data?.advertisements || [];
+        renderAdvertisementsGrid();
+        populateBannerAdSelect();
+    } catch (err) {
+        console.error('Error loading advertisements:', err);
+    }
+}
+
+function renderAdvertisementsGrid() {
+    const grid = document.getElementById('advertisements-grid');
+    if (!grid) return;
+
+    if (state.advertisements.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-10 text-slate-400 text-xs">لا توجد إعلانات أو شاليهات مطابقة للبحث. يمكنك إضافة إعلان جديد بالضغط على زر "إضافة إعلان جديد".</div>`;
+        return;
+    }
+
+    grid.innerHTML = state.advertisements.map(ad => {
+        const adId = ad.id || ad._id;
+        const imgSrc = ad.image?.startsWith('http') ? ad.image : (ad.image ? `/uploads/${ad.image}` : 'https://placehold.co/400x250?text=No+Image');
+        const isActive = ad.active !== false;
+
+        const isChalet = ad.type === 'chalet';
+        const typeLabel = {
+            chalet: 'شاليه (Chalet)',
+            apartment: 'شقة (Apartment)',
+            hotel: 'فندق (Hotel)',
+            villa: 'فيلا (Villa)',
+            resort: 'منتجع (Resort)',
+            unit: 'وحدة (Unit)',
+            other: 'أخرى',
+        }[ad.type] || ad.type;
+
+        const regionName = ad.region?.name || '';
+        const categoryName = ad.category?.name || '';
+
+        return `
+            <div class="card p-3 bg-white border ${isChalet ? 'border-[#2D4F2E]/40 shadow-sm' : 'border-slate-200'} hover:border-[#2D4F2E] transition flex flex-col justify-between">
+                <div>
+                    <div class="h-36 w-full rounded-lg overflow-hidden bg-slate-100 mb-2.5 relative">
+                        <img src="${imgSrc}" alt="${ad.title}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x250?text=No+Image'">
+                        
+                        <!-- Type badge -->
+                        <span class="absolute top-2 start-2 badge ${isChalet ? 'bg-amber-600 text-white' : 'badge-brand'} text-[10px] shadow">
+                            ${isChalet ? '<i class="fas fa-umbrella-beach me-1"></i>' : ''} ${typeLabel}
+                        </span>
+
+                        <!-- Active status -->
+                        <span class="absolute top-2 end-2 badge ${isActive ? 'badge-success' : 'badge-danger'} text-[10px] shadow">
+                            ${isActive ? 'نشط' : 'معطل'}
+                        </span>
+                    </div>
+
+                    <div class="space-y-1 text-xs">
+                        <div class="font-bold text-slate-900 line-clamp-1 text-sm mb-1">${ad.title}</div>
+                        
+                        <div class="flex items-center justify-between text-slate-600">
+                            <span class="text-slate-400">السعر:</span>
+                            <span class="font-bold text-[#2D4F2E] text-sm">${ad.price ? Number(ad.price).toLocaleString() : 0} ج.م</span>
+                        </div>
+
+                        ${regionName ? `
+                            <div class="flex items-center gap-1 text-[11px] text-emerald-700 font-medium">
+                                <i class="fas fa-map-location-dot"></i>
+                                <span>${regionName}</span>
+                            </div>
+                        ` : ''}
+
+                        ${ad.location ? `
+                            <div class="flex items-center gap-1 text-[11px] text-slate-500 truncate" title="${ad.location}">
+                                <i class="fas fa-map-pin text-slate-400"></i>
+                                <span class="truncate">${ad.location}</span>
+                            </div>
+                        ` : ''}
+
+                        ${categoryName ? `
+                            <div class="text-[11px] text-slate-400">
+                                التصنيف: <span class="text-slate-600 font-medium">${categoryName}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-1.5 pt-3 mt-3 border-t border-slate-100">
+                    <button onclick="openEditAdvertisementModal('${adId}')" class="btn-secondary text-xs py-1 px-2.5">
+                        <i class="fas fa-edit text-blue-600 me-1"></i> ${t('edit')}
+                    </button>
+                    <button onclick="deleteAdvertisement('${adId}')" class="btn-secondary text-xs py-1 px-2.5 hover:text-red-600">
+                        <i class="fas fa-trash-alt text-red-600 me-1"></i> ${t('delete')}
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openAddAdvertisementModal() {
+    state.editingAdvertisementId = null;
+    document.getElementById('advertisement-modal-title').textContent = t('addAdvertisement');
+    document.getElementById('advertisement-form').reset();
+    document.getElementById('ad-modal-active').checked = true;
+    document.getElementById('ad-modal-preview').innerHTML = '';
+
+    populateRegionSelects();
+    populateAdCategorySelect();
+
+    document.getElementById('advertisement-modal').classList.add('active');
+}
+
+function openEditAdvertisementModal(adId) {
+    const ad = state.advertisements.find(a => (a.id || a._id) === adId);
+    if (!ad) return;
+
+    state.editingAdvertisementId = adId;
+    document.getElementById('advertisement-modal-title').textContent = `${t('edit')}: ${ad.title}`;
+
+    populateRegionSelects();
+    populateAdCategorySelect();
+
+    document.getElementById('ad-modal-title').value = ad.title || '';
+    document.getElementById('ad-modal-type').value = ad.type || 'apartment';
+    document.getElementById('ad-modal-price').value = ad.price || '';
+    document.getElementById('ad-modal-location').value = ad.location || '';
+    document.getElementById('ad-modal-description').value = ad.description || '';
+    document.getElementById('ad-modal-active').checked = ad.active !== false;
+
+    const regId = ad.region ? (ad.region._id || ad.region.id || ad.region) : '';
+    document.getElementById('ad-modal-region').value = regId || '';
+
+    const catId = ad.category ? (ad.category._id || ad.category.id || ad.category) : '';
+    document.getElementById('ad-modal-category').value = catId || '';
+
+    const urlInput = document.getElementById('ad-modal-image-url');
+    if (ad.image?.startsWith('http')) {
+        urlInput.value = ad.image;
+    } else {
+        urlInput.value = '';
+    }
+
+    const preview = document.getElementById('ad-modal-preview');
+    const imgSrc = ad.image?.startsWith('http') ? ad.image : (ad.image ? `/uploads/${ad.image}` : '');
+    preview.innerHTML = imgSrc ? `<img src="${imgSrc}" class="h-24 w-auto rounded border border-slate-300 object-cover mt-2">` : '';
+
+    document.getElementById('advertisement-modal').classList.add('active');
+}
+
+function populateAdCategorySelect() {
+    const select = document.getElementById('ad-modal-category');
+    if (!select) return;
+
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">-- اختر التصنيف --</option>' + 
+        state.categories.map(c => {
+            const id = c.id || c._id;
+            return `<option value="${id}">${c.name}</option>`;
+        }).join('');
+
+    if (currentVal) select.value = currentVal;
+}
+
+async function handleAdvertisementFormSubmit(e) {
+    e.preventDefault();
+    const title = document.getElementById('ad-modal-title').value.trim();
+    const type = document.getElementById('ad-modal-type').value;
+    const region = document.getElementById('ad-modal-region').value || null;
+    const category = document.getElementById('ad-modal-category').value || null;
+    const price = document.getElementById('ad-modal-price').value || 0;
+    const location = document.getElementById('ad-modal-location').value.trim();
+    const description = document.getElementById('ad-modal-description').value.trim();
+    const active = document.getElementById('ad-modal-active').checked;
+    const imageFile = document.getElementById('ad-modal-image-file').files[0];
+    const imageUrl = document.getElementById('ad-modal-image-url').value.trim();
+
+    if (!title) {
+        showToast('يرجى إدخال عنوان الإعلان', 'error');
+        return;
+    }
+
+    let payload;
+
+    if (imageFile) {
+        payload = new FormData();
+        payload.append('title', title);
+        payload.append('type', type);
+        if (region) payload.append('region', region);
+        if (category) payload.append('category', category);
+        payload.append('price', price);
+        payload.append('location', location);
+        payload.append('description', description);
+        payload.append('active', active);
+        payload.append('image', imageFile);
+    } else {
+        const bodyObj = {
+            title,
+            type,
+            region: region || null,
+            category: category || null,
+            price: Number(price),
+            location,
+            description,
+            active,
+        };
+        if (imageUrl) bodyObj.image = imageUrl;
+        payload = JSON.stringify(bodyObj);
+    }
+
+    try {
+        if (state.editingAdvertisementId) {
+            await apiFetch(`/api/v1/admin/advertisements/${state.editingAdvertisementId}`, {
+                method: 'PATCH',
+                body: payload,
+            });
+            showToast('تم تحديث الإعلان بنجاح', 'success');
+        } else {
+            await apiFetch('/api/v1/admin/advertisements', {
+                method: 'POST',
+                body: payload,
+            });
+            showToast('تم إنشاء الإعلان بنجاح', 'success');
+        }
+
+        closeModal('advertisement-modal');
+        loadAdvertisementsTab();
+    } catch (err) {}
+}
+
+async function deleteAdvertisement(adId) {
+    if (!confirm(t('confirmDeleteAdvertisement'))) return;
+
+    try {
+        await apiFetch(`/api/v1/admin/advertisements/${adId}`, { method: 'DELETE' });
+        showToast('تم حذف الإعلان بنجاح', 'success');
+        loadAdvertisementsTab();
     } catch (err) {}
 }
 
@@ -1174,6 +1665,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('onboarding-form')?.addEventListener('submit', handleOnboardingFormSubmit);
     document.getElementById('category-form')?.addEventListener('submit', handleCategoryFormSubmit);
     document.getElementById('banner-form')?.addEventListener('submit', handleBannerFormSubmit);
+    document.getElementById('region-form')?.addEventListener('submit', handleRegionFormSubmit);
+    document.getElementById('advertisement-form')?.addEventListener('submit', handleAdvertisementFormSubmit);
 
     // Sidebar navigation
     document.querySelectorAll('.nav-link').forEach(link => {

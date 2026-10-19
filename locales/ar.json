@@ -21,7 +21,13 @@
         "bannerCreated": "تم إنشاء البانر بنجاح.",
         "bannerUpdated": "تم تحديث البانر بنجاح.",
         "bannerDeleted": "تم حذف البانر بنجاح.",
-        "advertisementCreated": "تم إنشاء الإعلان بنجاح."
+        "advertisementCreated": "تم إنشاء الإعلان بنجاح.",
+        "advertisementUpdated": "تم تحديث الإعلان بنجاح.",
+        "advertisementDeleted": "تم حذف الإعلان بنجاح.",
+        "regionCreated": "تم إنشاء المنطقة بنجاح.",
+        "regionUpdated": "تم تحديث المنطقة بنجاح.",
+        "regionDeleted": "تم حذف المنطقة بنجاح.",
+        "regionSelected": "تم اختيار المنطقة بنجاح."
     },
     "errors": {
         "somethingWentWrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.",
@@ -61,6 +67,8 @@
         "invalidAdvertisementId": "معرف الإعلان المحدد غير صالح.",
         "invalidCategoryId": "معرف التصنيف المحدد غير صالح.",
         "invalidBannerId": "معرف البانر المحدد غير صالح.",
+        "regionNotFound": "المنطقة المطلوبة غير موجودة.",
+        "invalidRegionId": "معرف المنطقة المحدد غير صالح.",
         "imageRequired": "الصورة مطلوبة (يرجى رفع ملف صورة أو توفير رابط الصورة)."
     },
     "validation": {
@@ -76,6 +84,7 @@
         "onboardingScreenNotFound": "شاشة الترحيب غير موجودة.",
         "categoryRequired": "التصنيف مطلوب.",
         "advertisementRequired": "معرف الإعلان مطلوب.",
+        "regionRequired": "معرف المنطقة مطلوب.",
         "imageRequired": "الصورة مطلوبة."
     }
 }

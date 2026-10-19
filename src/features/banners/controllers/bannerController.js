@@ -3,6 +3,7 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const Banner = require('../models/bannerModel');
 const Advertisement = require('../../advertisements/models/advertisementModel');
+const Region = require('../../regions/models/regionModel');
 const APIError = require('../../../utils/apiError');
 const { getUploadsRoot } = require('../../../config/uploadsPath');
 const { getImageUrl, getRelativeImagePath } = require('../../../utils/imageUrl');
@@ -24,10 +25,19 @@ const formatBanner = (doc) => {
         id: (obj._id || obj.id).toString(),
         image: getImageUrl(obj.image),
         advertisementId: (obj.advertisementId?._id || obj.advertisementId || '').toString(),
+        region: obj.region
+            ? (typeof obj.region === 'object' && obj.region._id
+                ? {
+                    id: obj.region._id.toString(),
+                    name: obj.region.name,
+                    image: obj.region.image ? getImageUrl(obj.region.image) : '',
+                }
+                : obj.region.toString())
+            : null,
     };
 };
 
-exports.getAll = async (_req, res, next) => {
+exports.getAll = async (req, res, next) => {
     try {
         if (mongoose.connection.readyState !== 1) {
             return res.status(200).json({
@@ -38,7 +48,24 @@ exports.getAll = async (_req, res, next) => {
             });
         }
 
-        const rawBanners = await Banner.find().sort({ createdAt: -1 });
+        const filter = {};
+        const regionParam = req.query.region || req.query.regionId;
+        if (regionParam && mongoose.Types.ObjectId.isValid(regionParam)) {
+            if (req.query.strict === 'true') {
+                filter.region = regionParam;
+            } else {
+                filter.$or = [
+                    { region: regionParam },
+                    { region: null },
+                    { region: { $exists: false } },
+                ];
+            }
+        }
+
+        const rawBanners = await Banner.find(filter)
+            .populate('region', 'name image')
+            .sort({ createdAt: -1 });
+
         const banners = rawBanners.map(formatBanner);
 
         res.status(200).json({
@@ -57,7 +84,7 @@ exports.getOne = async (req, res, next) => {
             return next(new APIError('errors.invalidBannerId', 400));
         }
 
-        const banner = await Banner.findById(req.params.id);
+        const banner = await Banner.findById(req.params.id).populate('region', 'name image');
         if (!banner) {
             return next(new APIError('errors.bannerNotFound', 404));
         }
@@ -88,6 +115,19 @@ exports.create = async (req, res, next) => {
             return next(new APIError('errors.advertisementNotFound', 404));
         }
 
+        let region = null;
+        if (req.body.region && req.body.region.toString().trim() !== '') {
+            const regId = req.body.region.toString().trim();
+            if (!mongoose.Types.ObjectId.isValid(regId)) {
+                return next(new APIError('errors.invalidRegionId', 400));
+            }
+            const regExists = await Region.findById(regId);
+            if (!regExists) {
+                return next(new APIError('errors.regionNotFound', 404));
+            }
+            region = regId;
+        }
+
         let image = null;
         if (req.file) {
             image = `banners/${req.file.filename}`;
@@ -102,12 +142,15 @@ exports.create = async (req, res, next) => {
         const banner = await Banner.create({
             image,
             advertisementId,
+            region,
         });
+
+        const populated = await Banner.findById(banner._id).populate('region', 'name image');
 
         res.status(201).json({
             status: 'success',
             message: req.t ? req.t('messages.bannerCreated') : 'Banner created successfully.',
-            data: { banner: formatBanner(banner) },
+            data: { banner: formatBanner(populated) },
         });
     } catch (err) {
         next(err);
@@ -143,6 +186,22 @@ exports.update = async (req, res, next) => {
             banner.advertisementId = newAdId;
         }
 
+        if (req.body.region !== undefined) {
+            const newRegion = req.body.region ? req.body.region.toString().trim() : '';
+            if (newRegion && newRegion !== 'null' && newRegion !== '') {
+                if (!mongoose.Types.ObjectId.isValid(newRegion)) {
+                    return next(new APIError('errors.invalidRegionId', 400));
+                }
+                const regExists = await Region.findById(newRegion);
+                if (!regExists) {
+                    return next(new APIError('errors.regionNotFound', 404));
+                }
+                banner.region = newRegion;
+            } else {
+                banner.region = null;
+            }
+        }
+
         if (req.file) {
             deleteImageFile(banner.image);
             banner.image = `banners/${req.file.filename}`;
@@ -156,10 +215,12 @@ exports.update = async (req, res, next) => {
 
         await banner.save();
 
+        const populated = await Banner.findById(banner._id).populate('region', 'name image');
+
         res.status(200).json({
             status: 'success',
             message: req.t ? req.t('messages.bannerUpdated') : 'Banner updated successfully.',
-            data: { banner: formatBanner(banner) },
+            data: { banner: formatBanner(populated) },
         });
     } catch (err) {
         next(err);

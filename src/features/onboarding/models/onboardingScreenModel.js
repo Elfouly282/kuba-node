@@ -43,7 +43,6 @@ const onboardingScreenSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// Only return active screens in normal queries
 onboardingScreenSchema.pre(/^find/, function (next) {
     if (!this.getOptions().includeInactive) {
         this.find({ active: { $ne: false } });

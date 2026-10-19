@@ -3,10 +3,11 @@ const User = require('../../../../src/features/auth/models/userModel');
 const OnboardingScreen = require('../../../../src/features/onboarding/models/onboardingScreenModel');
 const Category = require('../../../../src/features/categories/models/categoryModel');
 const Banner = require('../../../../src/features/banners/models/bannerModel');
+const Region = require('../../../../src/features/regions/models/regionModel');
+const Advertisement = require('../../../../src/features/advertisements/models/advertisementModel');
 const APIError = require('../../../utils/apiError');
 const bcrypt = require('bcrypt');
 
-// ─── GET ALL USERS (with search, filter, pagination) ──────────────────────────
 exports.getAllUsers = async (req, res, next) => {
     try {
         if (mongoose.connection.readyState !== 1) {
@@ -27,13 +28,11 @@ exports.getAllUsers = async (req, res, next) => {
 
         const queryObj = {};
 
-        // Search in name, email, phone
         if (req.query.search) {
             const regex = new RegExp(req.query.search.trim(), 'i');
             queryObj.$or = [{ name: regex }, { email: regex }, { phone: regex }];
         }
 
-        // Filters
         if (req.query.role) {
             queryObj.role = req.query.role;
         }
@@ -53,6 +52,7 @@ exports.getAllUsers = async (req, res, next) => {
         const total = await User.countDocuments(queryObj).setOptions({ includeInactive: true });
         const users = await User.find(queryObj)
             .setOptions({ includeInactive: true })
+            .populate('region', 'name image')
             .select('+active')
             .sort({ createdAt: -1 })
             .skip(skip)
@@ -71,7 +71,6 @@ exports.getAllUsers = async (req, res, next) => {
     }
 };
 
-// ─── GET STATS ────────────────────────────────────────────────────────────────
 exports.getUserStats = async (_req, res, next) => {
     try {
         if (mongoose.connection.readyState !== 1) {
@@ -85,6 +84,10 @@ exports.getUserStats = async (_req, res, next) => {
                     googleUsers: 0,
                     localUsers: 0,
                     totalOnboarding: 0,
+                    totalCategories: 0,
+                    totalBanners: 0,
+                    totalRegions: 0,
+                    totalAdvertisements: 0,
                     recentUsers: [],
                     serverTime: new Date().toISOString(),
                     environment: process.env.NODE_ENV || 'development',
@@ -103,6 +106,8 @@ exports.getUserStats = async (_req, res, next) => {
             totalOnboarding,
             totalCategories,
             totalBanners,
+            totalRegions,
+            totalAdvertisements,
             recentUsers,
         ] = await Promise.all([
             User.countDocuments().setOptions({ includeInactive: true }),
@@ -114,8 +119,11 @@ exports.getUserStats = async (_req, res, next) => {
             OnboardingScreen.countDocuments().setOptions({ includeInactive: true }),
             Category.countDocuments(),
             Banner.countDocuments(),
+            Region.countDocuments(),
+            Advertisement.countDocuments(),
             User.find()
                 .setOptions({ includeInactive: true })
+                .populate('region', 'name')
                 .select('+active')
                 .sort({ createdAt: -1 })
                 .limit(5),
@@ -133,6 +141,8 @@ exports.getUserStats = async (_req, res, next) => {
                 totalOnboarding,
                 totalCategories,
                 totalBanners,
+                totalRegions,
+                totalAdvertisements,
                 recentUsers,
                 serverTime: new Date().toISOString(),
                 environment: process.env.NODE_ENV || 'development',
@@ -143,7 +153,6 @@ exports.getUserStats = async (_req, res, next) => {
     }
 };
 
-// ─── GET USER BY ID ───────────────────────────────────────────────────────────
 exports.getUserById = async (req, res, next) => {
     try {
         const user = await User.findById(req.params.id)
@@ -163,7 +172,6 @@ exports.getUserById = async (req, res, next) => {
     }
 };
 
-// ─── CREATE USER (by Admin) ───────────────────────────────────────────────────
 exports.createUser = async (req, res, next) => {
     try {
         const { name, email, phone, password, role, isEmailVerified, active } = req.body;
@@ -199,7 +207,6 @@ exports.createUser = async (req, res, next) => {
     }
 };
 
-// ─── UPDATE USER ──────────────────────────────────────────────────────────────
 exports.updateUser = async (req, res, next) => {
     try {
         const user = await User.findById(req.params.id)
@@ -219,7 +226,7 @@ exports.updateUser = async (req, res, next) => {
         if (isEmailVerified !== undefined) user.isEmailVerified = isEmailVerified === true || isEmailVerified === 'true';
 
         if (password && password.length >= 8) {
-            user.password = password; // Will be hashed by pre('save') hook
+            user.password = password;
         }
 
         await user.save();
@@ -236,7 +243,6 @@ exports.updateUser = async (req, res, next) => {
     }
 };
 
-// ─── TOGGLE STATUS ────────────────────────────────────────────────────────────
 exports.toggleUserStatus = async (req, res, next) => {
     try {
         const user = await User.findById(req.params.id)
@@ -262,7 +268,6 @@ exports.toggleUserStatus = async (req, res, next) => {
     }
 };
 
-// ─── DELETE USER ──────────────────────────────────────────────────────────────
 exports.deleteUser = async (req, res, next) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id).setOptions({ includeInactive: true });

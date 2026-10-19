@@ -42,6 +42,11 @@ const userSchema = new mongoose.Schema(
             enum: ['user', 'admin'],
             default: 'user',
         },
+        region: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Region',
+            default: null,
+        },
         isEmailVerified: { type: Boolean, default: false },
         emailVerificationToken: { type: String, select: false },
         emailVerificationExpires: { type: Date, select: false },

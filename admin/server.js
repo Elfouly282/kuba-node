@@ -22,6 +22,7 @@ const userRoutes = require('./features/users/routes/userRoutes');
 const categoryRoutes = require('./features/categories/routes/categoryRoutes');
 const bannerRoutes = require('./features/banners/routes/bannerRoutes');
 const advertisementRoutes = require('./features/advertisements/routes/advertisementRoutes');
+const regionRoutes = require('./features/regions/routes/regionRoutes');
 
 dbConnection();
 
@@ -52,11 +53,13 @@ app.use('/api/v1/admin/users', userRoutes);
 app.use('/api/v1/admin/categories', categoryRoutes);
 app.use('/api/v1/admin/banners', bannerRoutes);
 app.use('/api/v1/admin/advertisements', advertisementRoutes);
+app.use('/api/v1/admin/regions', regionRoutes);
 
 // Mirror routes under client-style paths for dashboard convenience
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/banners', bannerRoutes);
 app.use('/api/v1/advertisements', advertisementRoutes);
+app.use('/api/v1/regions', regionRoutes);
 
 app.get('/', (_req, res) => {
     res.redirect('/admin');

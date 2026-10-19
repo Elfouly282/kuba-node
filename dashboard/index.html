@@ -91,6 +91,14 @@
                         <i class="fas fa-users w-5 text-center text-[#2D4F2E]"></i>
                         <span data-i18n="users">إدارة المستخدمين</span>
                     </a>
+                    <a href="#" class="nav-link" data-tab="regions">
+                        <i class="fas fa-map-location-dot w-5 text-center text-[#2D4F2E]"></i>
+                        <span data-i18n="regions">المناطق</span>
+                    </a>
+                    <a href="#" class="nav-link" data-tab="advertisements">
+                        <i class="fas fa-hotel w-5 text-center text-[#2D4F2E]"></i>
+                        <span data-i18n="advertisements">الإعلانات والشاليهات</span>
+                    </a>
                     <a href="#" class="nav-link" data-tab="onboarding">
                         <i class="fas fa-mobile-screen w-5 text-center text-[#2D4F2E]"></i>
                         <span data-i18n="onboarding">شاشات الترحيب</span>
@@ -163,7 +171,8 @@
                     <!-- 1. OVERVIEW VIEW -->
                     <section id="view-overview" class="tab-view space-y-6">
                         <!-- KPI Stats -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                        <!-- KPI Stats -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div class="card p-4 bg-white">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-500" data-i18n="totalUsers">إجمالي المستخدمين</span>
@@ -180,35 +189,24 @@
 
                             <div class="card p-4 bg-white">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="activeUsers">المستخدمون النشطون</span>
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="regions">المناطق</span>
                                     <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                                        <i class="fas fa-user-check text-xs"></i>
+                                        <i class="fas fa-map-location-dot text-xs"></i>
                                     </div>
                                 </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-active-users">0</div>
-                                <div class="text-[10px] text-emerald-600 font-medium mt-1">حسابات نشطة</div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-regions">0</div>
+                                <div class="text-[10px] text-emerald-600 font-medium mt-1">المناطق المعتمدة</div>
                             </div>
 
                             <div class="card p-4 bg-white">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="verifiedAccounts">الحسابات الموثقة</span>
-                                    <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                                        <i class="fas fa-envelope-circle-check text-xs"></i>
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="advertisements">الإعلانات والشاليهات</span>
+                                    <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+                                        <i class="fas fa-hotel text-xs"></i>
                                     </div>
                                 </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-verified-users">0</div>
-                                <div class="text-[10px] text-slate-500 font-medium mt-1">تم تأكيد البريد</div>
-                            </div>
-
-                            <div class="card p-4 bg-white">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="totalOnboarding">شاشات الترحيب</span>
-                                    <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                                        <i class="fas fa-mobile-screen text-xs"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-onboarding">0</div>
-                                <div class="text-[10px] text-purple-600 font-medium mt-1">شاشات Onboarding</div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-advertisements">0</div>
+                                <div class="text-[10px] text-teal-600 font-medium mt-1">شاليهات ووحدات سكنية</div>
                             </div>
 
                             <div class="card p-4 bg-white">
@@ -231,6 +229,39 @@
                                 </div>
                                 <div class="text-2xl font-extrabold text-slate-900" id="stat-banners">0</div>
                                 <div class="text-[10px] text-rose-600 font-medium mt-1">بانرات إعلانية نشطة</div>
+                            </div>
+
+                            <div class="card p-4 bg-white">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="activeUsers">المستخدمون النشطون</span>
+                                    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                        <i class="fas fa-user-check text-xs"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-active-users">0</div>
+                                <div class="text-[10px] text-indigo-600 font-medium mt-1">حسابات نشطة</div>
+                            </div>
+
+                            <div class="card p-4 bg-white">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="totalOnboarding">شاشات الترحيب</span>
+                                    <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                                        <i class="fas fa-mobile-screen text-xs"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-onboarding">0</div>
+                                <div class="text-[10px] text-purple-600 font-medium mt-1">شاشات Onboarding</div>
+                            </div>
+
+                            <div class="card p-4 bg-white">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="verifiedAccounts">الحسابات الموثقة</span>
+                                    <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                                        <i class="fas fa-envelope-circle-check text-xs"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-verified-users">0</div>
+                                <div class="text-[10px] text-slate-500 font-medium mt-1">تم تأكيد البريد</div>
                             </div>
                         </div>
 
@@ -269,8 +300,16 @@
                                 <div class="pt-4 border-t border-slate-100 space-y-2">
                                     <div class="text-xs font-bold text-slate-700 mb-2" data-i18n="quickActions">إجراءات سريعة</div>
                                     <div class="grid grid-cols-2 gap-2">
-                                        <button onclick="openAddCategoryModal()" class="gold-btn text-xs py-2 text-center">
-                                            <i class="fas fa-tags me-1"></i> <span data-i18n="addCategory">إضافة تصنيف</span>
+                                        <button onclick="openAddRegionModal()" class="gold-btn text-xs py-2 text-center">
+                                            <i class="fas fa-map-location-dot me-1"></i> <span data-i18n="addRegion">إضافة منطقة</span>
+                                        </button>
+                                        <button onclick="openAddAdvertisementModal()" class="btn-secondary text-xs py-2 text-center">
+                                            <i class="fas fa-hotel text-[#2D4F2E] me-1"></i> <span data-i18n="addAdvertisement">إضافة إعلان</span>
+                                        </button>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button onclick="openAddCategoryModal()" class="btn-secondary text-xs py-2 text-center">
+                                            <i class="fas fa-tags text-[#2D4F2E] me-1"></i> <span data-i18n="addCategory">إضافة تصنيف</span>
                                         </button>
                                         <button onclick="openAddBannerModal()" class="btn-secondary text-xs py-2 text-center">
                                             <i class="fas fa-bullhorn text-[#2D4F2E] me-1"></i> <span data-i18n="addBanner">إضافة بانر</span>
@@ -449,6 +488,105 @@
                             <div id="banners-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                 <div class="col-span-full text-center py-8 text-slate-400 text-xs">جاري تحميل البانرات الإعلانية...</div>
                             </div>
+                        </div>
+                    </section>
+
+                    <!-- REGIONS MANAGEMENT VIEW -->
+                    <section id="view-regions" class="tab-view hidden space-y-4">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900" data-i18n="regions">إدارة المناطق (Regions)</h2>
+                                <p class="text-xs text-slate-500" data-i18n="regionsSubtitle">المناطق المتاحة في التطبيق التي يختار منها المستخدم بعد تسجيل الدخول لتصفية الشاليهات والإعلانات والبانرات</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="openAddRegionModal()" class="gold-btn text-xs">
+                                    <i class="fas fa-plus"></i>
+                                    <span data-i18n="addRegion">إضافة منطقة جديدة</span>
+                                </button>
+                                <button onclick="loadRegions()" class="btn-secondary text-xs" title="تحديث">
+                                    <i class="fas fa-sync-alt"></i>
+                                    <span data-i18n="refresh">تحديث</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card p-5 bg-white space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center font-bold text-sm">
+                                        <i class="fas fa-map-location-dot"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-slate-900 text-sm" data-i18n="regions">المناطق المعتمدة</h3>
+                                        <p class="text-[11px] text-slate-500">مثل: الساحل الشمالي، العين السخنة، شرم الشيخ، الغردقة...</p>
+                                    </div>
+                                </div>
+                                <span class="badge badge-brand text-xs" id="badge-regions-count">0 منطقة</span>
+                            </div>
+
+                            <div id="regions-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <div class="col-span-full text-center py-8 text-slate-400 text-xs">جاري تحميل المناطق...</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ADVERTISEMENTS MANAGEMENT VIEW -->
+                    <section id="view-advertisements" class="tab-view hidden space-y-4">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900" data-i18n="advertisements">إدارة الإعلانات والشاليهات</h2>
+                                <p class="text-xs text-slate-500" data-i18n="advertisementsSubtitle">إدارة إعلانات الوحدات، الشقق، والشاليهات التابعة لكل منطقة وتصنيف</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="openAddAdvertisementModal()" class="gold-btn text-xs">
+                                    <i class="fas fa-plus"></i>
+                                    <span data-i18n="addAdvertisement">إضافة إعلان جديد</span>
+                                </button>
+                                <button onclick="loadAdvertisementsTab()" class="btn-secondary text-xs" title="تحديث">
+                                    <i class="fas fa-sync-alt"></i>
+                                    <span data-i18n="refresh">تحديث</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Filter bar for advertisements -->
+                        <div class="card p-4 bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                            <div class="lg:col-span-2 relative">
+                                <input type="text" id="ad-search-input" oninput="loadAdvertisementsTab()" class="form-input text-xs ps-9" placeholder="ابحث بعنوان الإعلان أو الموقع...">
+                                <i class="fas fa-search absolute top-3 start-3 text-slate-400 text-xs"></i>
+                            </div>
+
+                            <div>
+                                <select id="ad-filter-region" onchange="loadAdvertisementsTab()" class="form-select text-xs">
+                                    <option value="">كل المناطق</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <select id="ad-filter-type" onchange="loadAdvertisementsTab()" class="form-select text-xs">
+                                    <option value="">كل الأنواع</option>
+                                    <option value="chalet">شاليه (Chalet)</option>
+                                    <option value="apartment">شقة (Apartment)</option>
+                                    <option value="hotel">فندق (Hotel)</option>
+                                    <option value="villa">فيلا (Villa)</option>
+                                    <option value="resort">منتجع (Resort)</option>
+                                    <option value="unit">وحدة (Unit)</option>
+                                    <option value="other">أخرى</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <select id="ad-filter-active" onchange="loadAdvertisementsTab()" class="form-select text-xs">
+                                    <option value="">كل الحالات</option>
+                                    <option value="true">نشط فقط</option>
+                                    <option value="false">معطل فقط</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Advertisements Grid -->
+                        <div id="advertisements-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            <div class="col-span-full text-center py-8 text-slate-400 text-xs">جاري تحميل الإعلانات والشاليهات...</div>
                         </div>
                     </section>
 
@@ -680,6 +818,13 @@
                 </div>
 
                 <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">المنطقة المستهدفة للبانر (اختياري)</label>
+                    <select id="banner-modal-region-select" class="form-select text-xs">
+                        <option value="">-- عام (يظهر لجميع المناطق) --</option>
+                    </select>
+                </div>
+
+                <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="bannerImage">صورة البانر</label>
                     <div class="space-y-2">
                         <input type="file" id="banner-modal-image-file" accept="image/*" class="form-input text-xs p-2">
@@ -695,6 +840,142 @@
                 <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
                     <button type="button" onclick="closeModal('banner-modal')" class="btn-secondary text-xs" data-i18n="cancel">إلغاء</button>
                     <button type="submit" class="gold-btn text-xs" data-i18n="save">حفظ البانر</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── REGION MODAL (ADD / EDIT) ──────────────────────────────────────── -->
+    <div id="region-modal" class="modal-overlay">
+        <div class="modal-content p-6 bg-white max-w-md">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                <h3 id="region-modal-title" class="font-bold text-slate-900 text-base" data-i18n="addRegion">إضافة منطقة جديدة</h3>
+                <button onclick="closeModal('region-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+            </div>
+
+            <form id="region-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="regionName">اسم المنطقة (مثل: الساحل الشمالي، العين السخنة...)</label>
+                    <input type="text" id="region-modal-name" required class="form-input text-xs" placeholder="مثال: الساحل الشمالي، العين السخنة، شرم الشيخ...">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="order">الترتيب</label>
+                        <input type="number" id="region-modal-order" value="0" min="0" class="form-input text-xs">
+                    </div>
+                    <div class="flex items-center pt-5">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-medium">
+                            <input type="checkbox" id="region-modal-active" checked class="rounded border-slate-300 text-[#2D4F2E] focus:ring-[#2D4F2E]">
+                            <span data-i18n="active">نشط ومعروض للمستخدمين</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="regionImage">صورة أو أيقونة المنطقة</label>
+                    <div class="space-y-2">
+                        <input type="file" id="region-modal-image-file" accept="image/*" class="form-input text-xs p-2">
+                        <div class="relative flex items-center">
+                            <span class="text-[11px] text-slate-400 bg-white px-2 absolute right-3">أو رابط صورة مباشر</span>
+                            <div class="w-full border-t border-slate-200"></div>
+                        </div>
+                        <input type="url" id="region-modal-image-url" class="form-input text-xs" placeholder="https://example.com/region.jpg">
+                    </div>
+                    <div id="region-modal-preview" class="mt-2"></div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('region-modal')" class="btn-secondary text-xs" data-i18n="cancel">إلغاء</button>
+                    <button type="submit" class="gold-btn text-xs" data-i18n="save">حفظ المنطقة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── ADVERTISEMENT MODAL (ADD / EDIT) ───────────────────────────────── -->
+    <div id="advertisement-modal" class="modal-overlay">
+        <div class="modal-content p-6 bg-white max-w-xl">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                <h3 id="advertisement-modal-title" class="font-bold text-slate-900 text-base" data-i18n="addAdvertisement">إضافة إعلان جديد</h3>
+                <button onclick="closeModal('advertisement-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+            </div>
+
+            <form id="advertisement-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adTitle">عنوان الإعلان</label>
+                    <input type="text" id="ad-modal-title" required class="form-input text-xs" placeholder="مثال: شاليه فاخر بفيو بحري مميز بالساحل الشمالي">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adType">نوع الوحدة</label>
+                        <select id="ad-modal-type" class="form-select text-xs">
+                            <option value="chalet">شاليه (Chalet)</option>
+                            <option value="apartment">شقة (Apartment)</option>
+                            <option value="hotel">فندق (Hotel)</option>
+                            <option value="villa">فيلا (Villa)</option>
+                            <option value="resort">منتجع (Resort)</option>
+                            <option value="unit">وحدة سكنية (Unit)</option>
+                            <option value="other">أخرى (Other)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adRegion">المنطقة التابع لها</label>
+                        <select id="ad-modal-region" class="form-select text-xs">
+                            <option value="">-- اختر المنطقة --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adCategory">التصنيف</label>
+                        <select id="ad-modal-category" class="form-select text-xs">
+                            <option value="">-- اختر التصنيف --</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adPrice">السعر (ج.م)</label>
+                        <input type="number" id="ad-modal-price" min="0" step="any" class="form-input text-xs" placeholder="مثال: 3500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adLocation">الموقع / العنوان التفصيلي</label>
+                    <input type="text" id="ad-modal-location" class="form-input text-xs" placeholder="مثال: الكيلو 124، هاسيندا باي، الساحل الشمالي">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adDescription">الوصف</label>
+                    <textarea id="ad-modal-description" rows="3" class="form-textarea text-xs" placeholder="اكتب تفاصيل الوحدة، عدد الغرف، المرافق، المميزات..."></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adImage">صورة الإعلان</label>
+                    <div class="space-y-2">
+                        <input type="file" id="ad-modal-image-file" accept="image/*" class="form-input text-xs p-2">
+                        <div class="relative flex items-center">
+                            <span class="text-[11px] text-slate-400 bg-white px-2 absolute right-3">أو رابط صورة خارجي</span>
+                            <div class="w-full border-t border-slate-200"></div>
+                        </div>
+                        <input type="url" id="ad-modal-image-url" class="form-input text-xs" placeholder="https://example.com/ad-image.jpg">
+                    </div>
+                    <div id="ad-modal-preview" class="mt-2"></div>
+                </div>
+
+                <div class="flex items-center justify-between pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-medium">
+                        <input type="checkbox" id="ad-modal-active" checked class="rounded border-slate-300 text-[#2D4F2E] focus:ring-[#2D4F2E]">
+                        <span data-i18n="active">الإعلان نشط ومعروض للمستخدمين</span>
+                    </label>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('advertisement-modal')" class="btn-secondary text-xs" data-i18n="cancel">إلغاء</button>
+                    <button type="submit" class="gold-btn text-xs" data-i18n="save">حفظ الإعلان</button>
                 </div>
             </form>
         </div>

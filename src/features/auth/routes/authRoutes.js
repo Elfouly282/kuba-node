@@ -15,6 +15,7 @@ const {
     updateProfile,
     deleteAccount,
     googleLogin,
+    selectRegion,
 } = require('../controllers/authController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -32,6 +33,8 @@ router.post('/logout', protect, logout);
 router.patch('/change-password', protect, changePassword);
 router.get('/me', protect, getMe);
 router.patch('/update-profile', protect, updateProfile);
+router.post('/select-region', protect, selectRegion);
+router.patch('/select-region', protect, selectRegion);
 router.delete('/delete-account', protect, deleteAccount);
 
 module.exports = router;

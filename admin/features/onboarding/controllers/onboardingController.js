@@ -4,15 +4,11 @@ const mongoose = require('mongoose');
 const OnboardingScreen = require('../../../../src/features/onboarding/models/onboardingScreenModel');
 const APIError = require('../../../utils/apiError');
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
 const deleteImageFile = (imagePath) => {
     if (!imagePath) return;
     const abs = path.join(__dirname, '..', '..', '..', '..', 'uploads', imagePath);
     try { fs.unlinkSync(abs); } catch (_) { }
 };
-
-// ─── GET ALL (includes inactive for admin) ───────────────────────────────────
 
 exports.getAll = async (req, res, next) => {
     try {
@@ -39,8 +35,6 @@ exports.getAll = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
-// ─── GET ONE ─────────────────────────────────────────────────────────────────
-
 exports.getOne = async (req, res, next) => {
     try {
         const screen = await OnboardingScreen
@@ -56,8 +50,6 @@ exports.getOne = async (req, res, next) => {
         });
     } catch (err) { next(err); }
 };
-
-// ─── CREATE ───────────────────────────────────────────────────────────────────
 
 exports.create = async (req, res, next) => {
     try {
@@ -85,8 +77,6 @@ exports.create = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
-// ─── UPDATE ───────────────────────────────────────────────────────────────────
-
 exports.update = async (req, res, next) => {
     try {
         const screen = await OnboardingScreen
@@ -106,7 +96,6 @@ exports.update = async (req, res, next) => {
             }
         });
 
-        // Replace image if a new one was uploaded
         if (req.file) {
             deleteImageFile(screen.image);
             screen.image = `onboarding/${req.file.filename}`;
@@ -121,8 +110,6 @@ exports.update = async (req, res, next) => {
         });
     } catch (err) { next(err); }
 };
-
-// ─── DELETE ───────────────────────────────────────────────────────────────────
 
 exports.remove = async (req, res, next) => {
     try {
@@ -141,9 +128,6 @@ exports.remove = async (req, res, next) => {
         });
     } catch (err) { next(err); }
 };
-
-// ─── REORDER ──────────────────────────────────────────────────────────────────
-// Body: { order: [{ id: "...", order: 0 }, { id: "...", order: 1 }, ...] }
 
 exports.reorder = async (req, res, next) => {
     try {

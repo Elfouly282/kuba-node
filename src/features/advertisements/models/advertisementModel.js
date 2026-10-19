@@ -31,6 +31,11 @@ const advertisementSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Category',
         },
+        region: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Region',
+            default: null,
+        },
         image: {
             type: String,
             default: '',

@@ -21,7 +21,13 @@
         "bannerCreated": "Banner created successfully.",
         "bannerUpdated": "Banner updated successfully.",
         "bannerDeleted": "Banner deleted successfully.",
-        "advertisementCreated": "Advertisement created successfully."
+        "advertisementCreated": "Advertisement created successfully.",
+        "advertisementUpdated": "Advertisement updated successfully.",
+        "advertisementDeleted": "Advertisement deleted successfully.",
+        "regionCreated": "Region created successfully.",
+        "regionUpdated": "Region updated successfully.",
+        "regionDeleted": "Region deleted successfully.",
+        "regionSelected": "Region selected successfully."
     },
     "errors": {
         "somethingWentWrong": "Something went wrong. Please try again later.",
@@ -61,6 +67,8 @@
         "invalidAdvertisementId": "Invalid advertisement ID provided.",
         "invalidCategoryId": "Invalid category ID provided.",
         "invalidBannerId": "Invalid banner ID provided.",
+        "regionNotFound": "The requested region was not found.",
+        "invalidRegionId": "Invalid region ID provided.",
         "imageRequired": "Image is required (please upload an image file or provide an image URL)."
     },
     "validation": {
@@ -76,6 +84,7 @@
         "onboardingScreenNotFound": "Onboarding screen not found.",
         "categoryRequired": "Category is required.",
         "advertisementRequired": "Advertisement ID is required.",
+        "regionRequired": "Region ID is required.",
         "imageRequired": "Image is required."
     }
 }

@@ -22,7 +22,7 @@ const protect = async (req, _res, next) => {
 
     if (decoded.id) {
         const userId = decompressId(decoded.id);
-        const user = await User.findById(userId);
+        const user = await User.findById(userId).populate('region', 'name image');
         if (!user) return next(new APIError('errors.userNotFound', 401));
         req.user = user;
         return next();

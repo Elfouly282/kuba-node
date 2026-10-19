@@ -35,6 +35,7 @@ const onboardingRoutes = require('./features/onboarding/routes/onboardingRoutes'
 const categoryRoutes = require('./features/categories/routes/categoryRoutes');
 const bannerRoutes = require('./features/banners/routes/bannerRoutes');
 const advertisementRoutes = require('./features/advertisements/routes/advertisementRoutes');
+const regionRoutes = require('./features/regions/routes/regionRoutes');
 
 const adminAuthRoutes = require('../admin/features/auth/routes/authRoutes');
 const adminOnboardingRoutes = require('../admin/features/onboarding/routes/onboardingRoutes');
@@ -42,6 +43,7 @@ const adminUserRoutes = require('../admin/features/users/routes/userRoutes');
 const adminCategoryRoutes = require('../admin/features/categories/routes/categoryRoutes');
 const adminBannerRoutes = require('../admin/features/banners/routes/bannerRoutes');
 const adminAdvertisementRoutes = require('../admin/features/advertisements/routes/advertisementRoutes');
+const adminRegionRoutes = require('../admin/features/regions/routes/regionRoutes');
 
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('DB_URI exists:', Boolean(process.env.DB_URI));
@@ -80,6 +82,7 @@ app.use('/api/v1/onboarding', onboardingRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/banners', bannerRoutes);
 app.use('/api/v1/advertisements', advertisementRoutes);
+app.use('/api/v1/regions', regionRoutes);
 
 // Admin APIs
 app.use('/api/v1/admin/auth', adminAuthRoutes);
@@ -88,6 +91,7 @@ app.use('/api/v1/admin/users', adminUserRoutes);
 app.use('/api/v1/admin/categories', adminCategoryRoutes);
 app.use('/api/v1/admin/banners', adminBannerRoutes);
 app.use('/api/v1/admin/advertisements', adminAdvertisementRoutes);
+app.use('/api/v1/admin/regions', adminRegionRoutes);
 
 app.get('/', (req, res) => {
     res.status(200).json({

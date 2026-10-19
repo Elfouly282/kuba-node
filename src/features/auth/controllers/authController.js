@@ -7,8 +7,6 @@ const { sendVerificationEmail, sendPasswordResetOtpEmail } = require('../../../u
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
 const randomToken = () => {
-    // Use base64url encoding to produce a shorter, URL-safe token (~43 chars vs 64 hex chars)
-    // This avoids email clients truncating long URLs
     const raw = crypto.randomBytes(32).toString('base64url');
     return { raw, hashed: hashToken(raw) };
 };
@@ -65,7 +63,7 @@ exports.login = async (req, res, next) => {
         const { email, password } = req.body;
         if (!email || !password) return next(new APIError('errors.missingFields', 400));
 
-        const user = await User.findOne({ email }).select('+password');
+        const user = await User.findOne({ email }).select('+password').populate('region', 'name image');
         if (!user || !(await user.comparePassword(password))) return next(new APIError('errors.invalidCredentials', 401));
         if (user.provider !== 'local') return next(new APIError('errors.useGoogleLogin', 400));
 
@@ -73,6 +71,33 @@ exports.login = async (req, res, next) => {
             status: 'success',
             message: req.t('messages.loginSuccess'),
             token: generateToken({ id: user._id }),
+            data: { user: clean(user) },
+        });
+    } catch (err) { next(err); }
+};
+
+exports.selectRegion = async (req, res, next) => {
+    try {
+        const mongoose = require('mongoose');
+        const regionId = req.body.regionId || req.body.region;
+        if (!regionId) return next(new APIError('validation.regionRequired', 400));
+        if (!mongoose.Types.ObjectId.isValid(regionId)) return next(new APIError('errors.invalidRegionId', 400));
+
+        const Region = require('../../regions/models/regionModel');
+        const region = await Region.findById(regionId);
+        if (!region) return next(new APIError('errors.regionNotFound', 404));
+
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            { region: region._id },
+            { new: true }
+        ).populate('region', 'name image');
+
+        if (!user) return next(new APIError('errors.userNotFound', 404));
+
+        res.status(200).json({
+            status: 'success',
+            message: req.t('messages.regionSelected'),
             data: { user: clean(user) },
         });
     } catch (err) { next(err); }
