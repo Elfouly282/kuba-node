@@ -12,6 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Custom Style -->
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -176,107 +178,227 @@
                     <section id="view-overview" class="tab-view space-y-6">
                         <!-- KPI Stats -->
                         <!-- KPI Stats -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div class="card p-4 bg-white">
+                        <!-- KPI Stats: Perfectly Balanced 3x3 Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- 1. إجمالي المستخدمين -->
+                            <div class="card p-4 bg-white hover:border-[#2D4F2E]/40 hover:shadow-md transition">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-500" data-i18n="totalUsers">إجمالي المستخدمين</span>
-                                    <div class="w-8 h-8 rounded-lg bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center">
-                                        <i class="fas fa-users text-xs"></i>
+                                    <div class="w-9 h-9 rounded-xl bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-users text-sm"></i>
                                     </div>
                                 </div>
                                 <div class="text-2xl font-extrabold text-slate-900" id="stat-total-users">0</div>
-                                <div class="text-[10px] text-slate-500 mt-1 flex items-center gap-1 font-medium">
-                                    <i class="fas fa-arrow-trend-up text-[#2D4F2E]"></i>
+                                <div class="text-[11px] text-[#2D4F2E] mt-1 flex items-center gap-1 font-semibold">
+                                    <i class="fas fa-arrow-trend-up"></i>
                                     <span>المسجلين في النظام</span>
                                 </div>
                             </div>
 
-                            <div class="card p-4 bg-white">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="regions">المناطق</span>
-                                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                                        <i class="fas fa-map-location-dot text-xs"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-regions">0</div>
-                                <div class="text-[10px] text-emerald-600 font-medium mt-1">المناطق المعتمدة</div>
-                            </div>
-
-                            <div class="card p-4 bg-white">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="advertisements">الإعلانات والشاليهات</span>
-                                    <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
-                                        <i class="fas fa-hotel text-xs"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-advertisements">0</div>
-                                <div class="text-[10px] text-teal-600 font-medium mt-1">شاليهات ووحدات سكنية</div>
-                            </div>
-
-                            <div class="card p-4 bg-white">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="categoriesTitle">التصنيفات</span>
-                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                                        <i class="fas fa-layer-group text-xs"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-categories">0</div>
-                                <div class="text-[10px] text-blue-600 font-medium mt-1">فنادق، شاليهات...</div>
-                            </div>
-
-                            <div class="card p-4 bg-white">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="bannersTitle">البانرات</span>
-                                    <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
-                                        <i class="fas fa-images text-xs"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-banners">0</div>
-                                <div class="text-[10px] text-rose-600 font-medium mt-1">بانرات إعلانية نشطة</div>
-                            </div>
-
-                            <div class="card p-4 bg-white">
+                            <!-- 2. المستخدمون النشطون -->
+                            <div class="card p-4 bg-white hover:border-indigo-400 hover:shadow-md transition">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-xs font-bold text-slate-500" data-i18n="activeUsers">المستخدمون النشطون</span>
-                                    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                                        <i class="fas fa-user-check text-xs"></i>
+                                    <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-user-check text-sm"></i>
                                     </div>
                                 </div>
                                 <div class="text-2xl font-extrabold text-slate-900" id="stat-active-users">0</div>
-                                <div class="text-[10px] text-indigo-600 font-medium mt-1">حسابات نشطة</div>
-                            </div>
-
-                            <div class="card p-4 bg-white">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="totalOnboarding">شاشات الترحيب</span>
-                                    <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                                        <i class="fas fa-mobile-screen text-xs"></i>
-                                    </div>
+                                <div class="text-[11px] text-indigo-600 font-semibold mt-1 flex items-center gap-1">
+                                    <i class="fas fa-circle-check"></i>
+                                    <span>حسابات نشطة ومفعلة</span>
                                 </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-onboarding">0</div>
-                                <div class="text-[10px] text-purple-600 font-medium mt-1">شاشات Onboarding</div>
                             </div>
 
-                            <div class="card p-4 bg-white">
+                            <!-- 3. الحجوزات -->
+                            <div class="card p-4 bg-white hover:border-cyan-400 hover:shadow-md transition">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500">أنواع الوحدات</span>
-                                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                                        <i class="fas fa-cubes text-xs"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-unit-types">0</div>
-                                <div class="text-[10px] text-emerald-600 font-medium mt-1">شاليهات، فنادق، يخوت...</div>
-                            </div>
-
-                            <div class="card p-4 bg-white">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500">الحجوزات</span>
-                                    <div class="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center">
-                                        <i class="fas fa-calendar-check text-xs"></i>
+                                    <span class="text-xs font-bold text-slate-500">الحجوزات والطلبات</span>
+                                    <div class="w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-calendar-check text-sm"></i>
                                     </div>
                                 </div>
                                 <div class="text-2xl font-extrabold text-slate-900" id="stat-bookings">0</div>
-                                <div class="text-[10px] text-cyan-600 font-medium mt-1">طلبات الحجز المسجلة</div>
+                                <div class="text-[11px] text-cyan-600 font-semibold mt-1 flex items-center gap-1">
+                                    <i class="fas fa-receipt"></i>
+                                    <span>طلبات الحجز المسجلة</span>
+                                </div>
+                            </div>
+
+                            <!-- 4. الإعلانات والشاليهات -->
+                            <div class="card p-4 bg-white hover:border-teal-400 hover:shadow-md transition">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="advertisements">الإعلانات والشاليهات</span>
+                                    <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-hotel text-sm"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-advertisements">0</div>
+                                <div class="text-[11px] text-teal-600 font-semibold mt-1 flex items-center gap-1">
+                                    <i class="fas fa-umbrella-beach"></i>
+                                    <span>شاليهات ووحدات سكنية</span>
+                                </div>
+                            </div>
+
+                            <!-- 5. المناطق -->
+                            <div class="card p-4 bg-white hover:border-emerald-400 hover:shadow-md transition">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="regions">المناطق المعتمدة</span>
+                                    <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-map-location-dot text-sm"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-regions">0</div>
+                                <div class="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center gap-1">
+                                    <i class="fas fa-location-crosshairs"></i>
+                                    <span>المدن والمحافظات</span>
+                                </div>
+                            </div>
+
+                            <!-- 6. أنواع الوحدات -->
+                            <div class="card p-4 bg-white hover:border-emerald-500 hover:shadow-md transition">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500">أنواع الوحدات</span>
+                                    <div class="w-9 h-9 rounded-xl bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-cubes text-sm"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-unit-types">0</div>
+                                <div class="text-[11px] text-[#2D4F2E] font-semibold mt-1 flex items-center gap-1">
+                                    <i class="fas fa-shapes"></i>
+                                    <span>شاليهات، فنادق، يخوت...</span>
+                                </div>
+                            </div>
+
+                            <!-- 7. التصنيفات -->
+                            <div class="card p-4 bg-white hover:border-blue-400 hover:shadow-md transition">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="categoriesTitle">التصنيفات</span>
+                                    <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-layer-group text-sm"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-categories">0</div>
+                                <div class="text-[11px] text-blue-600 font-semibold mt-1 flex items-center gap-1">
+                                    <i class="fas fa-tag"></i>
+                                    <span>تصنيفات العرض الرئيسية</span>
+                                </div>
+                            </div>
+
+                            <!-- 8. البانرات -->
+                            <div class="card p-4 bg-white hover:border-rose-400 hover:shadow-md transition">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="bannersTitle">البانرات الإعلانية</span>
+                                    <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-images text-sm"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-banners">0</div>
+                                <div class="text-[11px] text-rose-600 font-semibold mt-1 flex items-center gap-1">
+                                    <i class="fas fa-rectangle-ad"></i>
+                                    <span>بانرات الواجهة النشطة</span>
+                                </div>
+                            </div>
+
+                            <!-- 9. شاشات الترحيب -->
+                            <div class="card p-4 bg-white hover:border-purple-400 hover:shadow-md transition">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-bold text-slate-500" data-i18n="totalOnboarding">شاشات الترحيب</span>
+                                    <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-mobile-screen text-sm"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-extrabold text-slate-900" id="stat-onboarding">0</div>
+                                <div class="text-[11px] text-purple-600 font-semibold mt-1 flex items-center gap-1">
+                                    <i class="fas fa-compass"></i>
+                                    <span>شاشات Onboarding</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ─── Analytics & Charts Section ──────────────────────────────── -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- Chart 1: User Growth Line Chart (spans 2 cols) -->
+                            <div class="card p-5 bg-white lg:col-span-2 shadow-sm border border-slate-200/90 rounded-2xl flex flex-col justify-between">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-3 border-b border-slate-100 gap-2">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center text-base shadow-sm">
+                                            <i class="fas fa-chart-line"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-slate-900 text-sm">حركة نمو وتسجيل المستخدمين</h3>
+                                            <p class="text-[11px] text-slate-500">معدل انضمام الأعضاء الجدد شهرياً للمنصة</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="badge badge-brand text-[11px] py-1 px-2.5">
+                                            <i class="fas fa-calendar-alt me-1"></i> آخر 6 أشهر
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="relative w-full" style="height: 280px;">
+                                    <canvas id="chart-user-growth"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Chart 2: Categories Doughnut Chart (spans 1 col) -->
+                            <div class="card p-5 bg-white shadow-sm border border-slate-200/90 rounded-2xl flex flex-col justify-between">
+                                <div class="flex items-center justify-between pb-4 mb-3 border-b border-slate-100">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center text-base shadow-sm">
+                                            <i class="fas fa-chart-pie"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-slate-900 text-sm">توزيع الوحدات والتصنيفات</h3>
+                                            <p class="text-[11px] text-slate-500">نسبة الشاليهات والوحدات حسب التصنيف</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="relative w-full flex items-center justify-center" style="height: 220px;">
+                                    <canvas id="chart-categories"></canvas>
+                                </div>
+                                <div id="categories-chart-legend" class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-1.5 text-[11px]"></div>
+                            </div>
+                        </div>
+
+                        <!-- Secondary Analytics Row: Regions & User Status -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Chart 3: Regions Bar Chart -->
+                            <div class="card p-5 bg-white shadow-sm border border-slate-200/90 rounded-2xl">
+                                <div class="flex items-center justify-between pb-4 mb-3 border-b border-slate-100">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-base shadow-sm">
+                                            <i class="fas fa-map-location-dot"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-slate-900 text-sm">كثافة الوحدات في المناطق</h3>
+                                            <p class="text-[11px] text-slate-500">أكثر المناطق احتواءً على شاليهات وإعلانات</p>
+                                        </div>
+                                    </div>
+                                    <span class="badge badge-success text-[10px]">المناطق الأعلى</span>
+                                </div>
+                                <div class="relative w-full" style="height: 240px;">
+                                    <canvas id="chart-regions"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Chart 4: Users Accounts & Status -->
+                            <div class="card p-5 bg-white shadow-sm border border-slate-200/90 rounded-2xl">
+                                <div class="flex items-center justify-between pb-4 mb-3 border-b border-slate-100">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-base shadow-sm">
+                                            <i class="fas fa-shield-halved"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-slate-900 text-sm">حالة المستخدمين ومصادر التسجيل</h3>
+                                            <p class="text-[11px] text-slate-500">الحسابات النشطة، توثيق البريد، ومصادر الحسابات</p>
+                                        </div>
+                                    </div>
+                                    <span class="badge badge-brand text-[10px]">مباشر</span>
+                                </div>
+                                <div class="relative w-full" style="height: 240px;">
+                                    <canvas id="chart-user-status"></canvas>
+                                </div>
                             </div>
                         </div>
 

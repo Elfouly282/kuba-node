@@ -15,7 +15,13 @@
       "key": "token",
       "value": "",
       "type": "string",
-      "description": "JWT — set automatically after login / signup"
+      "description": "User JWT — set automatically after login / signup"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string",
+      "description": "Admin JWT — set automatically after admin login"
     },
     {
       "key": "resetToken",
@@ -593,6 +599,42 @@
               ]
             },
             {
+              "name": "Select Region",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/select-region",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "select-region"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"regionId\": \"<REGION_ID>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Set the user's active region after login.\nAccepts POST or PATCH.\nRequires: Bearer token"
+              }
+            },
+            {
               "name": "Delete Account",
               "request": {
                 "method": "DELETE",
@@ -627,6 +669,2630 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Onboarding",
+      "description": "Onboarding screens — public read endpoint.",
+      "item": [
+        {
+          "name": "Get All Onboarding Screens",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/onboarding",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "onboarding"
+              ]
+            },
+            "description": "Returns all onboarding screens in display order. Public."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Regions",
+      "description": "Region endpoints — public reads.",
+      "item": [
+        {
+          "name": "Get All Regions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/regions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "regions"
+              ],
+              "query": [
+                {
+                  "key": "active",
+                  "value": "true",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Returns all regions. Optional query: active=true|false"
+          }
+        },
+        {
+          "name": "Get All Regions (flat data)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/regions/data?regionId=<REGION_ID>",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "regions",
+                "data"
+              ],
+              "query": [
+                {
+                  "key": "regionId",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            },
+            "description": "Returns region + its banners, advertisements, categories combined. Query param: regionId"
+          }
+        },
+        {
+          "name": "Get One Region",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/regions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "regions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            },
+            "description": "Returns a single region by ID."
+          }
+        },
+        {
+          "name": "Get Region Data by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/regions/:id/data",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "regions",
+                ":id",
+                "data"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            },
+            "description": "Returns region + its banners, advertisements, categories. ID in URL path."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Advertisements",
+      "description": "Listing/advertisement endpoints.",
+      "item": [
+        {
+          "name": "Get All Advertisements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/advertisements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "advertisements"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "<CATEGORY_ID>",
+                  "disabled": true
+                },
+                {
+                  "key": "region",
+                  "value": "<REGION_ID>",
+                  "disabled": true
+                },
+                {
+                  "key": "unitType",
+                  "value": "<UNIT_TYPE_ID>",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "chalet",
+                  "disabled": true
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "minPrice",
+                  "value": "100",
+                  "disabled": true
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "5000",
+                  "disabled": true
+                },
+                {
+                  "key": "pricingUnit",
+                  "value": "per_night",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "price_asc",
+                  "disabled": true,
+                  "description": "price_asc | price_desc | oldest"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Returns all advertisements with pagination and filters. Public."
+          }
+        },
+        {
+          "name": "Get One Advertisement",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/advertisements/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "advertisements",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<ADVERTISEMENT_ID>"
+                }
+              ]
+            },
+            "description": "Returns a single advertisement by ID. Public."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unit Types",
+      "description": "Unit type (chalet, apartment, etc.) endpoints — public.",
+      "item": [
+        {
+          "name": "Get All Unit Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/unit-types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "unit-types"
+              ],
+              "query": [
+                {
+                  "key": "active",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "<CATEGORY_ID>",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Returns all unit types. Optional filters: active, category, search."
+          }
+        },
+        {
+          "name": "Get One Unit Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/unit-types/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "unit-types",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<UNIT_TYPE_ID>"
+                }
+              ]
+            },
+            "description": "Returns a single unit type by ID or slug. Includes associated attributes."
+          }
+        },
+        {
+          "name": "Get Unit Type Attributes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/unit-types/:id/attributes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "unit-types",
+                ":id",
+                "attributes"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<UNIT_TYPE_ID>"
+                }
+              ]
+            },
+            "description": "Returns all dynamic attributes for a unit type."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "description": "Booking endpoints — require user authentication.",
+      "item": [
+        {
+          "name": "Check Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/check-availability/:advertisementId?startDate=2026-11-01&endDate=2026-11-05",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "check-availability",
+                ":advertisementId"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-11-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-11-05"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "advertisementId",
+                  "value": "<ADVERTISEMENT_ID>"
+                }
+              ]
+            },
+            "description": "Check if an advertisement is available for the given date range. Public."
+          }
+        },
+        {
+          "name": "Get All My Bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "disabled": true,
+                  "description": "pending | confirmed | cancelled | completed"
+                },
+                {
+                  "key": "advertisement",
+                  "value": "<ADVERTISEMENT_ID>",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Returns the authenticated user's bookings. Requires: Bearer token"
+          }
+        },
+        {
+          "name": "Get One Booking",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<BOOKING_ID>"
+                }
+              ]
+            },
+            "description": "Returns a single booking by ID. Requires: Bearer token (must be owner or admin)"
+          }
+        },
+        {
+          "name": "Create Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"advertisement\": \"<ADVERTISEMENT_ID>\",\n  \"startDate\": \"2026-11-01\",\n  \"endDate\": \"2026-11-05\",\n  \"notes\": \"Please prepare the place before arrival.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Create a new booking.\nRequired: advertisement (ID), startDate, endDate\nOptional: notes\nRequires: Bearer token"
+          }
+        },
+        {
+          "name": "Update Booking (Cancel)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<BOOKING_ID>"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"cancelled\",\n  \"notes\": \"Changed my plans.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Users can only cancel their own bookings (status=cancelled).\nAdmins can set any status or paymentStatus.\nRequires: Bearer token"
+          }
+        },
+        {
+          "name": "Delete Booking",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<BOOKING_ID>"
+                }
+              ]
+            },
+            "description": "Delete a booking. Must be owner or admin.\nRequires: Bearer token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Auth",
+      "description": "Admin authentication endpoints.",
+      "item": [
+        {
+          "name": "Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@kuba-app.com\",\n  \"password\": \"Admin@123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Admin login with email & password.\nDefault admin: admin@kuba-app.com / Admin@123456\nReturns an admin JWT."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) pm.collectionVariables.set('adminToken', res.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Login (Google / Firebase)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/auth/google",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "auth",
+                "google"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firebaseIdToken\": \"<FIREBASE_ID_TOKEN_HERE>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Admin login via Firebase Google token. Returns admin JWT."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) pm.collectionVariables.set('adminToken', res.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Get Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Returns the currently authenticated admin's profile.\nRequires: admin Bearer token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Onboarding",
+      "description": "Admin CRUD for onboarding screens.",
+      "item": [
+        {
+          "name": "Get All Onboarding Screens",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/onboarding",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "onboarding"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get One Onboarding Screen",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/onboarding/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "onboarding",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<ONBOARDING_ID>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Onboarding Screen",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/onboarding",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "onboarding"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Welcome to Kuba",
+                  "type": "text"
+                },
+                {
+                  "key": "titleAr",
+                  "value": "مرحباً بك في كوبا",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Find your perfect vacation rental.",
+                  "type": "text"
+                },
+                {
+                  "key": "descriptionAr",
+                  "value": "ابحث عن إيجارك المثالي.",
+                  "type": "text"
+                },
+                {
+                  "key": "order",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "value": "",
+                  "type": "file",
+                  "description": "Upload onboarding image"
+                }
+              ]
+            },
+            "description": "Create a new onboarding screen. Accepts multipart/form-data with image upload.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Update Onboarding Screen",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/onboarding/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "onboarding",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<ONBOARDING_ID>"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Updated Title",
+                  "type": "text"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "value": "",
+                  "type": "file",
+                  "description": "New image (optional)"
+                }
+              ]
+            },
+            "description": "Update an onboarding screen. Fields are optional.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Delete Onboarding Screen",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/onboarding/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "onboarding",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<ONBOARDING_ID>"
+                }
+              ]
+            },
+            "description": "Delete an onboarding screen.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Reorder Onboarding Screens (Bulk)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/onboarding/reorder/bulk",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "onboarding",
+                "reorder",
+                "bulk"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [\"<ID_1>\", \"<ID_2>\", \"<ID_3>\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Set the display order of onboarding screens by passing an ordered array of IDs.\nRequires: admin Bearer token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Users",
+      "description": "Admin user management.",
+      "item": [
+        {
+          "name": "Get User Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "stats"
+              ]
+            },
+            "description": "Dashboard stats: total users, active/inactive, verified, Google vs local, and resource counts.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "role",
+                  "value": "user",
+                  "disabled": true
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "isEmailVerified",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "provider",
+                  "value": "local",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Paginated list of all users including inactive ones.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New User\",\n  \"email\": \"newuser@example.com\",\n  \"phone\": \"+201234567890\",\n  \"password\": \"Password123\",\n  \"role\": \"user\",\n  \"isEmailVerified\": true,\n  \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Create a new user (admin-side). Required: email, password.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Get One User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<USER_ID>"
+                }
+              ]
+            },
+            "description": "Get a single user by ID including inactive.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<USER_ID>"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"phone\": \"+201111111111\",\n  \"role\": \"user\",\n  \"active\": true,\n  \"isEmailVerified\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Update a user's details. All fields optional.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Toggle User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id/toggle-status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":id",
+                "toggle-status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<USER_ID>"
+                }
+              ]
+            },
+            "description": "Toggle user active/inactive status.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<USER_ID>"
+                }
+              ]
+            },
+            "description": "Permanently delete a user.\nRequires: admin Bearer token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Categories",
+      "description": "Admin CRUD for categories.",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "categories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get One Category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<CATEGORY_ID>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "categories"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Chalets",
+                  "type": "text"
+                },
+                {
+                  "key": "nameAr",
+                  "value": "شاليهات",
+                  "type": "text"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "value": "",
+                  "type": "file",
+                  "description": "Category image"
+                }
+              ]
+            },
+            "description": "Create a new category. Accepts multipart/form-data.\nRequired: name\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<CATEGORY_ID>"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Updated Name",
+                  "type": "text"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "value": "",
+                  "type": "file",
+                  "description": "New image (optional)"
+                }
+              ]
+            },
+            "description": "Update a category. Fields optional.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<CATEGORY_ID>"
+                }
+              ]
+            },
+            "description": "Delete a category.\nRequires: admin Bearer token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Banners",
+      "description": "Admin CRUD for banners.",
+      "item": [
+        {
+          "name": "Get All Banners",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/banners",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "banners"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get One Banner",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/banners/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "banners",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<BANNER_ID>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Banner",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/banners",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "banners"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "advertisementId",
+                  "value": "<ADVERTISEMENT_ID>",
+                  "type": "text",
+                  "description": "Linked advertisement (optional)"
+                },
+                {
+                  "key": "region",
+                  "value": "<REGION_ID>",
+                  "type": "text",
+                  "description": "Region this banner belongs to (optional)"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "value": "",
+                  "type": "file",
+                  "description": "Banner image"
+                }
+              ]
+            },
+            "description": "Create a new banner. Accepts multipart/form-data.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Update Banner",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/banners/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "banners",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<BANNER_ID>"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "value": "",
+                  "type": "file",
+                  "description": "New image (optional)"
+                }
+              ]
+            },
+            "description": "Update a banner. Fields optional.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Delete Banner",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/banners/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "banners",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<BANNER_ID>"
+                }
+              ]
+            },
+            "description": "Delete a banner.\nRequires: admin Bearer token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Advertisements",
+      "description": "Admin CRUD for advertisements/listings.",
+      "item": [
+        {
+          "name": "Get All Advertisements",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "<CATEGORY_ID>",
+                  "disabled": true
+                },
+                {
+                  "key": "region",
+                  "value": "<REGION_ID>",
+                  "disabled": true
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "published",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get One Advertisement",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<ADVERTISEMENT_ID>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Advertisement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Luxury Chalet in North Coast",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Spacious chalet with sea view.",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "<CATEGORY_ID>",
+                  "type": "text"
+                },
+                {
+                  "key": "region",
+                  "value": "<REGION_ID>",
+                  "type": "text"
+                },
+                {
+                  "key": "unitType",
+                  "value": "<UNIT_TYPE_ID>",
+                  "type": "text"
+                },
+                {
+                  "key": "location",
+                  "value": "North Coast, Egypt",
+                  "type": "text"
+                },
+                {
+                  "key": "address",
+                  "value": "Km 100, Alexandria Desert Road",
+                  "type": "text"
+                },
+                {
+                  "key": "latitude",
+                  "value": "31.0",
+                  "type": "text"
+                },
+                {
+                  "key": "longitude",
+                  "value": "29.0",
+                  "type": "text"
+                },
+                {
+                  "key": "pricing[basePrice]",
+                  "value": "2000",
+                  "type": "text"
+                },
+                {
+                  "key": "pricing[pricingUnit]",
+                  "value": "per_night",
+                  "type": "text",
+                  "description": "per_night | per_day | per_hour | per_trip | fixed"
+                },
+                {
+                  "key": "pricing[discountType]",
+                  "value": "none",
+                  "type": "text",
+                  "description": "none | percentage | fixed_amount"
+                },
+                {
+                  "key": "pricing[discountValue]",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "pricing[currency]",
+                  "value": "EGP",
+                  "type": "text"
+                },
+                {
+                  "key": "pricing[minDuration]",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "attributes",
+                  "value": "{\"guests\": 6, \"bedrooms\": 3}",
+                  "type": "text",
+                  "description": "JSON string of dynamic attributes"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "published",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "value": "",
+                  "type": "file",
+                  "description": "Main image"
+                }
+              ]
+            },
+            "description": "Create a new advertisement. Accepts multipart/form-data.\nRequired: title\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Update Advertisement",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<ADVERTISEMENT_ID>"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Updated Title",
+                  "type": "text"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "pricing[basePrice]",
+                  "value": "2500",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "value": "",
+                  "type": "file",
+                  "description": "New image (optional)"
+                }
+              ]
+            },
+            "description": "Update an advertisement. All fields optional.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Delete Advertisement",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<ADVERTISEMENT_ID>"
+                }
+              ]
+            },
+            "description": "Delete an advertisement and its images.\nRequires: admin Bearer token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Regions",
+      "description": "Admin CRUD for regions.",
+      "item": [
+        {
+          "name": "Get All Regions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Regions (flat data)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions/data?regionId=<REGION_ID>",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions",
+                "data"
+              ],
+              "query": [
+                {
+                  "key": "regionId",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get One Region",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Region Data by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions/:id/data",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions",
+                ":id",
+                "data"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Region",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "North Coast",
+                  "type": "text"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "order",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "value": "",
+                  "type": "file",
+                  "description": "Region image"
+                }
+              ]
+            },
+            "description": "Create a new region. Required: name.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Update Region",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Updated Region Name",
+                  "type": "text"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "value": "",
+                  "type": "file",
+                  "description": "New image (optional)"
+                }
+              ]
+            },
+            "description": "Update a region. All fields optional.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Delete Region",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            },
+            "description": "Delete a region.\nRequires: admin Bearer token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Unit Types",
+      "description": "Admin CRUD for unit types and their dynamic attributes.",
+      "item": [
+        {
+          "name": "Get All Unit Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get One Unit Type",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<UNIT_TYPE_ID>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Unit Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Chalet\",\n  \"nameAr\": \"شاليه\",\n  \"slug\": \"chalet\",\n  \"description\": \"Private chalet with full facilities.\",\n  \"icon\": \"🏡\",\n  \"categories\": [\"<CATEGORY_ID>\"],\n  \"pricingUnits\": [\"per_night\", \"per_day\"],\n  \"defaultPricingUnit\": \"per_night\",\n  \"order\": 1,\n  \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Create a new unit type. Required: name.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Update Unit Type",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<UNIT_TYPE_ID>"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"active\": true,\n  \"order\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Update a unit type. All fields optional.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Delete Unit Type",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<UNIT_TYPE_ID>"
+                }
+              ]
+            },
+            "description": "Delete a unit type and all its attributes.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Get Unit Type Attributes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types/:id/attributes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types",
+                ":id",
+                "attributes"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<UNIT_TYPE_ID>"
+                }
+              ]
+            },
+            "description": "Get all dynamic attributes for a unit type."
+          }
+        },
+        {
+          "name": "Create Unit Type Attribute",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types/:id/attributes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types",
+                ":id",
+                "attributes"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<UNIT_TYPE_ID>"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Number of Guests\",\n  \"nameAr\": \"عدد الضيوف\",\n  \"key\": \"guests\",\n  \"dataType\": \"number\",\n  \"required\": false,\n  \"showInFilters\": true,\n  \"showInDetails\": true,\n  \"order\": 1,\n  \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Create a dynamic attribute for a unit type.\nRequired: name\nRequires: admin Bearer token\n\ndataType: string | number | boolean | select | multi_select | date"
+          }
+        },
+        {
+          "name": "Update Unit Type Attribute",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types/:id/attributes/:attrId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types",
+                ":id",
+                "attributes",
+                ":attrId"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<UNIT_TYPE_ID>"
+                },
+                {
+                  "key": "attrId",
+                  "value": "<ATTRIBUTE_ID>"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Max Guests\",\n  \"required\": true,\n  \"order\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Update a dynamic attribute. All fields optional.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Delete Unit Type Attribute",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types/:id/attributes/:attrId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types",
+                ":id",
+                "attributes",
+                ":attrId"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<UNIT_TYPE_ID>"
+                },
+                {
+                  "key": "attrId",
+                  "value": "<ATTRIBUTE_ID>"
+                }
+              ]
+            },
+            "description": "Delete a dynamic attribute.\nRequires: admin Bearer token"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Bookings",
+      "description": "Admin booking management.",
+      "item": [
+        {
+          "name": "Check Availability",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings/check-availability/:advertisementId?startDate=2026-11-01&endDate=2026-11-05",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings",
+                "check-availability",
+                ":advertisementId"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-11-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-11-05"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "advertisementId",
+                  "value": "<ADVERTISEMENT_ID>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "disabled": true
+                },
+                {
+                  "key": "user",
+                  "value": "<USER_ID>",
+                  "disabled": true
+                },
+                {
+                  "key": "advertisement",
+                  "value": "<ADVERTISEMENT_ID>",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get all bookings (admin sees all users' bookings).\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Get One Booking",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<BOOKING_ID>"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"advertisement\": \"<ADVERTISEMENT_ID>\",\n  \"startDate\": \"2026-11-01\",\n  \"endDate\": \"2026-11-05\",\n  \"notes\": \"Admin-created booking.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update Booking",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<BOOKING_ID>"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\",\n  \"paymentStatus\": \"paid\",\n  \"notes\": \"Confirmed by admin.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Admins can set any status (confirmed, completed, cancelled) and paymentStatus.\nRequires: admin Bearer token"
+          }
+        },
+        {
+          "name": "Delete Booking",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<BOOKING_ID>"
+                }
+              ]
+            },
+            "description": "Delete a booking.\nRequires: admin Bearer token"
+          }
         }
       ]
     }

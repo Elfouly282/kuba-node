@@ -90,6 +90,8 @@ exports.getUserStats = async (_req, res, next) => {
                     totalBanners: 0,
                     totalRegions: 0,
                     totalAdvertisements: 0,
+                    totalUnitTypes: 0,
+                    totalBookings: 0,
                     recentUsers: [],
                     serverTime: new Date().toISOString(),
                     environment: process.env.NODE_ENV || 'development',
@@ -110,6 +112,8 @@ exports.getUserStats = async (_req, res, next) => {
             totalBanners,
             totalRegions,
             totalAdvertisements,
+            totalUnitTypes,
+            totalBookings,
             recentUsers,
         ] = await Promise.all([
             User.countDocuments().setOptions({ includeInactive: true }),
@@ -133,6 +137,100 @@ exports.getUserStats = async (_req, res, next) => {
                 .limit(5),
         ]);
 
+        // Monthly user registrations (last 6 months)
+        const monthNamesAr = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        const months = [];
+        const now = new Date();
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            months.push({
+                year: d.getFullYear(),
+                month: d.getMonth() + 1,
+                label: monthNamesAr[d.getMonth()],
+                count: 0,
+            });
+        }
+
+        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+        let adsByRegion = [];
+        let adsByCategory = [];
+        let bookingsByStatus = [];
+
+        try {
+            const monthlyUsersAgg = await User.aggregate([
+                { $match: { createdAt: { $gte: sixMonthsAgo } } },
+                {
+                    $group: {
+                        _id: {
+                            year: { $year: '$createdAt' },
+                            month: { $month: '$createdAt' },
+                        },
+                        count: { $sum: 1 },
+                    },
+                },
+            ]);
+
+            monthlyUsersAgg.forEach((item) => {
+                const m = months.find((x) => x.year === item._id.year && x.month === item._id.month);
+                if (m) m.count = item.count;
+            });
+        } catch (_) {}
+
+        try {
+            adsByRegion = await Advertisement.aggregate([
+                {
+                    $lookup: {
+                        from: 'regions',
+                        localField: 'region',
+                        foreignField: '_id',
+                        as: 'regionDoc',
+                    },
+                },
+                { $unwind: { path: '$regionDoc', preserveNullAndEmptyArrays: true } },
+                {
+                    $group: {
+                        _id: { $ifNull: ['$regionDoc.name', 'أخرى'] },
+                        count: { $sum: 1 },
+                    },
+                },
+                { $sort: { count: -1 } },
+                { $limit: 6 },
+            ]);
+        } catch (_) {}
+
+        try {
+            adsByCategory = await Advertisement.aggregate([
+                {
+                    $lookup: {
+                        from: 'categories',
+                        localField: 'category',
+                        foreignField: '_id',
+                        as: 'catDoc',
+                    },
+                },
+                { $unwind: { path: '$catDoc', preserveNullAndEmptyArrays: true } },
+                {
+                    $group: {
+                        _id: { $ifNull: ['$catDoc.name', 'غير مصنف'] },
+                        count: { $sum: 1 },
+                    },
+                },
+                { $sort: { count: -1 } },
+                { $limit: 6 },
+            ]);
+        } catch (_) {}
+
+        try {
+            bookingsByStatus = await Booking.aggregate([
+                {
+                    $group: {
+                        _id: '$status',
+                        count: { $sum: 1 },
+                    },
+                },
+            ]);
+        } catch (_) {}
+
         res.status(200).json({
             status: 'success',
             data: {
@@ -149,9 +247,24 @@ exports.getUserStats = async (_req, res, next) => {
                 totalAdvertisements,
                 totalUnitTypes: totalUnitTypes || 0,
                 totalBookings: totalBookings || 0,
-                recentUsers,
+                recentUsers: Array.isArray(recentUsers) ? recentUsers : [],
+                charts: {
+                    userGrowth: months.map((m) => ({ label: m.label, count: m.count })),
+                    adsByRegion: adsByRegion.map((r) => ({ label: r._id, count: r.count })),
+                    adsByCategory: adsByCategory.map((c) => ({ label: c._id, count: c.count })),
+                    bookingsByStatus: bookingsByStatus.map((b) => ({ status: b._id, count: b.count })),
+                    userTypes: {
+                        active: activeUsers,
+                        inactive: inactiveUsers,
+                        verified: verifiedUsers,
+                        unverified: Math.max(0, totalUsers - verifiedUsers),
+                        google: googleUsers,
+                        local: localUsers,
+                    },
+                },
                 serverTime: new Date().toISOString(),
                 environment: process.env.NODE_ENV || 'development',
+                dbConnected: true,
             },
         });
     } catch (err) {
