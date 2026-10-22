@@ -10,7 +10,7 @@
         "passwordResetSuccess": "Password reset successfully. You are now logged in.",
         "passwordChanged": "Password changed successfully.",
         "profileUpdated": "Profile updated successfully.",
-        "accountDeleted": "Your account has been deactivated successfully.",
+        "accountDeleted": "Your account and all associated data have been permanently deleted successfully.",
         "onboardingScreenCreated": "Onboarding screen created successfully.",
         "onboardingScreenUpdated": "Onboarding screen updated successfully.",
         "onboardingScreenDeleted": "Onboarding screen deleted successfully.",

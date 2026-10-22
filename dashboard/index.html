@@ -14,6 +14,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Custom Style -->
     <link rel="stylesheet" href="css/style.css">
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="images/kuba-logo.jpeg">
 </head>
 <body class="bg-[#f8faf9] text-slate-900">
 
@@ -27,8 +29,8 @@
             <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-[#2D4F2E]/10 rounded-full blur-3xl pointer-events-none"></div>
 
             <div class="text-center mb-8">
-                <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-[#2D4F2E] flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-[#2D4F2E]/25">
-                    K
+                <div class="w-16 h-16 mx-auto mb-3 rounded-2xl overflow-hidden shadow-lg shadow-[#2D4F2E]/25 border border-slate-100 flex items-center justify-center bg-white">
+                    <img src="images/kuba-logo.jpeg" alt="Kuba Logo" class="w-full h-full object-cover">
                 </div>
                 <h1 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="loginTitle">تسجيل الدخول للوحة التحكم</h1>
                 <p class="text-xs text-slate-500" data-i18n="loginSubtitle">أدخل بيانات حساب المدير للمتابعة</p>
@@ -73,8 +75,8 @@
             <!-- Sidebar -->
             <aside class="sidebar p-4 bg-white" id="sidebar">
                 <div class="flex items-center gap-3 px-3 py-3 mb-6 border-b border-slate-100">
-                    <div class="w-10 h-10 rounded-xl bg-[#2D4F2E] flex items-center justify-center text-white font-black text-xl shadow-md shadow-[#2D4F2E]/20">
-                        K
+                    <div class="w-10 h-10 rounded-xl overflow-hidden shadow-md shadow-[#2D4F2E]/20 border border-slate-100 flex items-center justify-center bg-white shrink-0">
+                        <img src="images/kuba-logo.jpeg" alt="Kuba Logo" class="w-full h-full object-cover">
                     </div>
                     <div>
                         <div class="font-bold text-slate-900 text-base tracking-wide" data-i18n="appName">لوحة تحكم كوبا</div>
@@ -143,9 +145,8 @@
                             <i class="fas fa-bars text-lg"></i>
                         </button>
                         <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500 font-medium">
+                            <img src="images/kuba-logo.jpeg" alt="Kuba Logo" class="w-5 h-5 rounded-md object-cover shadow-xs border border-slate-200">
                             <span class="text-slate-700 font-bold">Kuba App</span>
-                            <span>•</span>
-                            <span class="badge badge-brand">v1.0.0</span>
                         </div>
                     </div>
 
@@ -709,35 +710,8 @@
                             </div>
                         </div>
 
-                        <!-- Dynamic Attributes Panel (Active when a unit type is selected) -->
-                        <div id="unit-type-attributes-section" class="hidden card p-5 bg-white space-y-4 border-2 border-[#2D4F2E]/30">
-                            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-8 h-8 rounded-lg bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center font-bold text-sm">
-                                        <i class="fas fa-sliders"></i>
-                                    </div>
-                                    <div>
-                                        <div class="flex items-center gap-2">
-                                            <h3 class="font-bold text-slate-900 text-sm" id="attrs-section-title">خصائص النوع</h3>
-                                            <span class="badge badge-brand text-[10px]" id="attrs-section-badge">0 خاصية</span>
-                                        </div>
-                                        <p class="text-[11px] text-slate-500">الخصائص التي يجب إدخالها عند إنشاء إعلان من هذا النوع (مثل: عدد الغرف، السعة، طاقم، إلخ)</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <button onclick="openAddAttributeModal()" class="gold-btn text-xs py-1.5 px-3">
-                                        <i class="fas fa-plus"></i> إضافة خاصية جديدة
-                                    </button>
-                                    <button onclick="hideAttributesSection()" class="btn-secondary text-xs p-1.5" title="إغلاق">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div id="attributes-list" class="space-y-2">
-                                <div class="text-center py-6 text-slate-400 text-xs">لا توجد خصائص مضافة لهذا النوع حتى الآن. اضغط "إضافة خاصية جديدة" لتعريف الأولى.</div>
-                            </div>
-                        </div>
+                        <!-- Hidden placeholder for legacy scripts -->
+                        <div id="unit-type-attributes-section" class="hidden"></div>
                     </section>
 
                     <!-- 5. SYSTEM & API CONSOLE VIEW -->
@@ -1143,6 +1117,121 @@
                     <button type="submit" class="gold-btn text-xs" data-i18n="save">حفظ نوع الوحدة</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ─── UNIT TYPE ATTRIBUTES MODAL (POPUP / FULL VIEW) ──────────────────── -->
+    <div id="unit-type-attributes-modal" class="modal-overlay">
+        <div id="unit-type-attributes-modal-container" class="modal-content modal-wide p-0 flex flex-col bg-white overflow-hidden shadow-2xl border border-slate-200 transition-all duration-200">
+            <!-- Modal Header -->
+            <div class="p-5 bg-gradient-to-r from-[#f4f7f4] via-white to-[#f4f7f4] border-b border-slate-200 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-12 h-12 rounded-xl bg-[#2D4F2E]/10 text-[#2D4F2E] flex items-center justify-center font-bold text-xl shadow-xs border border-[#2D4F2E]/20">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2.5 flex-wrap">
+                            <h3 id="attrs-modal-unit-name" class="font-extrabold text-slate-900 text-lg sm:text-xl">
+                                إدارة خصائص نوع الوحدة
+                            </h3>
+                            <span id="attrs-modal-unit-en-name" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 font-mono">
+                                Chalet
+                            </span>
+                            <span id="attrs-modal-status-badge" class="badge badge-success text-xs">
+                                نشط
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap" id="attrs-modal-unit-meta">
+                            <span>الخصائص والحقول الديناميكية الخاصة بهذا النوع</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 self-end sm:self-center">
+                    <button type="button" onclick="openAddAttributeModal()" class="gold-btn text-xs sm:text-sm py-2 px-4 shadow-sm flex items-center gap-2 font-bold">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>إضافة خاصية جديدة</span>
+                    </button>
+                    <button type="button" onclick="toggleAttributesModalFullscreen()" class="btn-secondary text-xs p-2 rounded-lg" title="تبديل وضع ملء الشاشة / صفحة كاملة" id="btn-toggle-attrs-fullscreen">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                    </button>
+                    <button type="button" onclick="closeModal('unit-type-attributes-modal')" class="text-slate-400 hover:text-red-600 text-2xl font-bold w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 transition" title="إغلاق">
+                        &times;
+                    </button>
+                </div>
+            </div>
+
+            <!-- Toolbar: Summary Stats & Search & Filters -->
+            <div class="px-5 py-3 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <!-- Stats Badges -->
+                <div class="flex items-center gap-2 flex-wrap text-xs">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 shadow-2xs font-medium">
+                        <i class="fas fa-layer-group text-[#2D4F2E]"></i>
+                        <span>إجمالي الخصائص:</span>
+                        <strong id="attrs-modal-total-count" class="text-[#2D4F2E] font-bold text-sm">0</strong>
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 shadow-2xs font-medium">
+                        <i class="fas fa-asterisk text-red-500 text-[10px]"></i>
+                        <span>إجبارية:</span>
+                        <strong id="attrs-modal-required-count" class="text-red-600 font-bold">0</strong>
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 shadow-2xs font-medium">
+                        <i class="fas fa-filter text-sky-500 text-[11px]"></i>
+                        <span>في الفلاتر:</span>
+                        <strong id="attrs-modal-filters-count" class="text-sky-600 font-bold">0</strong>
+                    </span>
+                </div>
+
+                <!-- Search and View Switcher -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    <div class="relative min-w-[220px] flex-1 sm:flex-none">
+                        <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="attrs-modal-search" oninput="filterAttributesList()" placeholder="بحث بالاسم أو الكود (Key)..." class="form-input text-xs pr-8 py-1.5 bg-white border-slate-300 rounded-lg w-full">
+                    </div>
+                    
+                    <select id="attrs-modal-type-filter" onchange="filterAttributesList()" class="form-select text-xs py-1.5 bg-white border-slate-300 rounded-lg">
+                        <option value="">جميع أنواع البيانات</option>
+                        <option value="string">نص (String)</option>
+                        <option value="number">رقم (Number)</option>
+                        <option value="boolean">نعم / لا (Boolean)</option>
+                        <option value="single_select">اختيار مفرد</option>
+                        <option value="multi_select">اختيار متعدد</option>
+                        <option value="date">تاريخ</option>
+                    </select>
+
+                    <div class="inline-flex rounded-lg border border-slate-300 p-0.5 bg-white shadow-2xs">
+                        <button type="button" onclick="setAttributesViewMode('table')" id="btn-attrs-view-table" class="px-2.5 py-1 text-xs rounded font-medium bg-[#2D4F2E] text-white transition">
+                            <i class="fas fa-table me-1"></i> جدول
+                        </button>
+                        <button type="button" onclick="setAttributesViewMode('cards')" id="btn-attrs-view-cards" class="px-2.5 py-1 text-xs rounded font-medium text-slate-600 hover:text-slate-900 transition">
+                            <i class="fas fa-th-large me-1"></i> بطاقات
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Body (Content container) -->
+            <div class="flex-1 overflow-y-auto p-5 bg-slate-100/50" id="attrs-modal-body">
+                <!-- Attributes Content Rendered via JS -->
+                <div id="attributes-list">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-5 py-3 bg-white border-t border-slate-200 flex items-center justify-between">
+                <span class="text-xs text-slate-500" id="attrs-modal-footer-info">
+                    جاري تحميل الخصائص...
+                </span>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="openAddAttributeModal()" class="gold-btn text-xs py-1.5 px-3">
+                        <i class="fas fa-plus me-1"></i> إضافة خاصية
+                    </button>
+                    <button type="button" onclick="closeModal('unit-type-attributes-modal')" class="btn-secondary text-xs py-1.5 px-4 font-semibold">
+                        إغلاق
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 

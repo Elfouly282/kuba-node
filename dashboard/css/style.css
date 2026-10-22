@@ -373,6 +373,33 @@ body {
     transform: scale(1);
 }
 
+.modal-content.modal-wide {
+    width: 96%;
+    max-width: 1200px;
+    max-height: 92vh;
+}
+
+.modal-content.modal-fullscreen {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    transform: none !important;
+}
+
+#unit-type-attributes-modal {
+    z-index: 55;
+}
+
+#attribute-modal {
+    z-index: 70;
+}
+
 /* Toasts */
 #toast-container {
     position: fixed;

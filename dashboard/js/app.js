@@ -1480,7 +1480,9 @@ function renderUnitTypes() {
 
         const catsLabels = (ut.categories || []).map(c => c.name || c).join(', ') || 'كل الأقسام';
 
-        return `
+                const attrCount = (ut.attributesCount !== undefined) ? `${ut.attributesCount} خاصية` : (ut.attributes?.length !== undefined ? `${ut.attributes.length} خاصية` : 'عرض');
+
+                return `
             <div class="card p-4 bg-white border ${isSelected ? 'border-[#2D4F2E] ring-2 ring-[#2D4F2E]/20 shadow-md' : 'border-slate-200'} hover:border-[#2D4F2E] transition flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-2">
@@ -1508,8 +1510,10 @@ function renderUnitTypes() {
                 </div>
 
                 <div class="space-y-2 pt-3 border-t border-slate-100">
-                    <button onclick="selectUnitTypeForAttributes('${utId}')" class="gold-btn w-full text-xs py-1.5">
-                        <i class="fas fa-sliders me-1"></i> إدارة الخصائص (${ut.attributes?.length || 'عرض'})
+                    <button onclick="selectUnitTypeForAttributes('${utId}')" class="gold-btn w-full text-xs py-2 flex items-center justify-center gap-1.5 font-bold shadow-xs">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>إدارة الخصائص</span>
+                        <span class="px-2 py-0.5 rounded-full text-[11px] bg-black/20 text-white font-mono font-bold">${attrCount}</span>
                     </button>
                     <div class="flex items-center justify-end gap-1.5">
                         <button onclick="openEditUnitTypeModal('${utId}')" class="btn-secondary text-xs py-1 px-2.5">
@@ -1638,20 +1642,86 @@ async function deleteUnitType(utId) {
 
 // ─── UNIT TYPE ATTRIBUTES MANAGEMENT ─────────────────────────────────────────
 
+let attributesSearchQuery = '';
+let attributesTypeFilter = '';
+let attributesViewMode = 'table';
+
 async function selectUnitTypeForAttributes(utId) {
     state.selectedUnitTypeId = utId;
+    attributesSearchQuery = '';
+    attributesTypeFilter = '';
+
+    const ut = state.unitTypes.find(u => (u.id || u._id) === utId);
+
+    // Reset inputs
+    const searchInput = document.getElementById('attrs-modal-search');
+    if (searchInput) searchInput.value = '';
+    const typeFilterEl = document.getElementById('attrs-modal-type-filter');
+    if (typeFilterEl) typeFilterEl.value = '';
+
+    // Update modal header
+    updateAttributesModalHeader(ut);
+
+    // Open the popup modal
+    const modal = document.getElementById('unit-type-attributes-modal');
+    if (modal) modal.classList.add('active');
+
+    // Show loading state
+    const list = document.getElementById('attributes-list');
+    if (list) {
+        list.innerHTML = `
+            <div class="py-16 text-center text-slate-500">
+                <i class="fas fa-circle-notch fa-spin text-3xl text-[#2D4F2E] mb-3"></i>
+                <p class="text-sm font-semibold text-slate-700">جاري تحميل خصائص نوع الوحدة...</p>
+                <p class="text-xs text-slate-400 mt-1">يرجى الانتظار لحظات</p>
+            </div>
+        `;
+    }
+
     renderUnitTypes();
     await loadUnitTypeAttributes(utId);
 }
 
+function updateAttributesModalHeader(ut) {
+    if (!ut) return;
+    const nameEl = document.getElementById('attrs-modal-unit-name');
+    const enNameEl = document.getElementById('attrs-modal-unit-en-name');
+    const statusBadge = document.getElementById('attrs-modal-status-badge');
+    const metaEl = document.getElementById('attrs-modal-unit-meta');
+
+    if (nameEl) nameEl.textContent = `إدارة خصائص: ${ut.nameAr || ut.name}`;
+    if (enNameEl) {
+        enNameEl.textContent = ut.name || '';
+        enNameEl.style.display = ut.name ? 'inline-block' : 'none';
+    }
+    if (statusBadge) {
+        statusBadge.className = `badge ${ut.active !== false ? 'badge-success' : 'badge-danger'} text-xs`;
+        statusBadge.textContent = ut.active !== false ? 'نشط' : 'معطل';
+    }
+    if (metaEl) {
+        const pricingUnitsLabels = (ut.pricingUnits || ['per_night']).map(u => {
+            return {
+                per_night: 'ليلة',
+                per_hour: 'ساعة',
+                per_day: 'يوم',
+                per_trip: 'رحلة',
+                fixed: 'ثابت',
+            }[u] || u;
+        }).join('، ');
+
+        const catsLabels = (ut.categories || []).map(c => c.name || c).join(', ') || 'كل الأقسام';
+
+        metaEl.innerHTML = `
+            <span class="inline-flex items-center gap-1.5"><i class="fas fa-money-bill-wave text-[#2D4F2E]"></i> وحدات التسعير: <strong class="text-slate-700">${pricingUnitsLabels}</strong></span>
+            <span class="text-slate-300">•</span>
+            <span class="inline-flex items-center gap-1.5"><i class="fas fa-folder text-slate-400"></i> الأقسام: <strong class="text-slate-700">${catsLabels}</strong></span>
+        `;
+    }
+}
+
 async function loadUnitTypeAttributes(utId) {
     const ut = state.unitTypes.find(u => (u.id || u._id) === utId);
-    const titleEl = document.getElementById('attrs-section-title');
-    const panel = document.getElementById('unit-type-attributes-section');
-    if (titleEl && ut) {
-        titleEl.textContent = `خصائص نوع: ${ut.nameAr || ut.name}`;
-    }
-    if (panel) panel.classList.remove('hidden');
+    if (ut) updateAttributesModalHeader(ut);
 
     try {
         const res = await apiFetch(`/api/v1/admin/unit-types/${utId}/attributes`);
@@ -1659,72 +1729,363 @@ async function loadUnitTypeAttributes(utId) {
         renderAttributesList();
     } catch (err) {
         console.error('Error loading attributes:', err);
+        const list = document.getElementById('attributes-list');
+        if (list) {
+            list.innerHTML = `
+                <div class="py-16 text-center text-red-500">
+                    <i class="fas fa-exclamation-circle text-3xl mb-2"></i>
+                    <p class="text-sm font-bold">تعذر تحميل خصائص نوع الوحدة</p>
+                    <p class="text-xs text-slate-400 mt-1">تأكد من الاتصال بالخادم ثم حاول مرة أخرى</p>
+                    <button onclick="loadUnitTypeAttributes('${utId}')" class="btn-secondary text-xs mt-3">
+                        <i class="fas fa-sync-alt me-1"></i> إعادة المحاولة
+                    </button>
+                </div>
+            `;
+        }
     }
 }
 
 function hideAttributesSection() {
     state.selectedUnitTypeId = null;
-    document.getElementById('unit-type-attributes-section')?.classList.add('hidden');
+    closeModal('unit-type-attributes-modal');
     renderUnitTypes();
+}
+
+function filterAttributesList() {
+    attributesSearchQuery = document.getElementById('attrs-modal-search')?.value || '';
+    attributesTypeFilter = document.getElementById('attrs-modal-type-filter')?.value || '';
+    renderAttributesList();
+}
+
+function resetAttributesFilter() {
+    attributesSearchQuery = '';
+    attributesTypeFilter = '';
+    const s = document.getElementById('attrs-modal-search');
+    if (s) s.value = '';
+    const t = document.getElementById('attrs-modal-type-filter');
+    if (t) t.value = '';
+    renderAttributesList();
+}
+
+function setAttributesViewMode(mode) {
+    attributesViewMode = mode;
+    const btnTable = document.getElementById('btn-attrs-view-table');
+    const btnCards = document.getElementById('btn-attrs-view-cards');
+
+    if (mode === 'table') {
+        btnTable?.classList.add('bg-[#2D4F2E]', 'text-white');
+        btnTable?.classList.remove('text-slate-600');
+        btnCards?.classList.remove('bg-[#2D4F2E]', 'text-white');
+        btnCards?.classList.add('text-slate-600');
+    } else {
+        btnCards?.classList.add('bg-[#2D4F2E]', 'text-white');
+        btnCards?.classList.remove('text-slate-600');
+        btnTable?.classList.remove('bg-[#2D4F2E]', 'text-white');
+        btnTable?.classList.add('text-slate-600');
+    }
+
+    renderAttributesList();
+}
+
+function toggleAttributesModalFullscreen() {
+    const container = document.getElementById('unit-type-attributes-modal-container');
+    const btn = document.getElementById('btn-toggle-attrs-fullscreen');
+    if (!container) return;
+
+    const isFullscreen = container.classList.contains('modal-fullscreen');
+    if (isFullscreen) {
+        container.classList.remove('modal-fullscreen');
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-expand-arrows-alt"></i>';
+            btn.title = 'تكبير كصفحة كاملة';
+        }
+    } else {
+        container.classList.add('modal-fullscreen');
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-compress-arrows-alt"></i>';
+            btn.title = 'تصغير النافذة';
+        }
+    }
 }
 
 function renderAttributesList() {
     const list = document.getElementById('attributes-list');
-    const badge = document.getElementById('attrs-section-badge');
-    if (badge) badge.textContent = `${state.unitTypeAttributes.length} خاصية`;
+    const totalCountEl = document.getElementById('attrs-modal-total-count');
+    const reqCountEl = document.getElementById('attrs-modal-required-count');
+    const filterCountEl = document.getElementById('attrs-modal-filters-count');
+    const footerInfoEl = document.getElementById('attrs-modal-footer-info');
+
+    const total = (state.unitTypeAttributes || []).length;
+    const requiredTotal = (state.unitTypeAttributes || []).filter(a => a.required).length;
+    const filtersTotal = (state.unitTypeAttributes || []).filter(a => a.showInFilters).length;
+
+    if (totalCountEl) totalCountEl.textContent = total;
+    if (reqCountEl) reqCountEl.textContent = requiredTotal;
+    if (filterCountEl) filterCountEl.textContent = filtersTotal;
 
     if (!list) return;
 
-    if (state.unitTypeAttributes.length === 0) {
-        list.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">لا توجد خصائص لهذا النوع حتى الآن. اضغط "إضافة خاصية جديدة" لإنشاء خاصية.</div>`;
+    if (total === 0) {
+        list.innerHTML = `
+            <div class="py-16 px-4 text-center max-w-md mx-auto bg-white rounded-2xl border border-dashed border-slate-300 shadow-xs my-4">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center text-2xl shadow-sm border border-[#2D4F2E]/20">
+                    <i class="fas fa-sliders-h"></i>
+                </div>
+                <h4 class="text-base font-bold text-slate-800 mb-1.5">لا توجد خصائص مضافة لهذا النوع حتى الآن</h4>
+                <p class="text-xs text-slate-500 mb-6 leading-relaxed">
+                    الخصائص تتيح لك تخصيص المعلومات التي يجب على المعلن إدخالها عند إضافة وحدة من هذا النوع (مثل: عدد الغرف، السعة، وجود طاقم، إلخ) لتظهر للمستأجرين بشكل منظم وجميل.
+                </p>
+                <button type="button" onclick="openAddAttributeModal()" class="gold-btn text-xs py-2.5 px-6 inline-flex items-center gap-2 font-bold shadow-md">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>إضافة أول خاصية الآن</span>
+                </button>
+            </div>
+        `;
+        if (footerInfoEl) footerInfoEl.textContent = 'لا توجد خصائص مسجلة بعد';
         return;
     }
 
-    list.innerHTML = state.unitTypeAttributes.map(attr => {
-        const attrId = attr.id || attr._id;
-        const dataTypeLabels = {
-            string: 'نص (String)',
-            number: 'رقم (Number)',
-            boolean: 'نعم/لا (Boolean)',
-            single_select: 'اختيار مفرد',
-            multi_select: 'اختيار متعدد',
-            date: 'تاريخ',
-        };
+    // Filter attributes
+    const q = (attributesSearchQuery || '').toLowerCase().trim();
+    const typeFilter = attributesTypeFilter || '';
 
-        const optionsText = (attr.options && attr.options.length > 0) ? `الخيارات: [${attr.options.join(', ')}]` : '';
+    let items = (state.unitTypeAttributes || []).slice();
+    if (typeFilter) {
+        items = items.filter(a => a.dataType === typeFilter);
+    }
+    if (q) {
+        items = items.filter(a => {
+            const name = (a.name || '').toLowerCase();
+            const nameAr = (a.nameAr || '').toLowerCase();
+            const key = (a.key || '').toLowerCase();
+            const options = (a.options || []).join(' ').toLowerCase();
+            return name.includes(q) || nameAr.includes(q) || key.includes(q) || options.includes(q);
+        });
+    }
 
-        return `
-            <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-white hover:border-[#2D4F2E] transition">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center font-bold text-[#2D4F2E] text-xs">
-                        #${attr.order || 0}
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-slate-900 text-xs">${attr.nameAr || attr.name}</span>
-                            <span class="font-mono text-[10px] text-slate-400">(${attr.key})</span>
-                            ${attr.required ? '<span class="badge badge-danger text-[9px] py-0 px-1.5">مطلوب</span>' : '<span class="badge text-[9px] py-0 px-1.5 bg-slate-100 text-slate-500">اختياري</span>'}
-                            ${attr.showInFilters ? '<span class="badge badge-brand text-[9px] py-0 px-1.5">في الفلاتر</span>' : ''}
-                        </div>
-                        <div class="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
-                            <span>النوع: <strong class="text-[#2D4F2E]">${dataTypeLabels[attr.dataType] || attr.dataType}</strong></span>
-                            ${attr.unit ? `<span>الوحدة: <strong>${attr.unit}</strong></span>` : ''}
-                            ${optionsText ? `<span class="text-slate-400 truncate max-w-xs">${optionsText}</span>` : ''}
-                        </div>
-                    </div>
+    if (footerInfoEl) {
+        footerInfoEl.innerHTML = `يتم عرض <strong class="text-slate-800 font-bold">${items.length}</strong> من إجمالي <strong class="text-slate-800 font-bold">${total}</strong> خاصية`;
+    }
+
+    if (items.length === 0) {
+        list.innerHTML = `
+            <div class="py-14 px-4 text-center bg-white rounded-2xl border border-slate-200 shadow-xs my-4">
+                <div class="w-12 h-12 mx-auto mb-3 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center text-xl">
+                    <i class="fas fa-search"></i>
                 </div>
-
-                <div class="flex items-center gap-1.5">
-                    <button onclick="openEditAttributeModal('${attrId}')" class="p-1.5 text-xs text-blue-600 hover:bg-blue-50 rounded" title="تعديل">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button onclick="deleteAttribute('${attrId}')" class="p-1.5 text-xs text-red-600 hover:bg-red-50 rounded" title="حذف">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
+                <h4 class="text-sm font-bold text-slate-700 mb-1">لا توجد نتائج مطابقة</h4>
+                <p class="text-xs text-slate-400 mb-4">لم نجد أي خاصية تطابق عبارة البحث "${attributesSearchQuery}" أو الفلتر المحدد</p>
+                <button type="button" onclick="resetAttributesFilter()" class="btn-secondary text-xs py-1.5 px-4 font-semibold">
+                    <i class="fas fa-redo me-1"></i> مسح خيارات البحث
+                </button>
             </div>
         `;
-    }).join('');
+        return;
+    }
+
+    const dataTypeLabels = {
+        string: { label: 'نص (String)', icon: 'fa-font', bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-200' },
+        number: { label: 'رقم (Number)', icon: 'fa-hashtag', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+        boolean: { label: 'نعم / لا (Boolean)', icon: 'fa-toggle-on', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+        single_select: { label: 'قائمة اختيار مفرد', icon: 'fa-list-ul', bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+        multi_select: { label: 'قائمة اختيار متعدد', icon: 'fa-check-double', bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+        date: { label: 'تاريخ (Date)', icon: 'fa-calendar-alt', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+    };
+
+    if (attributesViewMode === 'cards') {
+        list.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                ${items.map(attr => {
+                    const attrId = attr.id || attr._id;
+                    const typeCfg = dataTypeLabels[attr.dataType] || { label: attr.dataType, icon: 'fa-cube', bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-200' };
+                    const hasOptions = (attr.dataType === 'single_select' || attr.dataType === 'multi_select') && attr.options && attr.options.length > 0;
+
+                    return `
+                        <div class="bg-white rounded-xl border border-slate-200 hover:border-[#2D4F2E] shadow-xs hover:shadow-md transition p-4 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-start justify-between gap-2 mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center">
+                                            #${attr.order || 0}
+                                        </span>
+                                        <div>
+                                            <h4 class="font-extrabold text-slate-900 text-sm">${attr.nameAr || attr.name}</h4>
+                                            ${attr.nameAr && attr.name ? `<p class="text-[11px] text-slate-400 font-medium">${attr.name}</p>` : ''}
+                                        </div>
+                                    </div>
+                                    ${attr.required 
+                                        ? '<span class="badge badge-danger text-[10px] py-0.5 px-2 font-bold">إجباري</span>' 
+                                        : '<span class="badge text-[10px] py-0.5 px-2 bg-slate-100 text-slate-500 font-medium">اختياري</span>'
+                                    }
+                                </div>
+
+                                <div class="space-y-2 mb-3 text-xs">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[11px] text-slate-400">الكود البرمجي:</span>
+                                        <code class="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-50 text-[#2D4F2E] border border-slate-200 select-all font-semibold">
+                                            ${attr.key}
+                                        </code>
+                                    </div>
+
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold ${typeCfg.bg} ${typeCfg.text} border ${typeCfg.border}">
+                                            <i class="fas ${typeCfg.icon}"></i>
+                                            <span>${typeCfg.label}</span>
+                                        </span>
+                                        ${attr.unit ? `<span class="inline-flex items-center text-[11px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 font-medium">الوحدة: <strong>${attr.unit}</strong></span>` : ''}
+                                    </div>
+
+                                    ${attr.defaultValue !== null && attr.defaultValue !== undefined && attr.defaultValue !== '' ? `
+                                        <div class="text-[11px] text-slate-500">
+                                            <span class="text-slate-400">القيمة الافتراضية:</span>
+                                            <span class="font-mono text-slate-700 font-medium">${attr.defaultValue}</span>
+                                        </div>
+                                    ` : ''}
+
+                                    ${hasOptions ? `
+                                        <div class="pt-2 border-t border-slate-100">
+                                            <span class="text-[11px] text-slate-400 block mb-1">الخيارات المتاحة (${attr.options.length}):</span>
+                                            <div class="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                                                ${attr.options.map(opt => `<span class="px-2 py-0.5 text-[11px] bg-purple-50 text-purple-800 rounded border border-purple-200 font-medium">${opt}</span>`).join('')}
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-1">
+                                    ${attr.showInFilters ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-sky-50 text-sky-700 border border-sky-200 font-semibold" title="يظهر كفلتر تصفية"><i class="fas fa-filter text-[9px]"></i> فلاتر</span>' : ''}
+                                    ${attr.showInDetails !== false ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold" title="يظهر في صفحة التفاصيل"><i class="fas fa-eye text-[9px]"></i> تفاصيل</span>' : ''}
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <button onclick="openEditAttributeModal('${attrId}')" class="btn-secondary text-xs py-1 px-2.5 text-blue-700 hover:bg-blue-50 font-semibold">
+                                        <i class="fas fa-edit me-1"></i> تعديل
+                                    </button>
+                                    <button onclick="deleteAttribute('${attrId}')" class="btn-secondary text-xs py-1 px-2 text-red-600 hover:bg-red-50" title="حذف">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    } else {
+        // Table view (Default)
+        list.innerHTML = `
+            <div class="overflow-x-auto bg-white rounded-xl border border-slate-200 shadow-xs">
+                <table class="w-full text-right border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-700 text-xs font-bold">
+                            <th class="py-3 px-4 w-12 text-center">#</th>
+                            <th class="py-3 px-4 min-w-[200px]">الخاصية (الاسم والمفتاح البرمجي)</th>
+                            <th class="py-3 px-4 min-w-[160px]">نوع البيانات والوحدة</th>
+                            <th class="py-3 px-4 min-w-[220px]">الخيارات والقيم المتاحة</th>
+                            <th class="py-3 px-4 min-w-[160px]">شروط الظهور</th>
+                            <th class="py-3 px-4 w-28 text-center">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        ${items.map(attr => {
+                            const attrId = attr.id || attr._id;
+                            const typeCfg = dataTypeLabels[attr.dataType] || { label: attr.dataType, icon: 'fa-cube', bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-200' };
+                            const hasOptions = (attr.dataType === 'single_select' || attr.dataType === 'multi_select') && attr.options && attr.options.length > 0;
+
+                            let optionsContent = '';
+                            if (hasOptions) {
+                                const pills = attr.options.map(opt => `
+                                    <span class="inline-block px-2 py-0.5 text-xs bg-purple-50 text-purple-800 rounded-md border border-purple-200 font-medium">
+                                        ${opt}
+                                    </span>
+                                `).join('');
+                                optionsContent = `<div class="flex flex-wrap gap-1 max-w-sm">${pills}</div>`;
+                            } else if (attr.dataType === 'single_select' || attr.dataType === 'multi_select') {
+                                optionsContent = '<span class="text-xs text-amber-600 font-medium"><i class="fas fa-exclamation-triangle me-1"></i> لم تحدد خيارات بعد</span>';
+                            } else {
+                                optionsContent = '<span class="text-slate-300 text-xs">—</span>';
+                            }
+
+                            return `
+                                <tr class="hover:bg-slate-50/70 transition group">
+                                    <td class="py-3.5 px-4 text-center">
+                                        <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs group-hover:bg-[#eaf1ea] group-hover:text-[#2D4F2E] transition">
+                                            ${attr.order || 0}
+                                        </span>
+                                    </td>
+                                    <td class="py-3.5 px-4">
+                                        <div class="space-y-1">
+                                            <div class="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+                                                <span>${attr.nameAr || attr.name}</span>
+                                                ${attr.nameAr && attr.name ? `<span class="text-xs text-slate-400 font-medium">(${attr.name})</span>` : ''}
+                                            </div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-[10px] text-slate-400 font-medium">المفتاح:</span>
+                                                <code class="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 text-[#2D4F2E] border border-slate-200 select-all font-semibold">
+                                                    ${attr.key}
+                                                </code>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3.5 px-4">
+                                        <div class="space-y-1.5">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${typeCfg.bg} ${typeCfg.text} border ${typeCfg.border}">
+                                                <i class="fas ${typeCfg.icon}"></i>
+                                                <span>${typeCfg.label}</span>
+                                            </span>
+                                            ${attr.unit ? `
+                                                <div class="text-[11px] text-slate-600 flex items-center gap-1">
+                                                    <span class="text-slate-400">الوحدة:</span>
+                                                    <strong class="text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded">${attr.unit}</strong>
+                                                </div>
+                                            ` : ''}
+                                            ${attr.defaultValue !== null && attr.defaultValue !== undefined && attr.defaultValue !== '' ? `
+                                                <div class="text-[11px] text-slate-500">
+                                                    <span class="text-slate-400">افتراضي:</span>
+                                                    <span class="font-mono text-slate-700 font-medium">${attr.defaultValue}</span>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </td>
+                                    <td class="py-3.5 px-4">
+                                        ${optionsContent}
+                                    </td>
+                                    <td class="py-3.5 px-4">
+                                        <div class="flex flex-wrap gap-1.5">
+                                            ${attr.required 
+                                                ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200"><i class="fas fa-asterisk text-[9px]"></i> إجباري</span>' 
+                                                : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-500">اختياري</span>'
+                                            }
+                                            ${attr.showInFilters 
+                                                ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200" title="يظهر كفلتر تصفية في واجهة البحث"><i class="fas fa-filter text-[10px]"></i> فلتر بحث</span>' 
+                                                : ''
+                                            }
+                                            ${attr.showInDetails !== false 
+                                                ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200" title="يظهر في صفحة تفاصيل الإعلان"><i class="fas fa-eye text-[10px]"></i> في التفاصيل</span>' 
+                                                : ''
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="py-3.5 px-4 text-center">
+                                        <div class="flex items-center justify-center gap-1.5">
+                                            <button onclick="openEditAttributeModal('${attrId}')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition flex items-center gap-1" title="تعديل الخاصية">
+                                                <i class="fas fa-edit"></i>
+                                                <span>تعديل</span>
+                                            </button>
+                                            <button onclick="deleteAttribute('${attrId}')" class="p-1.5 rounded-lg text-xs font-semibold text-red-600 hover:text-white hover:bg-red-600 border border-red-200 transition" title="حذف الخاصية">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
 }
 
 function toggleAttributeOptionsInput() {
@@ -1750,7 +2111,7 @@ function openAddAttributeModal() {
     document.getElementById('attribute-form').reset();
     document.getElementById('attr-modal-unit-type-id').value = state.selectedUnitTypeId;
     document.getElementById('attr-modal-show-details').checked = true;
-    document.getElementById('attr-modal-order').value = state.unitTypeAttributes.length;
+    document.getElementById('attr-modal-order').value = (state.unitTypeAttributes || []).length;
     toggleAttributeOptionsInput();
 
     document.getElementById('attribute-modal').classList.add('active');
@@ -1827,7 +2188,8 @@ async function handleAttributeFormSubmit(e) {
         }
 
         closeModal('attribute-modal');
-        loadUnitTypeAttributes(unitTypeId);
+        await loadUnitTypeAttributes(unitTypeId);
+        loadUnitTypes();
     } catch (err) {}
 }
 
@@ -1839,7 +2201,8 @@ async function deleteAttribute(attrId) {
             method: 'DELETE',
         });
         showToast('تم حذف الخاصية بنجاح', 'success');
-        loadUnitTypeAttributes(state.selectedUnitTypeId);
+        await loadUnitTypeAttributes(state.selectedUnitTypeId);
+        loadUnitTypes();
     } catch (err) {}
 }
 
@@ -2493,7 +2856,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+            const attrModal = document.getElementById('attribute-modal');
+            if (attrModal && attrModal.classList.contains('active')) {
+                attrModal.classList.remove('active');
+                return;
+            }
+            const activeOverlays = Array.from(document.querySelectorAll('.modal-overlay.active'));
+            if (activeOverlays.length > 0) {
+                activeOverlays[activeOverlays.length - 1].classList.remove('active');
+            }
         }
     });
 });

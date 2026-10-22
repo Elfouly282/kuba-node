@@ -7,6 +7,7 @@ const Region = require('../../../../src/features/regions/models/regionModel');
 const Advertisement = require('../../../../src/features/advertisements/models/advertisementModel');
 const UnitType = require('../../../../src/features/unit-types/models/unitTypeModel');
 const Booking = require('../../../../src/features/bookings/models/bookingModel');
+const { deleteUserData } = require('../../../../src/features/auth/controllers/authController');
 const APIError = require('../../../utils/apiError');
 const bcrypt = require('bcrypt');
 
@@ -389,11 +390,13 @@ exports.toggleUserStatus = async (req, res, next) => {
 
 exports.deleteUser = async (req, res, next) => {
     try {
-        const user = await User.findByIdAndDelete(req.params.id).setOptions({ includeInactive: true });
+        const user = await User.findById(req.params.id).setOptions({ includeInactive: true });
 
         if (!user) {
             return next(new APIError('errors.userNotFound', 404));
         }
+
+        await deleteUserData(user._id);
 
         res.status(204).json({
             status: 'success',

@@ -7,17 +7,7 @@ const UnitTypeAttribute = require('../../unit-types/models/unitTypeAttributeMode
 const Category = require('../../categories/models/categoryModel');
 const APIError = require('../../../utils/apiError');
 const { getUploadsRoot } = require('../../../config/uploadsPath');
-const { getImageUrl, getRelativeImagePath } = require('../../../utils/imageUrl');
-
-const deleteImageFile = (imagePath) => {
-    if (!imagePath || imagePath.startsWith('http://') || imagePath.startsWith('https://')) return;
-    const absPath = path.join(getUploadsRoot(), imagePath.replace(/^uploads[\\/]/, ''));
-    try {
-        if (fs.existsSync(absPath)) {
-            fs.unlinkSync(absPath);
-        }
-    } catch (_) {}
-};
+const { getImageUrl, getRelativeImagePath, deleteImageFile } = require('../../../utils/imageUrl');
 
 const formatAdvertisement = (doc) => {
     if (!doc) return null;

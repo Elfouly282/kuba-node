@@ -1,3 +1,7 @@
+const fs = require('fs');
+const path = require('path');
+const { getUploadsRoot } = require('../config/uploadsPath');
+
 /**
  * Converts a stored relative image path (e.g. "categories/abc.png")
  * into a full public URL (e.g. "https://kuba-app.com/uploads/categories/abc.png").
@@ -32,4 +36,19 @@ const getRelativeImagePath = (imageUrl) => {
     return imageUrl;
 };
 
-module.exports = { getImageUrl, getRelativeImagePath };
+/**
+ * Deletes a local image file from uploads folder if it exists.
+ * Skips external URLs and falsy values.
+ */
+const deleteImageFile = (imagePath) => {
+    if (!imagePath || typeof imagePath !== 'string') return;
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return;
+    try {
+        const absPath = path.join(getUploadsRoot(), imagePath.replace(/^uploads[\\/]/, ''));
+        if (fs.existsSync(absPath)) {
+            fs.unlinkSync(absPath);
+        }
+    } catch (_) {}
+};
+
+module.exports = { getImageUrl, getRelativeImagePath, deleteImageFile };

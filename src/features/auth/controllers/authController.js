@@ -1,8 +1,12 @@
 const crypto = require('crypto');
 const User = require('../models/userModel');
+const Advertisement = require('../../advertisements/models/advertisementModel');
+const Booking = require('../../bookings/models/bookingModel');
+const Banner = require('../../banners/models/bannerModel');
 const APIError = require('../../../utils/apiError');
 const { generateToken } = require('../../../utils/generateToken');
 const { sendVerificationEmail, sendPasswordResetOtpEmail } = require('../../../utils/sendEmail');
+const { deleteImageFile } = require('../../../utils/imageUrl');
 
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
@@ -26,6 +30,50 @@ const clean = (user) => {
     return obj;
 };
 
+const deleteUserData = async (userId) => {
+    if (!userId) return;
+
+    // 1. Delete user avatar file if stored locally
+    const user = await User.findById(userId).setOptions({ includeInactive: true });
+    if (user && user.avatar) {
+        deleteImageFile(user.avatar);
+    }
+
+    // 2. Find and delete all advertisements owned by this user
+    const ads = await Advertisement.find({ owner: userId });
+    const adIds = ads.map((ad) => ad._id);
+
+    for (const ad of ads) {
+        if (ad.image) deleteImageFile(ad.image);
+        if (Array.isArray(ad.images)) {
+            ad.images.forEach((img) => deleteImageFile(img));
+        }
+    }
+
+    if (adIds.length > 0) {
+        // Delete banners linked to these ads and their images
+        const banners = await Banner.find({ advertisementId: { $in: adIds } });
+        for (const banner of banners) {
+            if (banner.image) deleteImageFile(banner.image);
+        }
+        await Banner.deleteMany({ advertisementId: { $in: adIds } });
+
+        // Delete bookings for these ads
+        await Booking.deleteMany({ advertisement: { $in: adIds } });
+
+        // Delete the ads themselves
+        await Advertisement.deleteMany({ owner: userId });
+    }
+
+    // 3. Delete any bookings made by this user
+    await Booking.deleteMany({ user: userId });
+
+    // 4. Delete the user document permanently
+    await User.findByIdAndDelete(userId);
+};
+
+exports.deleteUserData = deleteUserData;
+
 exports.signUp = async (req, res, next) => {
     try {
         const { name, email, phone, password, confirmPassword, acceptTerms } = req.body;
@@ -33,13 +81,23 @@ exports.signUp = async (req, res, next) => {
         if (password !== confirmPassword) return next(new APIError('errors.passwordsDoNotMatch', 400));
         if (!acceptTerms) return next(new APIError('errors.mustAcceptTerms', 400));
 
-        if (await User.findOne({ email })) return next(new APIError('errors.emailAlreadyExists', 400));
+        const normalizedEmail = email.toLowerCase().trim();
+
+        const existingUser = await User.findOne({ email: normalizedEmail }).setOptions({ includeInactive: true });
+        if (existingUser) {
+            if (existingUser.active === false) {
+                // If the user was soft-deleted previously, clean up completely so they can create a fresh account
+                await deleteUserData(existingUser._id);
+            } else {
+                return next(new APIError('errors.emailAlreadyExists', 400));
+            }
+        }
 
         const { raw, hashed } = randomToken();
 
         const user = await User.create({
             name: name || null,
-            email,
+            email: normalizedEmail,
             phone: phone || null,
             password,
             provider: 'local',
@@ -63,7 +121,8 @@ exports.login = async (req, res, next) => {
         const { email, password } = req.body;
         if (!email || !password) return next(new APIError('errors.missingFields', 400));
 
-        const user = await User.findOne({ email }).select('+password').populate('region', 'name image');
+        const normalizedEmail = email.toLowerCase().trim();
+        const user = await User.findOne({ email: normalizedEmail }).select('+password').populate('region', 'name image');
         if (!user || !(await user.comparePassword(password))) return next(new APIError('errors.invalidCredentials', 401));
         if (user.provider !== 'local') return next(new APIError('errors.useGoogleLogin', 400));
 
@@ -130,7 +189,8 @@ exports.resendVerificationEmail = async (req, res, next) => {
         const { email } = req.body;
         if (!email) return next(new APIError('errors.missingFields', 400));
 
-        const user = await User.findOne({ email }).select('+emailVerificationToken +emailVerificationExpires');
+        const normalizedEmail = email.toLowerCase().trim();
+        const user = await User.findOne({ email: normalizedEmail }).select('+emailVerificationToken +emailVerificationExpires');
 
         if (!user) return res.status(200).json({ status: 'success', message: req.t('messages.verificationEmailSent') });
         if (user.isEmailVerified) return next(new APIError('errors.emailAlreadyVerified', 400));
@@ -151,7 +211,8 @@ exports.forgotPassword = async (req, res, next) => {
         const { email } = req.body;
         if (!email) return next(new APIError('errors.missingFields', 400));
 
-        const user = await User.findOne({ email });
+        const normalizedEmail = email.toLowerCase().trim();
+        const user = await User.findOne({ email: normalizedEmail });
         const response = { status: 'success', message: req.t('messages.passwordResetEmailSent') };
 
         if (!user || user.provider !== 'local') return res.status(200).json(response);
@@ -181,7 +242,8 @@ exports.verifyResetOtp = async (req, res, next) => {
         const { email, otp } = req.body;
         if (!email || !otp) return next(new APIError('errors.missingFields', 400));
 
-        const user = await User.findOne({ email })
+        const normalizedEmail = email.toLowerCase().trim();
+        const user = await User.findOne({ email: normalizedEmail })
             .select('+passwordResetOtp +passwordResetOtpExpires');
 
         if (
@@ -279,8 +341,16 @@ exports.updateProfile = async (req, res, next) => {
 
 exports.deleteAccount = async (req, res, next) => {
     try {
-        await User.findByIdAndUpdate(req.user._id, { active: false });
-        res.status(200).json({ status: 'success', message: req.t('messages.accountDeleted') });
+        const userId = req.user._id;
+        const user = await User.findById(userId).setOptions({ includeInactive: true });
+        if (!user) return next(new APIError('errors.userNotFound', 404));
+
+        await deleteUserData(userId);
+
+        res.status(200).json({
+            status: 'success',
+            message: req.t('messages.accountDeleted'),
+        });
     } catch (err) { next(err); }
 };
 

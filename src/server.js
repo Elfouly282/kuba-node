@@ -75,6 +75,7 @@ if (process.env.NODE_ENV === 'development') {
 app.use(i18nMiddleware);
 
 app.use('/uploads', express.static(getUploadsRoot()));
+app.use('/images', express.static(path.join(__dirname, '..', 'images')));
 
 // Serve Dashboard UI
 app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, '..', 'dashboard', 'index.html')));

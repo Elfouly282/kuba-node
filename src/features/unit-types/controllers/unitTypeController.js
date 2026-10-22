@@ -45,10 +45,26 @@ exports.getAll = async (req, res, next) => {
             .populate('categories', 'name image')
             .sort({ order: 1, createdAt: -1 });
 
+        const unitTypeIds = unitTypes.map(u => u._id);
+        const attributeCounts = await UnitTypeAttribute.aggregate([
+            { $match: { unitType: { $in: unitTypeIds } } },
+            { $group: { _id: '$unitType', count: { $sum: 1 } } },
+        ]);
+        const countsMap = {};
+        attributeCounts.forEach(ac => {
+            countsMap[ac._id.toString()] = ac.count;
+        });
+
+        const formattedUnitTypes = unitTypes.map(ut => {
+            const formatted = formatUnitType(ut);
+            formatted.attributesCount = countsMap[ut._id.toString()] || 0;
+            return formatted;
+        });
+
         res.status(200).json({
             status: 'success',
-            results: unitTypes.length,
-            data: { unitTypes: unitTypes.map(formatUnitType) },
+            results: formattedUnitTypes.length,
+            data: { unitTypes: formattedUnitTypes },
         });
     } catch (err) {
         next(err);

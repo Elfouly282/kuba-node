@@ -10,7 +10,7 @@
         "passwordResetSuccess": "تمت إعادة تعيين كلمة المرور بنجاح. أنت الآن مسجّل الدخول.",
         "passwordChanged": "تم تغيير كلمة المرور بنجاح.",
         "profileUpdated": "تم تحديث الملف الشخصي بنجاح.",
-        "accountDeleted": "تم إلغاء تنشيط حسابك بنجاح.",
+        "accountDeleted": "تم حذف حسابك وجميع بياناتك نهائياً بنجاح.",
         "onboardingScreenCreated": "تم إنشاء شاشة الترحيب بنجاح.",
         "onboardingScreenUpdated": "تم تحديث شاشة الترحيب بنجاح.",
         "onboardingScreenDeleted": "تم حذف شاشة الترحيب بنجاح.",
