@@ -3,6 +3,8 @@ const Advertisement = require('../../advertisements/models/advertisementModel');
 const Region = require('../../regions/models/regionModel');
 const APIError = require('../../../utils/apiError');
 
+const ALLOWED_POSITIONS = ['top', 'center', 'bottom'];
+
 /**
  * Validates MongoDB ObjectId in route params.
  */
@@ -41,6 +43,13 @@ const validateCreateBanner = async (req, _res, next) => {
             const regExists = await Region.findById(regId);
             if (!regExists) {
                 return next(new APIError('errors.regionNotFound', 404));
+            }
+        }
+
+        if (req.body.position !== undefined && req.body.position !== null && req.body.position.toString().trim() !== '') {
+            const pos = req.body.position.toString().toLowerCase().trim();
+            if (!ALLOWED_POSITIONS.includes(pos)) {
+                return next(new APIError('errors.invalidPosition', 400));
             }
         }
 
@@ -88,6 +97,13 @@ const validateUpdateBanner = async (req, _res, next) => {
                 if (!regExists) {
                     return next(new APIError('errors.regionNotFound', 404));
                 }
+            }
+        }
+
+        if (req.body.position !== undefined) {
+            const pos = req.body.position ? req.body.position.toString().toLowerCase().trim() : '';
+            if (!ALLOWED_POSITIONS.includes(pos)) {
+                return next(new APIError('errors.invalidPosition', 400));
             }
         }
 

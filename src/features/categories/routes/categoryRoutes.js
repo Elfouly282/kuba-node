@@ -3,7 +3,6 @@ const router = express.Router();
 
 const {
     getAll,
-    getOne,
     create,
     update,
     remove,
@@ -18,7 +17,6 @@ const {
 } = require('../middleware/categoryMiddleware');
 
 router.get('/', getAll);
-router.get('/:id', validateCategoryId, getOne);
 
 router.post('/', protect, restrictTo('admin'), ...uploadSingle('image', 'categories'), validateCreateCategory, create);
 router.patch('/:id', protect, restrictTo('admin'), validateCategoryId, ...uploadSingle('image', 'categories'), validateUpdateCategory, update);

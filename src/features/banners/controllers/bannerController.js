@@ -24,6 +24,7 @@ const formatBanner = (doc) => {
     return {
         id: (obj._id || obj.id).toString(),
         image: getImageUrl(obj.image),
+        position: obj.position || 'top',
         advertisementId: (obj.advertisementId?._id || obj.advertisementId || '').toString(),
         region: obj.region
             ? (typeof obj.region === 'object' && obj.region._id
@@ -48,19 +49,42 @@ exports.getAll = async (req, res, next) => {
             });
         }
 
-        const filter = {};
+        const andConditions = [];
+
         const regionParam = req.query.region || req.query.regionId;
         if (regionParam && mongoose.Types.ObjectId.isValid(regionParam)) {
             if (req.query.strict === 'true') {
-                filter.region = regionParam;
+                andConditions.push({ region: regionParam });
             } else {
-                filter.$or = [
-                    { region: regionParam },
-                    { region: null },
-                    { region: { $exists: false } },
-                ];
+                andConditions.push({
+                    $or: [
+                        { region: regionParam },
+                        { region: null },
+                        { region: { $exists: false } },
+                    ],
+                });
             }
         }
+
+        if (req.query.position) {
+            const pos = req.query.position.toString().toLowerCase().trim();
+            if (!['top', 'center', 'bottom'].includes(pos)) {
+                return next(new APIError('errors.invalidPosition', 400));
+            }
+            if (pos === 'top') {
+                andConditions.push({
+                    $or: [
+                        { position: 'top' },
+                        { position: null },
+                        { position: { $exists: false } },
+                    ],
+                });
+            } else {
+                andConditions.push({ position: pos });
+            }
+        }
+
+        const filter = andConditions.length > 0 ? { $and: andConditions } : {};
 
         const rawBanners = await Banner.find(filter)
             .populate('region', 'name image')
@@ -98,6 +122,7 @@ exports.getOne = async (req, res, next) => {
     }
 };
 
+
 exports.create = async (req, res, next) => {
     try {
         const advertisementId = req.body.advertisementId ? req.body.advertisementId.toString().trim() : '';
@@ -128,6 +153,15 @@ exports.create = async (req, res, next) => {
             region = regId;
         }
 
+        let position = 'top';
+        if (req.body.position !== undefined && req.body.position !== null && req.body.position.toString().trim() !== '') {
+            const pos = req.body.position.toString().toLowerCase().trim();
+            if (!['top', 'center', 'bottom'].includes(pos)) {
+                return next(new APIError('errors.invalidPosition', 400));
+            }
+            position = pos;
+        }
+
         let image = null;
         if (req.file) {
             image = `banners/${req.file.filename}`;
@@ -142,6 +176,7 @@ exports.create = async (req, res, next) => {
         const banner = await Banner.create({
             image,
             advertisementId,
+            position,
             region,
         });
 
@@ -200,6 +235,14 @@ exports.update = async (req, res, next) => {
             } else {
                 banner.region = null;
             }
+        }
+
+        if (req.body.position !== undefined) {
+            const pos = req.body.position ? req.body.position.toString().toLowerCase().trim() : '';
+            if (!['top', 'center', 'bottom'].includes(pos)) {
+                return next(new APIError('errors.invalidPosition', 400));
+            }
+            banner.position = pos;
         }
 
         if (req.file) {

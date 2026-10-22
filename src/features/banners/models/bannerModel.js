@@ -12,6 +12,17 @@ const bannerSchema = new mongoose.Schema(
             ref: 'Advertisement',
             required: [true, 'validation.advertisementRequired'],
         },
+        position: {
+            type: String,
+            enum: {
+                values: ['top', 'center', 'bottom'],
+                message: 'validation.invalidPosition',
+            },
+            default: 'top',
+            trim: true,
+            lowercase: true,
+            index: true,
+        },
         region: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Region',

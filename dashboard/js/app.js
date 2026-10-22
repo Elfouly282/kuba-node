@@ -75,6 +75,10 @@ const I18N = {
         categoryName: 'اسم التصنيف',
         categoryImage: 'صورة التصنيف',
         bannerImage: 'صورة البانر',
+        bannerPosition: 'موضع البانر',
+        positionTop: 'أعلى الصفحة (Top)',
+        positionCenter: 'منتصف الصفحة (Center)',
+        positionBottom: 'أسفل الصفحة (Bottom)',
         linkedAd: 'الإعلان المرتبط',
         confirmDeleteCategory: 'هل أنت متأكد من رغبتك في حذف هذا التصنيف نهائياً؟',
         confirmDeleteBanner: 'هل أنت متأكد من رغبتك في حذف هذا البانر نهائياً؟',
@@ -180,6 +184,10 @@ const I18N = {
         categoryName: 'Category Name',
         categoryImage: 'Category Image',
         bannerImage: 'Banner Image',
+        bannerPosition: 'Banner Position',
+        positionTop: 'Top',
+        positionCenter: 'Center',
+        positionBottom: 'Bottom',
         linkedAd: 'Linked Advertisement',
         confirmDeleteCategory: 'Are you sure you want to delete this category?',
         confirmDeleteBanner: 'Are you sure you want to delete this banner?',
@@ -235,6 +243,7 @@ const state = {
     editingScreenId: null,
     editingCategoryId: null,
     editingBannerId: null,
+    bannerPositionFilter: 'all',
     editingRegionId: null,
     editingAdvertisementId: null,
     editingUnitTypeId: null,
@@ -1016,21 +1025,32 @@ async function loadBanners() {
     }
 }
 
+function filterBannersByPosition(pos) {
+    state.bannerPositionFilter = pos || 'all';
+    renderBanners();
+}
+
 function renderBanners() {
     const grid = document.getElementById('banners-grid');
     const badge = document.getElementById('badge-banners-count');
-    if (badge) badge.textContent = `${state.banners.length} ${t('bannersTitle')}`;
+
+    const filteredBanners = state.bannerPositionFilter && state.bannerPositionFilter !== 'all'
+        ? state.banners.filter(b => (b.position || 'top') === state.bannerPositionFilter)
+        : state.banners;
+
+    if (badge) badge.textContent = `${filteredBanners.length} ${t('bannersTitle')}`;
 
     if (!grid) return;
 
-    if (state.banners.length === 0) {
-        grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-xs">لا توجد بانرات إعلانية حالياً. يمكنك إضافة أول بانر بالضغط على زر "إضافة بانر".</div>`;
+    if (filteredBanners.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-xs">لا توجد بانرات إعلانية تطابق الموضع المحدد. يمكنك إضافة بانر جديد بالضغط على زر "إضافة بانر".</div>`;
         return;
     }
 
-    grid.innerHTML = state.banners.map(banner => {
+    grid.innerHTML = filteredBanners.map(banner => {
         const bannerId = banner.id || banner._id;
         const adId = banner.advertisementId;
+        const position = (banner.position || 'top').toLowerCase();
         const imgSrc = banner.image?.startsWith('http') ? banner.image : `/uploads/${banner.image}`;
         
         // Find linked advertisement details if loaded
@@ -1039,13 +1059,35 @@ function renderBanners() {
 
         const regionName = typeof banner.region === 'object' && banner.region ? banner.region.name : null;
 
+        const positionBadges = {
+            top: {
+                badgeClass: 'bg-indigo-600 text-white',
+                icon: 'fa-arrow-up',
+                label: 'أعلى (Top)',
+                textClass: 'text-indigo-600',
+            },
+            center: {
+                badgeClass: 'bg-amber-600 text-white',
+                icon: 'fa-arrows-alt-v',
+                label: 'منتصف (Center)',
+                textClass: 'text-amber-600',
+            },
+            bottom: {
+                badgeClass: 'bg-purple-600 text-white',
+                icon: 'fa-arrow-down',
+                label: 'أسفل (Bottom)',
+                textClass: 'text-purple-600',
+            },
+        };
+        const posInfo = positionBadges[position] || positionBadges.top;
+
         return `
             <div class="card p-3 bg-white border border-slate-200 hover:border-[#2D4F2E] transition flex flex-col justify-between">
                 <div>
                     <div class="h-40 w-full rounded-lg overflow-hidden bg-slate-100 mb-3 relative">
                         <img src="${imgSrc}" alt="Banner" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x300?text=Banner+Image'">
-                        <span class="absolute top-2 start-2 badge badge-brand text-[10px] shadow">
-                            <i class="fas fa-bullhorn me-1"></i> بانر إعلاني
+                        <span class="absolute top-2 start-2 badge ${posInfo.badgeClass} text-[10px] shadow">
+                            <i class="fas ${posInfo.icon} me-1"></i> ${posInfo.label}
                         </span>
                         ${regionName ? `<span class="absolute top-2 end-2 badge bg-emerald-700 text-white text-[10px] shadow"><i class="fas fa-map-marker-alt me-1"></i> ${regionName}</span>` : `<span class="absolute top-2 end-2 badge bg-slate-800 text-white text-[10px] shadow">عام للكل</span>`}
                     </div>
@@ -1054,6 +1096,12 @@ function renderBanners() {
                         <div class="flex items-center justify-between">
                             <span class="text-slate-400 text-[11px]">معرف البانر (ID):</span>
                             <span class="font-mono text-[11px] text-slate-700 font-bold truncate max-w-[150px]">${bannerId}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400 text-[11px]">موضع العرض:</span>
+                            <span class="font-bold text-[11px] ${posInfo.textClass}">
+                                <i class="fas ${posInfo.icon} me-1"></i>${posInfo.label}
+                            </span>
                         </div>
                         <div class="flex items-center justify-between bg-slate-50 p-2 rounded border border-slate-100">
                             <div>
@@ -1083,6 +1131,8 @@ function openAddBannerModal() {
     document.getElementById('banner-modal-title').textContent = t('addBanner');
     document.getElementById('banner-form').reset();
     document.getElementById('banner-modal-preview').innerHTML = '';
+    const posSelect = document.getElementById('banner-modal-position');
+    if (posSelect) posSelect.value = 'top';
     populateBannerAdSelect();
     populateRegionSelects();
     document.getElementById('banner-modal').classList.add('active');
@@ -1102,6 +1152,9 @@ function openEditBannerModal(bannerId) {
     const adId = banner.advertisementId;
     if (select) select.value = adId;
     if (input) input.value = adId;
+
+    const posSelect = document.getElementById('banner-modal-position');
+    if (posSelect) posSelect.value = banner.position || 'top';
 
     const regSelect = document.getElementById('banner-modal-region-select');
     if (regSelect) {
@@ -1127,6 +1180,7 @@ async function handleBannerFormSubmit(e) {
     e.preventDefault();
     const advertisementId = document.getElementById('banner-modal-ad-id').value.trim();
     const region = document.getElementById('banner-modal-region-select')?.value.trim() || '';
+    const position = document.getElementById('banner-modal-position')?.value || 'top';
     const imageFile = document.getElementById('banner-modal-image-file').files[0];
     const imageUrl = document.getElementById('banner-modal-image-url').value.trim();
 
@@ -1140,12 +1194,13 @@ async function handleBannerFormSubmit(e) {
     if (imageFile) {
         payload = new FormData();
         payload.append('advertisementId', advertisementId);
+        payload.append('position', position);
         if (region) payload.append('region', region);
         payload.append('image', imageFile);
     } else if (imageUrl) {
-        payload = JSON.stringify({ advertisementId, image: imageUrl, region: region || null });
+        payload = JSON.stringify({ advertisementId, position, image: imageUrl, region: region || null });
     } else if (state.editingBannerId) {
-        payload = JSON.stringify({ advertisementId, region: region || null });
+        payload = JSON.stringify({ advertisementId, position, region: region || null });
     } else {
         showToast('يرجى اختيار ملف صورة للبانر أو إدخال رابط الصورة المباشر', 'error');
         return;
@@ -1169,6 +1224,7 @@ async function handleBannerFormSubmit(e) {
         closeModal('banner-modal');
         loadBanners();
     } catch (err) {}
+}
 }
 
 async function deleteBanner(bannerId) {

@@ -22,6 +22,7 @@ const formatBanner = (doc) => {
     return {
         id: (obj._id || obj.id).toString(),
         image: getImageUrl(obj.image),
+        position: obj.position || 'top',
         advertisementId: (obj.advertisementId?._id || obj.advertisementId || '').toString(),
         region: obj.region ? (obj.region._id || obj.region).toString() : null,
     };
@@ -111,9 +112,24 @@ exports.getRegionData = async (req, res, next) => {
             return next(new APIError('errors.regionNotFound', 404));
         }
 
-        const rawBanners = await Banner.find({
-            $or: [{ region: regionId }, { region: null }, { region: { $exists: false } }],
-        }).sort({ createdAt: -1 });
+        const bannerConditions = [
+            { $or: [{ region: regionId }, { region: null }, { region: { $exists: false } }] },
+        ];
+
+        if (req.query.position) {
+            const pos = req.query.position.toString().toLowerCase().trim();
+            if (['top', 'center', 'bottom'].includes(pos)) {
+                if (pos === 'top') {
+                    bannerConditions.push({
+                        $or: [{ position: 'top' }, { position: null }, { position: { $exists: false } }],
+                    });
+                } else {
+                    bannerConditions.push({ position: pos });
+                }
+            }
+        }
+
+        const rawBanners = await Banner.find({ $and: bannerConditions }).sort({ createdAt: -1 });
 
         const rawChalets = await Advertisement.find({
             region: regionId,

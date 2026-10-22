@@ -121,12 +121,13 @@ const runTests = async () => {
             throw new Error('Expected 404 for non-existent advertisementId');
         }
 
-        console.log('\n[7] Testing POST /api/v1/admin/banners with VALID advertisementId...');
+        console.log('\n[7] Testing POST /api/v1/admin/banners with VALID advertisementId and position center...');
         const createBannerSuccess = await request('/api/v1/admin/banners', {
             method: 'POST',
             token,
             json: {
                 advertisementId: validAdId,
+                position: 'center',
                 image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1200',
             },
         });
@@ -137,7 +138,26 @@ const runTests = async () => {
         const createdBanner = createBannerSuccess.data.data.banner;
         console.log('Created Banner Object:', JSON.stringify(createdBanner, null, 2));
 
-        // Verify banner contains ONLY id, image, advertisementId
+        if (createdBanner.position !== 'center') {
+            throw new Error(`Expected position to be center, got ${createdBanner.position}`);
+        }
+
+        // Test invalid position rejection
+        const invalidPosRes = await request('/api/v1/admin/banners', {
+            method: 'POST',
+            token,
+            json: {
+                advertisementId: validAdId,
+                position: 'diagonal',
+                image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1200',
+            },
+        });
+        console.log(`POST /api/v1/admin/banners with invalid position -> Status: ${invalidPosRes.status}`);
+        if (invalidPosRes.status !== 400) {
+            throw new Error('Expected 400 for invalid position');
+        }
+
+        // Verify banner contains ONLY allowed fields
         const bannerKeys = Object.keys(createdBanner).sort();
         console.log('Banner fields in response:', bannerKeys);
         if (bannerKeys.includes('title') || bannerKeys.includes('description') || bannerKeys.includes('price')) {
@@ -146,31 +166,36 @@ const runTests = async () => {
 
         const createdBannerId = createdBanner.id;
 
-        console.log('\n[8] Testing GET /api/v1/banners...');
-        const getBanners = await request('/api/v1/banners');
-        console.log(`GET /api/v1/banners -> Status: ${getBanners.status}, Count: ${getBanners.data.results}`);
-        if (getBanners.status !== 200 || !Array.isArray(getBanners.data.data.banners)) {
-            throw new Error('Get banners list failed');
+        console.log('\n[8] Testing GET /api/v1/banners with position filter...');
+        const getBannersCenter = await request('/api/v1/banners?position=center');
+        console.log(`GET /api/v1/banners?position=center -> Status: ${getBannersCenter.status}, Count: ${getBannersCenter.data.results}`);
+        if (getBannersCenter.status !== 200 || !Array.isArray(getBannersCenter.data.data.banners)) {
+            throw new Error('Get banners list with position=center failed');
+        }
+        const hasCenter = getBannersCenter.data.data.banners.some(b => b.id === createdBannerId && b.position === 'center');
+        if (!hasCenter) {
+            throw new Error('Created banner not found in position=center query');
         }
 
         console.log('\n[9] Testing GET /api/v1/banners/:id...');
         const getOneBanner = await request(`/api/v1/banners/${createdBannerId}`);
-        console.log(`GET /api/v1/banners/:id -> Status: ${getOneBanner.status}, adId: ${getOneBanner.data.data?.banner?.advertisementId}`);
+        console.log(`GET /api/v1/banners/:id -> Status: ${getOneBanner.status}, adId: ${getOneBanner.data.data?.banner?.advertisementId}, pos: ${getOneBanner.data.data?.banner?.position}`);
         if (getOneBanner.status !== 200 || getOneBanner.data.data.banner.id !== createdBannerId) {
             throw new Error('Get one banner failed');
         }
 
-        console.log('\n[10] Testing PATCH /api/v1/admin/banners/:id (Update)...');
+        console.log('\n[10] Testing PATCH /api/v1/admin/banners/:id (Update image and position to bottom)...');
         const updateBanner = await request(`/api/v1/admin/banners/${createdBannerId}`, {
             method: 'PATCH',
             token,
             json: {
+                position: 'bottom',
                 image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200',
             },
         });
-        console.log(`PATCH /api/v1/admin/banners/:id -> Status: ${updateBanner.status}, New Image: ${updateBanner.data.data?.banner?.image}`);
-        if (updateBanner.status !== 200 || updateBanner.data.data.banner.image !== 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200') {
-            throw new Error('Update banner failed');
+        console.log(`PATCH /api/v1/admin/banners/:id -> Status: ${updateBanner.status}, New Image: ${updateBanner.data.data?.banner?.image}, New Pos: ${updateBanner.data.data?.banner?.position}`);
+        if (updateBanner.status !== 200 || updateBanner.data.data.banner.position !== 'bottom') {
+            throw new Error('Update banner position failed');
         }
 
         console.log('\n[11] Testing DELETE /api/v1/admin/banners/:id (Delete)...');

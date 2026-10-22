@@ -67,6 +67,7 @@
         "invalidAdvertisementId": "معرف الإعلان المحدد غير صالح.",
         "invalidCategoryId": "معرف التصنيف المحدد غير صالح.",
         "invalidBannerId": "معرف البانر المحدد غير صالح.",
+        "invalidPosition": "موضع البانر غير صالح. القيم المسموحة هي: top, center, bottom.",
         "regionNotFound": "المنطقة المطلوبة غير موجودة.",
         "invalidRegionId": "معرف المنطقة المحدد غير صالح.",
         "imageRequired": "الصورة مطلوبة (يرجى رفع ملف صورة أو توفير رابط الصورة)."
@@ -84,6 +85,8 @@
         "onboardingScreenNotFound": "شاشة الترحيب غير موجودة.",
         "categoryRequired": "التصنيف مطلوب.",
         "advertisementRequired": "معرف الإعلان مطلوب.",
+        "positionRequired": "موضع البانر مطلوب.",
+        "invalidPosition": "يجب أن يكون موضع البانر: top أو center أو bottom.",
         "regionRequired": "معرف المنطقة مطلوب.",
         "imageRequired": "الصورة مطلوبة."
     }

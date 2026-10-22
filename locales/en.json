@@ -67,6 +67,7 @@
         "invalidAdvertisementId": "Invalid advertisement ID provided.",
         "invalidCategoryId": "Invalid category ID provided.",
         "invalidBannerId": "Invalid banner ID provided.",
+        "invalidPosition": "Invalid banner position. Allowed values are top, center, bottom.",
         "regionNotFound": "The requested region was not found.",
         "invalidRegionId": "Invalid region ID provided.",
         "imageRequired": "Image is required (please upload an image file or provide an image URL)."
@@ -84,6 +85,8 @@
         "onboardingScreenNotFound": "Onboarding screen not found.",
         "categoryRequired": "Category is required.",
         "advertisementRequired": "Advertisement ID is required.",
+        "positionRequired": "Banner position is required.",
+        "invalidPosition": "Banner position must be one of: top, center, bottom.",
         "regionRequired": "Region ID is required.",
         "imageRequired": "Image is required."
     }

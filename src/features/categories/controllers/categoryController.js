@@ -47,25 +47,6 @@ exports.getAll = async (_req, res, next) => {
     }
 };
 
-exports.getOne = async (req, res, next) => {
-    try {
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return next(new APIError('errors.invalidCategoryId', 400));
-        }
-
-        const category = await Category.findById(req.params.id);
-        if (!category) {
-            return next(new APIError('errors.categoryNotFound', 404));
-        }
-
-        res.status(200).json({
-            status: 'success',
-            data: { category: formatCategory(category) },
-        });
-    } catch (err) {
-        next(err);
-    }
-};
 
 exports.create = async (req, res, next) => {
     try {
