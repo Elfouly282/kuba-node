@@ -273,6 +273,17 @@ function showToast(message, type = 'info') {
     }, 3500);
 }
 
+function getApiBaseUrl() {
+    if (window.location.protocol === 'file:') {
+        return 'http://localhost:4000';
+    }
+    const port = window.location.port;
+    if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && port !== '3000' && port !== '4000') {
+        return 'http://localhost:4000';
+    }
+    return '';
+}
+
 async function apiFetch(endpoint, options = {}) {
     const headers = options.headers || {};
     if (state.token) {
@@ -286,8 +297,21 @@ async function apiFetch(endpoint, options = {}) {
         headers['Content-Type'] = 'application/json';
     }
 
+    const baseUrl = getApiBaseUrl();
+    const url = endpoint.startsWith('http') ? endpoint : `${baseUrl}${endpoint}`;
+
     try {
-        const res = await fetch(endpoint, { ...options, headers });
+        let res;
+        try {
+            res = await fetch(url, { ...options, headers });
+        } catch (fetchErr) {
+            if (baseUrl && baseUrl.includes(':4000') && !options._fallbackAttempted) {
+                const altUrl = url.replace(':4000', ':3000');
+                res = await fetch(altUrl, { ...options, headers, _fallbackAttempted: true });
+            } else {
+                throw fetchErr;
+            }
+        }
         
         if (res.status === 401 && !endpoint.includes('/login')) {
             logout();
@@ -1224,7 +1248,6 @@ async function handleBannerFormSubmit(e) {
         closeModal('banner-modal');
         loadBanners();
     } catch (err) {}
-}
 }
 
 async function deleteBanner(bannerId) {
