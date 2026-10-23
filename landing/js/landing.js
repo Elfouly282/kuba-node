@@ -1,5 +1,5 @@
 /**
- * Kuba Tours - Luxury Green Portfolio Theme Script
+ * Kuba Tours - Streamlined Luxury Theme Script
  * Bilingual (AR/EN) + Horizontal Gallery Scroll + Lightbox
  */
 
@@ -46,7 +46,7 @@ const content = {
     card8Title: "مغامرتك الفاخرة القادمة",
     card8Sub: "إطلالة جوية ساحرة لخليج سهل حشيش",
 
-    // Download Section (No white box, all white text)
+    // Download Section (No White Box, Clean White Text)
     downloadTag: "حمّل التطبيق الآن",
     downloadTitle: "ابدأ رحلتك وصمم إجازتك القادمة بلمسة واحدة",
     downloadSubtitle: "تطبيق كوبا متاح الآن مجاناً على هواتف آبل وأندرويد. تصفح، اختر، واحجز يختك أو شاليهك في ثوانٍ.",
@@ -77,7 +77,7 @@ const content = {
     langBtn: "العربية",
 
     // Horizontal Gallery
-    galleryTag: "Exclusive Visual Journal & Posters",
+    galleryTag: "EXCLUSIVE VISUAL JOURNAL & POSTERS",
     galleryTitle: "Swipe Through the Beauty of Kuba",
     gallerySubtitle: "Browse our curated collection of promotional posters across Sahl Hasheesh. Scroll horizontally to explore every detail.",
     galleryHint: "Scroll or drag horizontally to view all posters",
@@ -108,8 +108,8 @@ const content = {
     card8Title: "Your Next Luxurious Adventure",
     card8Sub: "Magnificent aerial coastline views of Sahl Hasheesh Bay",
 
-    // Download Section (No white box, all white text)
-    downloadTag: "Download Today",
+    // Download Section
+    downloadTag: "DOWNLOAD TODAY",
     downloadTitle: "Begin Your Voyage and Plan Your Escape in Seconds",
     downloadSubtitle: "The Kuba App is available for free on iOS and Android. Discover, select, and confirm your private stay or yacht charter in taps.",
     downloadAppleBadgeAlt: "Download on the App Store",
@@ -161,7 +161,7 @@ function setupHorizontalGallery() {
 
   const getScrollAmount = () => {
     const card = track.querySelector('.h-poster-card');
-    return card ? card.offsetWidth + 24 : 420;
+    return card ? card.offsetWidth + 24 : 400;
   };
 
   if (btnNext) {

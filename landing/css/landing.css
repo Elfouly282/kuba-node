@@ -2,10 +2,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Jacques+Francois&display=swap');
 
 :root {
-  --app-green-darkest: #0A190D;
-  --app-green-deep: #132D18;
-  --app-green-main: #1E4323;
-  --app-green-light: #2A5A30;
+  --app-green-darkest: #0A1B0E;
+  --app-green-deep: #16321C;
+  --app-green-main: #234927;
+  --app-green-light: #2E5C33;
   --app-gold: #D4AF37;
   --app-gold-light: #F4E7BD;
   --white: #FFFFFF;
@@ -47,20 +47,21 @@ h1, h2, h3, h4, h5, .font-brand {
 body[dir="rtl"] h1, 
 body[dir="rtl"] h2, 
 body[dir="rtl"] h3, 
-body[dir="rtl"] h4 {
+body[dir="rtl"] h4,
+body[dir="rtl"] .font-brand {
   font-family: 'Cairo', serif;
 }
 
-/* Header - Top Full Width */
+/* Header: Full Width, at very top */
 .site-header {
   width: 100%;
-  background: rgba(14, 32, 18, 0.96);
+  background: rgba(18, 43, 23, 0.96);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.25);
 }
 
-/* Full Width Banner below Header */
+/* Full Width Banner */
 .hero-full-banner {
   width: 100%;
   position: relative;
@@ -75,7 +76,7 @@ body[dir="rtl"] h4 {
   object-fit: cover;
 }
 
-/* Horizontal Gallery Track */
+/* Horizontal Gallery Scroll Container */
 .horizontal-scroll-track {
   display: flex;
   overflow-x: auto;
@@ -100,32 +101,32 @@ body[dir="rtl"] h4 {
   scrollbar-width: none;
 }
 
-/* Poster Card: holds full natural aspect ratio (4:5) */
+/* Poster Card in Horizontal Scroll */
 .h-poster-card {
   flex: 0 0 auto;
-  height: 430px;
-  width: 344px;
+  width: 320px;
+  height: 480px;
   scroll-snap-align: center;
   border-radius: 24px;
   overflow: hidden;
   background: #ffffff;
   border: 2px solid rgba(212, 175, 55, 0.35);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45);
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
 }
 
 @media (min-width: 768px) {
   .h-poster-card {
-    height: 520px;
-    width: 416px;
+    width: 380px;
+    height: 540px;
   }
 }
 
 .h-poster-card:hover {
   transform: translateY(-8px) scale(1.02);
   border-color: var(--app-gold);
-  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.55), 0 0 25px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(212, 175, 55, 0.35);
 }
 
 .h-poster-card img {
@@ -143,7 +144,7 @@ body[dir="rtl"] h4 {
 .poster-hover-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(10, 25, 13, 0.95) 0%, rgba(10, 25, 13, 0.25) 55%, transparent 100%);
+  background: linear-gradient(to top, rgba(10, 24, 13, 0.95) 0%, rgba(10, 24, 13, 0.35) 50%, transparent 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
   display: flex;
@@ -164,25 +165,25 @@ body[dir="rtl"] h4 {
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  background: rgba(14, 32, 18, 0.92);
+  background: rgba(18, 43, 23, 0.92);
   border: 1.5px solid rgba(212, 175, 55, 0.6);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
   cursor: pointer;
   transition: all 0.25s ease;
   z-index: 30;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);
 }
 
 .scroll-arrow-btn:hover {
   background: var(--app-gold);
-  color: #0A190D;
+  color: var(--app-green-darkest);
   border-color: var(--app-gold);
   transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.55);
+  box-shadow: 0 10px 30px rgba(212, 175, 55, 0.5);
 }
 
 /* Store Badge Links */
@@ -193,8 +194,8 @@ body[dir="rtl"] h4 {
 }
 
 .badge-link:hover {
-  transform: translateY(-3px) scale(1.04);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
 }
 
 /* Lightbox Modal */
@@ -203,9 +204,9 @@ body[dir="rtl"] h4 {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(8, 20, 10, 0.97);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(8, 20, 11, 0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
@@ -216,8 +217,8 @@ body[dir="rtl"] h4 {
 }
 
 .lightbox-img-wrap {
-  max-width: 92vw;
-  max-height: 88vh;
+  max-width: 90vw;
+  max-height: 85vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -225,9 +226,9 @@ body[dir="rtl"] h4 {
 
 .lightbox-img-wrap img {
   max-width: 100%;
-  max-height: 88vh;
+  max-height: 85vh;
   object-fit: contain;
   border-radius: 18px;
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  border: 1px solid rgba(212, 175, 55, 0.5);
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
 }
