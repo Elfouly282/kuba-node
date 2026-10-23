@@ -1,17 +1,19 @@
-/* Kuba - Luxury Portfolio Stylesheet */
+/* Kuba Tours - Luxury Green & White Portfolio Theme */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Jacques+Francois&display=swap');
+
 :root {
-  --app-green: #234927;
-  --app-green-dark: #17321A;
+  --app-green-darkest: #0E2012;
+  --app-green-deep: #16321C;
+  --app-green-main: #234927;
   --app-green-light: #2E5C33;
-  --app-green-soft: #F2F6F3;
-  --app-green-border: rgba(35, 73, 39, 0.15);
-  --gold: #D4AF37;
-  --gold-light: #F4E7BD;
-  --text-dark: #132415;
-  --text-muted: #576A59;
-  --bg-white: #FFFFFF;
-  --bg-soft: #F8FAF8;
-  --bg-card: #FFFFFF;
+  --app-green-accent: #3D7844;
+  --app-gold: #D4AF37;
+  --app-gold-light: #F4E7BD;
+  --white: #FFFFFF;
+  --white-soft: #F9FAF9;
+  --white-card: #FFFFFF;
+  --text-white: #FFFFFF;
+  --text-muted: #D1DFD4;
 }
 
 * {
@@ -25,151 +27,212 @@ html {
 }
 
 body {
-  font-family: 'Cairo', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: var(--text-dark);
-  background-color: var(--bg-soft);
+  font-family: 'Jacques Francois', 'Cairo', serif;
+  color: var(--text-white);
+  background-color: var(--app-green-deep);
   line-height: 1.6;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-body[dir="ltr"] {
-  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+body[dir="rtl"] {
+  font-family: 'Cairo', 'Jacques Francois', sans-serif;
 }
 
-body[dir="rtl"] {
-  font-family: 'Cairo', sans-serif;
+body[dir="ltr"] {
+  font-family: 'Jacques Francois', serif;
+}
+
+h1, h2, h3, h4, h5, .font-brand {
+  font-family: 'Jacques Francois', 'Cairo', serif;
+}
+
+body[dir="rtl"] h1, 
+body[dir="rtl"] h2, 
+body[dir="rtl"] h3, 
+body[dir="rtl"] h4 {
+  font-family: 'Cairo', serif;
 }
 
 /* Header */
 .site-header {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--app-green-border);
+  background: rgba(22, 50, 28, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.25);
 }
 
-/* Portfolio Card */
-.portfolio-card {
-  background: #ffffff;
-  border-radius: 20px;
-  overflow: hidden;
-  border: 1px solid rgba(35, 73, 39, 0.12);
-  box-shadow: 0 4px 20px -2px rgba(35, 73, 39, 0.06);
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex;
-  flex-direction: column;
-}
-
-.portfolio-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 36px -6px rgba(35, 73, 39, 0.15);
-  border-color: var(--app-green);
-}
-
-.portfolio-img-wrap {
+/* Full Width Top Banner */
+.hero-full-banner {
+  width: 100%;
   position: relative;
+  background: var(--app-green-deep);
   overflow: hidden;
-  background: #f1f5f2;
 }
 
-.portfolio-img {
+.hero-full-banner img {
   width: 100%;
   height: auto;
   display: block;
-  object-fit: contain;
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  object-fit: cover;
 }
 
-.portfolio-card:hover .portfolio-img {
-  transform: scale(1.03);
+/* Horizontal Gallery Scroll Container */
+.horizontal-scroll-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 1.5rem;
+  padding-top: 1rem;
+  cursor: grab;
 }
 
-.portfolio-overlay {
+.horizontal-scroll-track:active {
+  cursor: grabbing;
+}
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Poster Card in Horizontal Scroll */
+.h-poster-card {
+  flex: 0 0 auto;
+  width: 320px;
+  height: 480px;
+  scroll-snap-align: center;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .h-poster-card {
+    width: 380px;
+    height: 540px;
+  }
+}
+
+.h-poster-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: var(--app-gold);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 20px rgba(212, 175, 55, 0.3);
+}
+
+.h-poster-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.h-poster-card:hover img {
+  transform: scale(1.04);
+}
+
+.poster-hover-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(23, 50, 26, 0.85) 0%, rgba(23, 50, 26, 0.2) 50%, transparent 100%);
+  background: linear-gradient(to top, rgba(14, 32, 18, 0.95) 0%, rgba(14, 32, 18, 0.3) 50%, transparent 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
   display: flex;
-  align-items: flex-end;
-  padding: 1.25rem;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.5rem;
 }
 
-.portfolio-card:hover .portfolio-overlay {
+.h-poster-card:hover .poster-hover-overlay {
   opacity: 1;
 }
 
-/* Service Card */
-.service-card {
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 1.75rem;
-  border: 1px solid rgba(35, 73, 39, 0.1);
-  box-shadow: 0 4px 16px rgba(35, 73, 39, 0.04);
-  transition: all 0.3s ease;
-}
-
-.service-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(35, 73, 39, 0.1);
-  border-color: var(--app-green);
-}
-
-.service-icon-box {
+/* Scroll Arrow Navigation Buttons */
+.scroll-arrow-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   width: 52px;
   height: 52px;
-  border-radius: 14px;
-  background: var(--app-green-soft);
-  color: var(--app-green);
+  border-radius: 50%;
+  background: rgba(22, 50, 28, 0.9);
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  z-index: 30;
+  backdrop-filter: blur(8px);
+}
+
+.scroll-arrow-btn:hover {
+  background: var(--app-gold);
+  color: var(--app-green-darkest);
+  border-color: var(--app-gold);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5);
+}
+
+/* White Content Cards */
+.white-feature-card {
+  background: #ffffff;
+  color: #17321A;
+  border-radius: 24px;
+  padding: 2rem;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.white-feature-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--app-gold);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+}
+
+.feature-icon-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #234927;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
   margin-bottom: 1.25rem;
   transition: all 0.3s ease;
 }
 
-.service-card:hover .service-icon-box {
-  background: var(--app-green);
-  color: #ffffff;
-}
-
-/* Portfolio Filter Tabs */
-.filter-btn {
-  padding: 0.5rem 1.25rem;
-  border-radius: 9999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border: 1px solid rgba(35, 73, 39, 0.15);
-  background: #ffffff;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.filter-btn:hover {
-  color: var(--app-green);
-  border-color: var(--app-green);
-}
-
-.filter-btn.active {
-  background: var(--app-green);
-  color: #ffffff;
-  border-color: var(--app-green);
-  box-shadow: 0 4px 12px rgba(35, 73, 39, 0.25);
+.white-feature-card:hover .feature-icon-circle {
+  background: var(--app-gold);
+  color: #17321A;
 }
 
 /* Store Badge Links */
 .badge-link {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
   display: inline-block;
-  border-radius: 12px;
+  border-radius: 14px;
 }
 
 .badge-link:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
 }
 
 /* Lightbox Modal */
@@ -178,12 +241,12 @@ body[dir="rtl"] {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(19, 36, 21, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(10, 24, 13, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 1.5rem;
 }
 
 .lightbox-modal.active {
@@ -202,6 +265,7 @@ body[dir="rtl"] {
   max-width: 100%;
   max-height: 85vh;
   object-fit: contain;
-  border-radius: 16px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  border-radius: 18px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
 }
