@@ -1,11 +1,10 @@
 /**
- * Kuba Tours - Streamlined Luxury Theme Script
- * Bilingual (AR/EN) + Horizontal Gallery Scroll + Lightbox
+ * Kuba Tours - Luxury Auto-Scrolling Showcase & Lightbox Script
+ * Pure Visual Elegance: No text on images, auto-scroll Right-to-Left, mobile optimized.
  */
 
 const content = {
   ar: {
-    // Header
     brandTitle: "KUBA TOURS",
     brandTag: "ذكريات ذهبية",
     navHome: "الرئيسية",
@@ -14,39 +13,11 @@ const content = {
     navContact: "تواصل معنا",
     langBtn: "English",
 
-    // Horizontal Gallery
+    // Gallery section title
     galleryTag: "ألبوم البوسترات والتجارب الحصرية",
-    galleryTitle: "اسحب وشاهد روعة عطلات كوبا",
-    gallerySubtitle: "تصفح ألبوم البوسترات الإعلانية لتطبيق كوبا في سهل حشيش.. اسحب يميناً ويساراً واستمتع بالتفاصيل.",
-    galleryHint: "اسحب أفقياً لتصفح جميع البوسترات",
-    zoomHint: "اضغط لتكبير الصورة",
+    galleryTitle: "تجارب وعطلات كوبا في سهل حشيش",
 
-    // Card Captions (1 to 8)
-    card1Title: "صيفك أحلى في سهل حشيش",
-    card1Sub: "شاطئ خاص، فلل فاخرة، يخت، وخصوصية تامة",
-
-    card2Title: "أمسية لا تُنسى وغروب ساحر",
-    card2Sub: "أجواء شاعرية ومشروبات منعشة على متن اليخت",
-
-    card3Title: "شتاء أدفأ في سهل حشيش",
-    card3Sub: "شمس الشتاء والميجا يخت في المياه الفيروزية",
-
-    card4Title: "على ضفاف البحر الفيروزي",
-    card4Sub: "فلل شاطئية استثنائية بإطلالة بانورامية",
-
-    card5Title: "الهروب بخصوصية تامة",
-    card5Sub: "رحلات بحرية مغلقة ومخصصة للعائلات والـ VIP",
-
-    card6Title: "سنة جديدة تبدأ من البحر",
-    card6Sub: "حفلات ليلية وأجواء احتفالية راقية على متن اليخت",
-
-    card7Title: "مغامرات بحرية وانطلاق",
-    card7Sub: "أنشطة مائية، سرعة، وسياحة في سهل حشيش",
-
-    card8Title: "مغامرتك الفاخرة القادمة",
-    card8Sub: "إطلالة جوية ساحرة لخليج سهل حشيش",
-
-    // Download Section (No White Box, Clean White Text)
+    // Download section
     downloadTag: "حمّل التطبيق الآن",
     downloadTitle: "ابدأ رحلتك وصمم إجازتك القادمة بلمسة واحدة",
     downloadSubtitle: "تطبيق كوبا متاح الآن مجاناً على هواتف آبل وأندرويد. تصفح، اختر، واحجز يختك أو شاليهك في ثوانٍ.",
@@ -67,7 +38,6 @@ const content = {
   },
 
   en: {
-    // Header
     brandTitle: "KUBA TOURS",
     brandTag: "Golden Memories",
     navHome: "Home",
@@ -76,39 +46,11 @@ const content = {
     navContact: "Contact",
     langBtn: "العربية",
 
-    // Horizontal Gallery
-    galleryTag: "EXCLUSIVE VISUAL JOURNAL & POSTERS",
-    galleryTitle: "Swipe Through the Beauty of Kuba",
-    gallerySubtitle: "Browse our curated collection of promotional posters across Sahl Hasheesh. Scroll horizontally to explore every detail.",
-    galleryHint: "Scroll or drag horizontally to view all posters",
-    zoomHint: "Click to zoom image",
+    // Gallery section title
+    galleryTag: "EXCLUSIVE POSTERS & EXPERIENCES",
+    galleryTitle: "Kuba Experiences in Sahl Hasheesh",
 
-    // Card Captions (1 to 8)
-    card1Title: "Make Your Summer Unforgettable",
-    card1Sub: "Private beach, luxury chalets, yacht & complete safety",
-
-    card2Title: "A Night to Remember — Sunset Lounge",
-    card2Sub: "Unforgettable moments sailing through the Red Sea sunset",
-
-    card3Title: "Winter Looks Better Here",
-    card3Sub: "Year-round coastal sun aboard luxury mega yachts",
-
-    card4Title: "Meet Me by the Sea",
-    card4Sub: "Exclusive waterfront villas with panoramic maritime vistas",
-
-    card5Title: "Escape, But Make It Private",
-    card5Sub: "Private yacht charters tailored for families and VIP guests",
-
-    card6Title: "A New Year Begins From The Sea",
-    card6Sub: "Night parties and chic celebrations on the open deck",
-
-    card7Title: "Escape to Sahl Hasheesh",
-    card7Sub: "Speedboat excursions, water sports & azure adventures",
-
-    card8Title: "Your Next Luxurious Adventure",
-    card8Sub: "Magnificent aerial coastline views of Sahl Hasheesh Bay",
-
-    // Download Section
+    // Download section
     downloadTag: "DOWNLOAD TODAY",
     downloadTitle: "Begin Your Voyage and Plan Your Escape in Seconds",
     downloadSubtitle: "The Kuba App is available for free on iOS and Android. Discover, select, and confirm your private stay or yacht charter in taps.",
@@ -147,76 +89,122 @@ function setLanguage(lang) {
   });
 
   const langBtn = document.getElementById('lang-btn');
-  if (langBtn) {
-    langBtn.textContent = t.langBtn;
-  }
+  if (langBtn) langBtn.textContent = t.langBtn;
 }
 
-// Horizontal Gallery Scrolling
-function setupHorizontalGallery() {
+// ==================== AUTO-SCROLL RIGHT-TO-LEFT ====================
+let isPaused = false;
+let autoScrollRaf = null;
+let detectedRtlDirection = -1; // -1 for RTL standard leftward scroll
+const scrollSpeed = 0.9; // Smooth 60fps continuous glide
+
+function startAutoScroll() {
   const track = document.getElementById('horizontal-gallery');
+  if (!track) return;
+
+  function loop() {
+    if (!isPaused && track) {
+      const isRtl = document.documentElement.dir === 'rtl';
+
+      if (isRtl) {
+        const prev = track.scrollLeft;
+        track.scrollLeft += (detectedRtlDirection * scrollSpeed);
+        
+        // Adaptive check for browser RTL sign convention
+        if (track.scrollLeft === prev && prev === 0) {
+          detectedRtlDirection = -detectedRtlDirection;
+          track.scrollLeft += (detectedRtlDirection * scrollSpeed);
+        }
+
+        // Loop seamlessly halfway
+        if (Math.abs(track.scrollLeft) >= (track.scrollWidth / 2)) {
+          track.scrollLeft = 0;
+        }
+      } else {
+        track.scrollLeft += scrollSpeed;
+        if (track.scrollLeft >= (track.scrollWidth / 2)) {
+          track.scrollLeft = 0;
+        }
+      }
+    }
+    autoScrollRaf = requestAnimationFrame(loop);
+  }
+
+  cancelAnimationFrame(autoScrollRaf);
+  autoScrollRaf = requestAnimationFrame(loop);
+}
+
+function setupGalleryControls() {
+  const track = document.getElementById('horizontal-gallery');
+  const section = document.getElementById('gallery-section');
   const btnNext = document.getElementById('scroll-next');
   const btnPrev = document.getElementById('scroll-prev');
   if (!track) return;
 
-  const getScrollAmount = () => {
+  // Pause on hover
+  if (section) {
+    section.addEventListener('mouseenter', () => { isPaused = true; });
+    section.addEventListener('mouseleave', () => { isPaused = false; });
+  }
+
+  // Pause on touch (mobile)
+  let touchTimeout = null;
+  track.addEventListener('touchstart', () => {
+    isPaused = true;
+    clearTimeout(touchTimeout);
+  }, { passive: true });
+
+  track.addEventListener('touchend', () => {
+    clearTimeout(touchTimeout);
+    touchTimeout = setTimeout(() => { isPaused = false; }, 2000);
+  }, { passive: true });
+
+  // Arrow Buttons
+  const getScrollStep = () => {
     const card = track.querySelector('.h-poster-card');
-    return card ? card.offsetWidth + 24 : 400;
+    return card ? card.offsetWidth + 24 : 320;
   };
 
   if (btnNext) {
     btnNext.addEventListener('click', () => {
+      isPaused = true;
       const isRtl = document.documentElement.dir === 'rtl';
       const dir = isRtl ? -1 : 1;
-      track.scrollBy({ left: getScrollAmount() * dir, behavior: 'smooth' });
+      track.scrollBy({ left: getScrollStep() * dir, behavior: 'smooth' });
+      setTimeout(() => { isPaused = false; }, 1500);
     });
   }
 
   if (btnPrev) {
     btnPrev.addEventListener('click', () => {
+      isPaused = true;
       const isRtl = document.documentElement.dir === 'rtl';
       const dir = isRtl ? 1 : -1;
-      track.scrollBy({ left: getScrollAmount() * dir, behavior: 'smooth' });
+      track.scrollBy({ left: getScrollStep() * dir, behavior: 'smooth' });
+      setTimeout(() => { isPaused = false; }, 1500);
     });
   }
 
-  // Mouse Wheel horizontal scroll over track
-  track.addEventListener('wheel', (e) => {
-    if (e.deltaY !== 0) {
-      e.preventDefault();
-      track.scrollLeft += e.deltaY;
-    }
-  }, { passive: false });
-
-  // Mouse Drag to Scroll
-  let isDown = false;
-  let startX;
-  let scrollLeft;
-
-  track.addEventListener('mousedown', (e) => {
-    isDown = true;
-    startX = e.pageX - track.offsetLeft;
-    scrollLeft = track.scrollLeft;
+  // Duplicate the 8 cards once inside the track for seamless infinite loop
+  const originalCards = Array.from(track.children);
+  originalCards.forEach((card) => {
+    const clone = card.cloneNode(true);
+    track.appendChild(clone);
   });
 
-  track.addEventListener('mouseleave', () => {
-    isDown = false;
+  // Re-bind click events on all cards (original + clones)
+  track.querySelectorAll('.h-poster-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const idx = parseInt(card.getAttribute('data-lightbox-index'), 10);
+      openLightbox(idx);
+    });
   });
 
-  track.addEventListener('mouseup', () => {
-    isDown = false;
-  });
-
-  track.addEventListener('mousemove', (e) => {
-    if (!isDown) return;
-    e.preventDefault();
-    const x = e.pageX - track.offsetLeft;
-    const walk = (x - startX) * 1.5;
-    track.scrollLeft = scrollLeft - walk;
-  });
+  // Start auto scroll
+  startAutoScroll();
 }
 
-// Lightbox for 8 Posters
+// ==================== LIGHTBOX (PURE IMAGE ONLY) ====================
 const posters = [
   '/images/1.jpg',
   '/images/2.jpg',
@@ -231,11 +219,12 @@ const posters = [
 let activeLightboxIndex = 0;
 
 function openLightbox(index) {
-  activeLightboxIndex = index;
+  isPaused = true;
+  activeLightboxIndex = index % posters.length;
   const modal = document.getElementById('lightbox-modal');
   const img = document.getElementById('lightbox-image');
   if (modal && img) {
-    img.src = posters[index];
+    img.src = posters[activeLightboxIndex];
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
   }
@@ -247,6 +236,7 @@ function closeLightbox() {
     modal.classList.remove('active');
     document.body.style.overflow = '';
   }
+  isPaused = false;
 }
 
 function nextLightbox() {
@@ -259,27 +249,20 @@ function prevLightbox() {
   openLightbox(activeLightboxIndex);
 }
 
-// Init
+// ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
   setLanguage(currentLang);
 
   const langBtn = document.getElementById('lang-btn');
-  if (langBtn) {
-    langBtn.addEventListener('click', () => {
-      setLanguage(currentLang === 'ar' ? 'en' : 'ar');
-    });
-  }
+  const handleLangToggle = () => {
+    setLanguage(currentLang === 'ar' ? 'en' : 'ar');
+  };
 
-  setupHorizontalGallery();
+  if (langBtn) langBtn.addEventListener('click', handleLangToggle);
 
-  // Lightbox click triggers
-  document.querySelectorAll('[data-lightbox-index]').forEach((el) => {
-    el.addEventListener('click', () => {
-      const idx = parseInt(el.getAttribute('data-lightbox-index'), 10);
-      openLightbox(idx);
-    });
-  });
+  setupGalleryControls();
 
+  // Lightbox close & navigation
   const modalClose = document.getElementById('lightbox-close');
   if (modalClose) modalClose.addEventListener('click', closeLightbox);
 
@@ -292,8 +275,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('lightbox-modal');
     if (modal && modal.classList.contains('active')) {
       if (e.key === 'Escape') closeLightbox();
-      if (e.key === 'ArrowRight') nextLightbox();
-      if (e.key === 'ArrowLeft') prevLightbox();
+      if (e.key === 'ArrowRight') (document.documentElement.dir === 'rtl' ? prevLightbox() : nextLightbox());
+      if (e.key === 'ArrowLeft') (document.documentElement.dir === 'rtl' ? nextLightbox() : prevLightbox());
     }
   });
 

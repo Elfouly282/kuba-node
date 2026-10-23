@@ -1,8 +1,8 @@
-/* Kuba Tours - Luxury Green & White Portfolio Theme */
+/* Kuba Tours - Luxury Green Theme with Auto-Scroll & Mobile Optimization */
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Jacques+Francois&display=swap');
 
 :root {
-  --app-green-darkest: #0A1B0E;
+  --app-green-darkest: #07150A;
   --app-green-deep: #16321C;
   --app-green-main: #234927;
   --app-green-light: #2E5C33;
@@ -21,6 +21,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -29,6 +30,7 @@ body {
   background-color: var(--app-green-deep);
   line-height: 1.6;
   overflow-x: hidden;
+  width: 100%;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -52,13 +54,14 @@ body[dir="rtl"] .font-brand {
   font-family: 'Cairo', serif;
 }
 
-/* Header: Full Width, at very top */
+/* Header: Sticky at very top, full width */
 .site-header {
   width: 100%;
   background: rgba(18, 43, 23, 0.96);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+  transition: all 0.3s ease;
 }
 
 /* Full Width Banner */
@@ -76,57 +79,67 @@ body[dir="rtl"] .font-brand {
   object-fit: cover;
 }
 
-/* Horizontal Gallery Scroll Container */
+/* Horizontal Gallery Track */
 .horizontal-scroll-track {
   display: flex;
   overflow-x: auto;
-  scroll-behavior: smooth;
-  scroll-snap-type: x mandatory;
+  scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 2rem;
+  padding-bottom: 1.5rem;
   padding-top: 1rem;
   cursor: grab;
+  user-select: none;
 }
 
 .horizontal-scroll-track:active {
   cursor: grabbing;
 }
 
-/* Hide scrollbar */
+/* Hide scrollbar completely */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+  width: 0;
+  height: 0;
 }
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-/* Poster Card in Horizontal Scroll */
+/* Poster Card: Pure Image, NO TEXT OVERLAY */
 .h-poster-card {
   flex: 0 0 auto;
-  width: 320px;
-  height: 480px;
-  scroll-snap-align: center;
-  border-radius: 24px;
+  width: 250px;
+  height: 350px;
+  border-radius: 20px;
   overflow: hidden;
-  background: #ffffff;
+  background: #0E2012;
   border: 2px solid rgba(212, 175, 55, 0.35);
-  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45);
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
   position: relative;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .h-poster-card {
-    width: 380px;
-    height: 540px;
+    width: 300px;
+    height: 420px;
+    border-radius: 22px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .h-poster-card {
+    width: 360px;
+    height: 510px;
+    border-radius: 26px;
   }
 }
 
 .h-poster-card:hover {
   transform: translateY(-8px) scale(1.02);
   border-color: var(--app-gold);
-  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), 0 0 25px rgba(212, 175, 55, 0.35);
 }
 
 .h-poster-card img {
@@ -134,27 +147,7 @@ body[dir="rtl"] .font-brand {
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.h-poster-card:hover img {
-  transform: scale(1.04);
-}
-
-.poster-hover-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(10, 24, 13, 0.95) 0%, rgba(10, 24, 13, 0.35) 50%, transparent 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 1.5rem;
-}
-
-.h-poster-card:hover .poster-hover-overlay {
-  opacity: 1;
+  pointer-events: none;
 }
 
 /* Scroll Arrow Navigation Buttons */
@@ -162,8 +155,8 @@ body[dir="rtl"] .font-brand {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 54px;
-  height: 54px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: rgba(18, 43, 23, 0.92);
   border: 1.5px solid rgba(212, 175, 55, 0.6);
@@ -171,11 +164,18 @@ body[dir="rtl"] .font-brand {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
   cursor: pointer;
   transition: all 0.25s ease;
   z-index: 30;
   backdrop-filter: blur(8px);
+}
+
+@media (min-width: 768px) {
+  .scroll-arrow-btn {
+    width: 52px;
+    height: 52px;
+  }
 }
 
 .scroll-arrow-btn:hover {
@@ -198,18 +198,18 @@ body[dir="rtl"] .font-brand {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
 }
 
-/* Lightbox Modal */
+/* Lightbox Modal: Clean, PURE IMAGE */
 .lightbox-modal {
   display: none;
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(8, 20, 11, 0.97);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(5, 14, 7, 0.97);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .lightbox-modal.active {
@@ -217,18 +217,19 @@ body[dir="rtl"] .font-brand {
 }
 
 .lightbox-img-wrap {
-  max-width: 90vw;
-  max-height: 85vh;
+  max-width: 92vw;
+  max-height: 88vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .lightbox-img-wrap img {
   max-width: 100%;
-  max-height: 85vh;
+  max-height: 88vh;
   object-fit: contain;
-  border-radius: 18px;
+  border-radius: 16px;
   border: 1px solid rgba(212, 175, 55, 0.5);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
 }

@@ -21,22 +21,22 @@
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="/landing/css/landing.css">
 </head>
-<body class="bg-[#16321C] text-white antialiased selection:bg-[#D4AF37] selection:text-[#0A1B0E]">
+<body class="bg-[#16321C] text-white antialiased selection:bg-[#D4AF37] selection:text-[#07150A]">
 
   <!-- ========================================================================= -->
   <!-- 1. FULL-WIDTH HEADER / NAVBAR (AT THE VERY TOP OF THE PAGE) -->
   <!-- ========================================================================= -->
   <header class="site-header sticky top-0 z-50 w-full">
-    <div class="w-full px-4 sm:px-8 lg:px-12 h-20 sm:h-24 flex items-center justify-between">
+    <div class="w-full px-4 sm:px-8 lg:px-12 h-18 sm:h-22 flex items-center justify-between">
       
       <!-- Brand Logo & Name (PROMINENT LOGO) -->
       <a href="/" class="flex items-center gap-3 sm:gap-4 group">
-        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden border-2 border-[#D4AF37] shadow-lg bg-[#234927] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+        <div class="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl overflow-hidden border-2 border-[#D4AF37] shadow-lg bg-[#234927] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
           <img src="/images/kuba-logo.jpg" alt="Kuba Logo" class="w-full h-full object-cover">
         </div>
         <div class="flex flex-col">
-          <span class="text-xl sm:text-2xl font-extrabold text-white tracking-wider block leading-none font-brand">KUBA TOURS</span>
-          <span class="text-xs text-[#D4AF37] font-bold tracking-widest uppercase block mt-1" data-i18n="brandTag">ذكريات ذهبية</span>
+          <span class="text-lg sm:text-2xl font-extrabold text-white tracking-wider block leading-none font-brand">KUBA TOURS</span>
+          <span class="text-[10px] sm:text-xs text-[#D4AF37] font-bold tracking-widest uppercase block mt-1" data-i18n="brandTag">ذكريات ذهبية</span>
         </div>
       </a>
 
@@ -49,15 +49,15 @@
       </nav>
 
       <!-- Right Action Buttons -->
-      <div class="flex items-center gap-3 sm:gap-4">
+      <div class="flex items-center gap-2.5 sm:gap-4">
         <!-- Language Switcher -->
-        <button id="lang-btn" class="px-4 py-2 rounded-full border border-[#D4AF37]/60 text-xs sm:text-sm font-bold text-[#F4E7BD] hover:bg-[#D4AF37]/20 transition-all cursor-pointer">
+        <button id="lang-btn" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-[#D4AF37]/60 text-xs sm:text-sm font-bold text-[#F4E7BD] hover:bg-[#D4AF37]/20 transition-all cursor-pointer">
           English
         </button>
 
-        <!-- Download CTA Button -->
-        <a href="#download-section" class="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-[#D4AF37] hover:bg-[#F4E7BD] text-[#0A1B0E] text-xs sm:text-sm font-bold flex items-center gap-2 shadow-lg shadow-[#D4AF37]/25 transition-all transform hover:-translate-y-0.5">
-          <i class="fa-solid fa-mobile-screen-button text-sm"></i>
+        <!-- Download CTA Button (Visible on all devices) -->
+        <a href="#download-section" class="px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-[#D4AF37] hover:bg-[#F4E7BD] text-[#07150A] text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 shadow-lg shadow-[#D4AF37]/25 transition-all transform hover:-translate-y-0.5">
+          <i class="fa-solid fa-mobile-screen-button text-xs sm:text-sm"></i>
           <span data-i18n="navDownload">تحميل التطبيق</span>
         </a>
       </div>
@@ -75,150 +75,75 @@
 
 
   <!-- ========================================================================= -->
-  <!-- 3. HORIZONTAL POSTER SHOWCASE (FULL SIZE, SCROLLS HORIZONTALLY) -->
+  <!-- 3. AUTO-SCROLLING HORIZONTAL GALLERY (RIGHT-TO-LEFT, PURE IMAGES ONLY) -->
   <!-- ========================================================================= -->
-  <section id="gallery-section" class="py-16 sm:py-24 bg-[#0A1B0E] relative overflow-hidden border-b border-[#D4AF37]/20">
-    <div class="w-full px-6 sm:px-12 lg:px-16 mb-8 text-center sm:text-start flex flex-col sm:flex-row items-center justify-between gap-4">
+  <section id="gallery-section" class="py-14 sm:py-20 bg-[#07150A] relative overflow-hidden border-b border-[#D4AF37]/20">
+    <div class="w-full px-4 sm:px-8 lg:px-12 mb-6 sm:mb-8 text-center sm:text-start flex flex-col sm:flex-row items-center justify-between gap-3">
       <div>
         <span class="text-xs sm:text-sm font-bold text-[#D4AF37] uppercase tracking-widest block mb-1" data-i18n="galleryTag">ألبوم البوسترات والتجارب الحصرية</span>
-        <h2 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white font-brand" data-i18n="galleryTitle">
-          اسحب وشاهد روعة عطلات كوبا
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-white font-brand" data-i18n="galleryTitle">
+          تجارب وعطلات كوبا في سهل حشيش
         </h2>
-        <p class="text-slate-300 text-sm sm:text-base mt-1" data-i18n="gallerySubtitle">
-          تصفح ألبوم البوسترات الإعلانية لتطبيق كوبا في سهل حشيش.. اسحب يميناً ويساراً واستمتع بالتفاصيل.
-        </p>
       </div>
 
-      <!-- Hint -->
-      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#16321C] border border-[#D4AF37]/40 text-xs sm:text-sm text-[#F4E7BD]">
-        <i class="fa-solid fa-arrows-left-right text-[#D4AF37]"></i>
-        <span data-i18n="galleryHint">اسحب أفقياً لتصفح جميع البوسترات</span>
+      <!-- Arrow Controls -->
+      <div class="hidden sm:flex items-center gap-2">
+        <button id="scroll-prev" class="w-11 h-11 rounded-full bg-[#16321C] border border-[#D4AF37]/50 text-white hover:bg-[#D4AF37] hover:text-[#07150A] flex items-center justify-center transition-all cursor-pointer" aria-label="Previous">
+          <i class="fa-solid fa-chevron-right rtl:inline ltr:hidden text-base"></i>
+          <i class="fa-solid fa-chevron-left rtl:hidden ltr:inline text-base"></i>
+        </button>
+        <button id="scroll-next" class="w-11 h-11 rounded-full bg-[#16321C] border border-[#D4AF37]/50 text-white hover:bg-[#D4AF37] hover:text-[#07150A] flex items-center justify-center transition-all cursor-pointer" aria-label="Next">
+          <i class="fa-solid fa-chevron-left rtl:inline ltr:hidden text-base"></i>
+          <i class="fa-solid fa-chevron-right rtl:hidden ltr:inline text-base"></i>
+        </button>
       </div>
     </div>
 
-    <!-- Relative Container for Arrow Controls & Horizontal Track -->
+    <!-- The Horizontal Auto-Scrolling Track (PURE IMAGES ONLY, NO TEXT OVERLAY) -->
     <div class="relative w-full">
-      
-      <!-- Prev & Next Arrow Buttons -->
-      <button id="scroll-prev" class="scroll-arrow-btn start-4 sm:start-8" aria-label="Previous">
-        <i class="fa-solid fa-chevron-right rtl:inline ltr:hidden text-lg"></i>
-        <i class="fa-solid fa-chevron-left rtl:hidden ltr:inline text-lg"></i>
-      </button>
-
-      <button id="scroll-next" class="scroll-arrow-btn end-4 sm:end-8" aria-label="Next">
-        <i class="fa-solid fa-chevron-left rtl:inline ltr:hidden text-lg"></i>
-        <i class="fa-solid fa-chevron-right rtl:hidden ltr:inline text-lg"></i>
-      </button>
-
-      <!-- Horizontal Scroll Track (All 8 Posters: 1.jpg to 8.jpg) -->
-      <div id="horizontal-gallery" class="horizontal-scroll-track no-scrollbar px-6 sm:px-12 lg:px-16 gap-6 sm:gap-8">
+      <div id="horizontal-gallery" class="horizontal-scroll-track no-scrollbar px-4 sm:px-8 lg:px-12 gap-5 sm:gap-7">
         
-        <!-- POSTER 1 (1.jpg) -->
+        <!-- POSTER 1 -->
         <div class="h-poster-card cursor-pointer group" data-lightbox-index="0">
-          <img src="/images/1.jpg" alt="Summer in Sahl Hasheesh">
-          <div class="poster-hover-overlay">
-            <span class="text-xs sm:text-sm font-bold text-[#F4E7BD] mb-1" data-i18n="card1Title">صيفك أحلى في سهل حشيش</span>
-            <span class="text-[11px] sm:text-xs text-slate-200" data-i18n="card1Sub">شاطئ خاص، فلل فاخرة، يخت، وخصوصية تامة</span>
-            <div class="mt-3 flex items-center gap-2 text-xs text-[#D4AF37] font-bold">
-              <i class="fa-solid fa-expand"></i>
-              <span data-i18n="zoomHint">اضغط لتكبير الصورة</span>
-            </div>
-          </div>
+          <img src="/images/1.jpg" alt="Kuba Poster 1">
         </div>
 
-        <!-- POSTER 2 (2.jpg) -->
+        <!-- POSTER 2 -->
         <div class="h-poster-card cursor-pointer group" data-lightbox-index="1">
-          <img src="/images/2.jpg" alt="A Night to Remember">
-          <div class="poster-hover-overlay">
-            <span class="text-xs sm:text-sm font-bold text-[#F4E7BD] mb-1" data-i18n="card2Title">أمسية لا تُنسى وغروب ساحر</span>
-            <span class="text-[11px] sm:text-xs text-slate-200" data-i18n="card2Sub">أجواء شاعرية ومشروبات منعشة على متن اليخت</span>
-            <div class="mt-3 flex items-center gap-2 text-xs text-[#D4AF37] font-bold">
-              <i class="fa-solid fa-expand"></i>
-              <span data-i18n="zoomHint">اضغط لتكبير الصورة</span>
-            </div>
-          </div>
+          <img src="/images/2.jpg" alt="Kuba Poster 2">
         </div>
 
-        <!-- POSTER 3 (3.jpg) -->
+        <!-- POSTER 3 -->
         <div class="h-poster-card cursor-pointer group" data-lightbox-index="2">
-          <img src="/images/3.jpg" alt="Winter Looks Better Here">
-          <div class="poster-hover-overlay">
-            <span class="text-xs sm:text-sm font-bold text-[#F4E7BD] mb-1" data-i18n="card3Title">شتاء أدفأ في سهل حشيش</span>
-            <span class="text-[11px] sm:text-xs text-slate-200" data-i18n="card3Sub">شمس الشتاء والميجا يخت في المياه الفيروزية</span>
-            <div class="mt-3 flex items-center gap-2 text-xs text-[#D4AF37] font-bold">
-              <i class="fa-solid fa-expand"></i>
-              <span data-i18n="zoomHint">اضغط لتكبير الصورة</span>
-            </div>
-          </div>
+          <img src="/images/3.jpg" alt="Kuba Poster 3">
         </div>
 
-        <!-- POSTER 4 (4.jpg) -->
+        <!-- POSTER 4 -->
         <div class="h-poster-card cursor-pointer group" data-lightbox-index="3">
-          <img src="/images/4.jpg" alt="Meet Me By The Sea">
-          <div class="poster-hover-overlay">
-            <span class="text-xs sm:text-sm font-bold text-[#F4E7BD] mb-1" data-i18n="card4Title">على ضفاف البحر الفيروزي</span>
-            <span class="text-[11px] sm:text-xs text-slate-200" data-i18n="card4Sub">فلل شاطئية استثنائية بإطلالة بانورامية</span>
-            <div class="mt-3 flex items-center gap-2 text-xs text-[#D4AF37] font-bold">
-              <i class="fa-solid fa-expand"></i>
-              <span data-i18n="zoomHint">اضغط لتكبير الصورة</span>
-            </div>
-          </div>
+          <img src="/images/4.jpg" alt="Kuba Poster 4">
         </div>
 
-        <!-- POSTER 5 (5.jpg) -->
+        <!-- POSTER 5 -->
         <div class="h-poster-card cursor-pointer group" data-lightbox-index="4">
-          <img src="/images/5.jpg" alt="Escape But Make It Private">
-          <div class="poster-hover-overlay">
-            <span class="text-xs sm:text-sm font-bold text-[#F4E7BD] mb-1" data-i18n="card5Title">الهروب بخصوصية تامة</span>
-            <span class="text-[11px] sm:text-xs text-slate-200" data-i18n="card5Sub">رحلات بحرية مغلقة ومخصصة للعائلات والـ VIP</span>
-            <div class="mt-3 flex items-center gap-2 text-xs text-[#D4AF37] font-bold">
-              <i class="fa-solid fa-expand"></i>
-              <span data-i18n="zoomHint">اضغط لتكبير الصورة</span>
-            </div>
-          </div>
+          <img src="/images/5.jpg" alt="Kuba Poster 5">
         </div>
 
-        <!-- POSTER 6 (6.jpg) -->
+        <!-- POSTER 6 -->
         <div class="h-poster-card cursor-pointer group" data-lightbox-index="5">
-          <img src="/images/6.jpg" alt="New Year Yacht Celebrations">
-          <div class="poster-hover-overlay">
-            <span class="text-xs sm:text-sm font-bold text-[#F4E7BD] mb-1" data-i18n="card6Title">سنة جديدة تبدأ من البحر</span>
-            <span class="text-[11px] sm:text-xs text-slate-200" data-i18n="card6Sub">حفلات ليلية وأجواء احتفالية راقية على متن اليخت</span>
-            <div class="mt-3 flex items-center gap-2 text-xs text-[#D4AF37] font-bold">
-              <i class="fa-solid fa-expand"></i>
-              <span data-i18n="zoomHint">اضغط لتكبير الصورة</span>
-            </div>
-          </div>
+          <img src="/images/6.jpg" alt="Kuba Poster 6">
         </div>
 
-        <!-- POSTER 7 (7.jpg) -->
+        <!-- POSTER 7 -->
         <div class="h-poster-card cursor-pointer group" data-lightbox-index="6">
-          <img src="/images/7.jpg" alt="Escape to Sahl Hasheesh Watersports">
-          <div class="poster-hover-overlay">
-            <span class="text-xs sm:text-sm font-bold text-[#F4E7BD] mb-1" data-i18n="card7Title">مغامرات بحرية وانطلاق</span>
-            <span class="text-[11px] sm:text-xs text-slate-200" data-i18n="card7Sub">أنشطة مائية، سرعة، وسياحة في سهل حشيش</span>
-            <div class="mt-3 flex items-center gap-2 text-xs text-[#D4AF37] font-bold">
-              <i class="fa-solid fa-expand"></i>
-              <span data-i18n="zoomHint">اضغط لتكبير الصورة</span>
-            </div>
-          </div>
+          <img src="/images/7.jpg" alt="Kuba Poster 7">
         </div>
 
-        <!-- POSTER 8 (8.jpg) -->
+        <!-- POSTER 8 -->
         <div class="h-poster-card cursor-pointer group" data-lightbox-index="7">
-          <img src="/images/8.jpg" alt="Your Next Luxurious Adventure">
-          <div class="poster-hover-overlay">
-            <span class="text-xs sm:text-sm font-bold text-[#F4E7BD] mb-1" data-i18n="card8Title">مغامرتك الفاخرة القادمة</span>
-            <span class="text-[11px] sm:text-xs text-slate-200" data-i18n="card8Sub">إطلالة جوية ساحرة لخليج سهل حشيش</span>
-            <div class="mt-3 flex items-center gap-2 text-xs text-[#D4AF37] font-bold">
-              <i class="fa-solid fa-expand"></i>
-              <span data-i18n="zoomHint">اضغط لتكبير الصورة</span>
-            </div>
-          </div>
+          <img src="/images/8.jpg" alt="Kuba Poster 8">
         </div>
 
       </div>
-
     </div>
   </section>
 
@@ -226,7 +151,7 @@
   <!-- ========================================================================= -->
   <!-- 4. DOWNLOAD SECTION (NO WHITE BOX, TEXT IS WHITE, NO LOGO) -->
   <!-- ========================================================================= -->
-  <section id="download-section" class="py-24 sm:py-32 bg-[#16321C] text-center">
+  <section id="download-section" class="py-20 sm:py-28 bg-[#16321C] text-center">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       
       <!-- Tag in Gold -->
@@ -234,27 +159,27 @@
         حمّل التطبيق الآن
       </span>
 
-      <!-- Headline in White -->
-      <h2 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-4 leading-tight font-brand" data-i18n="downloadTitle">
+      <!-- Headline in Pure White -->
+      <h2 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4 leading-tight font-brand" data-i18n="downloadTitle">
         ابدأ رحلتك وصمم إجازتك القادمة بلمسة واحدة
       </h2>
 
       <!-- Subhead in White/Slate -->
-      <p class="text-slate-200 text-base sm:text-xl max-w-2xl mx-auto mb-10 leading-relaxed" data-i18n="downloadSubtitle">
+      <p class="text-slate-200 text-sm sm:text-lg max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed" data-i18n="downloadSubtitle">
         تطبيق كوبا متاح الآن مجاناً على هواتف آبل وأندرويد. تصفح، اختر، واحجز يختك أو شاليهك في ثوانٍ.
       </p>
 
       <!-- App Store & Google Play Badges -->
-      <div class="flex flex-wrap items-center justify-center gap-5 sm:gap-7 mb-6">
+      <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-6">
         <a href="#download-section" class="badge-link">
-          <img src="/images/App%20Store.svg" alt="Download on the App Store" class="h-12 sm:h-14 w-auto">
+          <img src="/images/App%20Store.svg" alt="Download on the App Store" class="h-11 sm:h-13 w-auto">
         </a>
         <a href="#download-section" class="badge-link">
-          <img src="/images/Google%20Play.svg" alt="Get it on Google Play" class="h-12 sm:h-14 w-auto">
+          <img src="/images/Google%20Play.svg" alt="Get it on Google Play" class="h-11 sm:h-13 w-auto">
         </a>
       </div>
 
-      <p class="text-xs sm:text-sm text-slate-300 font-medium" data-i18n="downloadNote">
+      <p class="text-xs text-slate-300 font-medium" data-i18n="downloadNote">
         متوافق مع أجهزة iPhone و Android
       </p>
 
@@ -265,14 +190,14 @@
   <!-- ========================================================================= -->
   <!-- 5. CONTACT SECTION -->
   <!-- ========================================================================= -->
-  <section id="contact-section" class="py-16 bg-[#0A1B0E] border-t border-[#D4AF37]/20">
+  <section id="contact-section" class="py-14 sm:py-16 bg-[#07150A] border-t border-[#D4AF37]/20">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
       
-      <div class="rounded-3xl bg-[#16321C] border border-[#D4AF37]/30 p-8 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
+      <div class="rounded-3xl bg-[#16321C] border border-[#D4AF37]/30 p-6 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
         
-        <div class="space-y-3 text-center md:text-start">
+        <div class="space-y-3 text-center md:text-start w-full md:w-auto">
           <span class="text-xs font-bold text-[#D4AF37] uppercase tracking-widest block" data-i18n="contactTag">تواصل مع فريق كوبا</span>
-          <h3 class="text-2xl sm:text-3xl font-extrabold text-white font-brand" data-i18n="contactTitle">فريق الكونسيرج جاهز لخدمتك 24/7</h3>
+          <h3 class="text-xl sm:text-2xl font-extrabold text-white font-brand" data-i18n="contactTitle">فريق الكونسيرج جاهز لخدمتك 24/7</h3>
           <div class="pt-2 space-y-2 text-xs sm:text-sm text-slate-200 font-semibold">
             <p class="flex items-center justify-center md:justify-start gap-2">
               <i class="fa-solid fa-phone text-[#D4AF37]"></i>
@@ -291,8 +216,8 @@
           </div>
         </div>
 
-        <div class="flex-shrink-0">
-          <a href="https://wa.me/201062010239" target="_blank" rel="noopener" class="px-8 py-4 rounded-full bg-[#D4AF37] hover:bg-[#F4E7BD] text-[#0A1B0E] font-bold text-sm shadow-xl flex items-center gap-2.5 transition-all transform hover:-translate-y-0.5">
+        <div class="w-full md:w-auto flex-shrink-0">
+          <a href="https://wa.me/201062010239" target="_blank" rel="noopener" class="w-full sm:w-auto justify-center px-7 py-3.5 sm:px-8 sm:py-4 rounded-full bg-[#D4AF37] hover:bg-[#F4E7BD] text-[#07150A] font-bold text-sm shadow-xl flex items-center gap-2.5 transition-all transform hover:-translate-y-0.5">
             <i class="fa-brands fa-whatsapp text-xl"></i>
             <span data-i18n="contactBtn">محادثة واتساب مباشرة</span>
           </a>
@@ -307,20 +232,20 @@
   <!-- ========================================================================= -->
   <!-- 6. FOOTER -->
   <!-- ========================================================================= -->
-  <footer class="bg-[#050E07] py-8 border-t border-[#D4AF37]/15">
-    <div class="w-full px-6 sm:px-12 flex flex-col sm:flex-row items-center justify-between gap-4">
+  <footer class="bg-[#030904] py-8 border-t border-[#D4AF37]/15">
+    <div class="w-full px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-4">
       
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl overflow-hidden border border-[#D4AF37] bg-[#234927]">
+        <div class="w-8 h-8 rounded-xl overflow-hidden border border-[#D4AF37] bg-[#234927]">
           <img src="/images/kuba-logo.jpg" alt="Logo" class="w-full h-full object-cover">
         </div>
         <div>
           <span class="font-extrabold text-sm sm:text-base text-white tracking-wider block leading-none font-brand">KUBA TOURS</span>
-          <span class="text-[10px] text-[#D4AF37] font-bold tracking-widest block uppercase mt-0.5">Golden Memories</span>
+          <span class="text-[9px] text-[#D4AF37] font-bold tracking-widest block uppercase mt-0.5">Golden Memories</span>
         </div>
       </div>
 
-      <p class="text-xs sm:text-sm text-slate-400" data-i18n="copyright">
+      <p class="text-xs text-slate-400 text-center sm:text-start" data-i18n="copyright">
         جميع الحقوق محفوظة © كوبا تورز (Kuba Tours) 2026
       </p>
 
@@ -329,7 +254,7 @@
 
 
   <!-- ========================================================================= -->
-  <!-- 7. LIGHTBOX MODAL (VIEW ANY POSTER IN FULL RESOLUTION) -->
+  <!-- 7. LIGHTBOX MODAL (PURE FULL-RESOLUTION IMAGE ONLY - NO TEXT) -->
   <!-- ========================================================================= -->
   <div id="lightbox-modal" class="lightbox-modal">
     <div class="relative flex flex-col items-center">
@@ -340,19 +265,19 @@
       </button>
 
       <!-- Nav Next / Prev Buttons -->
-      <button id="lightbox-prev" class="absolute -start-14 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/60 hover:bg-[#D4AF37] hover:text-[#0A1B0E] text-white flex items-center justify-center text-lg transition-colors cursor-pointer" aria-label="Previous">
+      <button id="lightbox-prev" class="absolute -start-14 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/60 hover:bg-[#D4AF37] hover:text-[#07150A] text-white flex items-center justify-center text-lg transition-colors cursor-pointer" aria-label="Previous">
         <i class="fa-solid fa-chevron-right rtl:inline ltr:hidden"></i>
         <i class="fa-solid fa-chevron-left rtl:hidden ltr:inline"></i>
       </button>
 
-      <button id="lightbox-next" class="absolute -end-14 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/60 hover:bg-[#D4AF37] hover:text-[#0A1B0E] text-white flex items-center justify-center text-lg transition-colors cursor-pointer" aria-label="Next">
+      <button id="lightbox-next" class="absolute -end-14 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/60 hover:bg-[#D4AF37] hover:text-[#07150A] text-white flex items-center justify-center text-lg transition-colors cursor-pointer" aria-label="Next">
         <i class="fa-solid fa-chevron-left rtl:inline ltr:hidden"></i>
         <i class="fa-solid fa-chevron-right rtl:hidden ltr:inline"></i>
       </button>
 
-      <!-- Image Display -->
+      <!-- Pure Image Display Only -->
       <div class="lightbox-img-wrap">
-        <img id="lightbox-image" src="/images/1.jpg" alt="Poster Preview">
+        <img id="lightbox-image" src="/images/1.jpg" alt="Kuba Poster Preview">
       </div>
 
     </div>
