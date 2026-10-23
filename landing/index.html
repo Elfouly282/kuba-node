@@ -3,1231 +3,206 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kuba Tours | كوبا تورز — بوابتك لأرقى إقامات ويخوت البحر الأحمر ومصر</title>
-  <meta name="description" content="تطبيق كوبا تورز يمنحك تجربة حجز استثنائية لأفخم الفلل والشاليهات الشاطئية ورحلات اليخوت الخاصة في سهل حشيش، الجونة، والغردقة بأعلى معايير الخصوصية.">
-  <meta name="keywords" content="Kuba, Kuba Tours, سهل حشيش, يخوت خاصة, فلل شاطئية, شاليهات, البحر الأحمر, حجز فنادق, الجونة, الغردقة, tourism Egypt, Red Sea yacht charter, Sahl Hasheesh villas">
-  
-  <!-- Open Graph / Social Sharing -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://kuba-app.com/">
-  <meta property="og:title" content="Kuba Tours | Golden Memories — Luxury Stays & Private Yacht Charters">
-  <meta property="og:description" content="Experience Egypt's finest coastlines with Kuba. Luxury villas, chalets, and private yacht charters with 100% privacy.">
-  <meta property="og:image" content="/images/3.jpg">
-
-  <!-- Favicon -->
+  <title>KUBA | تطبيق كوبا</title>
+  <meta name="description" content="تطبيق كوبا — وجهتك الأولى لحجز الشاليهات والفلل الشاطئية ورحلات اليخوت الخاصة في سهل حشيش والبحر الأحمر.">
   <link rel="icon" type="image/jpeg" href="/images/kuba-logo.jpg">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            emerald: {
-              950: '#0B1912',
-              900: '#0F241A',
-              850: '#142E21',
-              800: '#1B3B2B',
-              700: '#2A5A41',
-              600: '#3D7A5B',
-            },
-            gold: {
-              300: '#F5E2A2',
-              400: '#E5C158',
-              500: '#D4AF37',
-              600: '#C59B27',
-              700: '#A17A16',
-            },
-            sand: {
-              50: '#FAF8F5',
-              100: '#F5EFE6',
-              200: '#E8DDCB',
-            }
-          }
-        }
-      }
-    }
-  </script>
 
-  <!-- Google Fonts: Cairo, Outfit, Playfair Display, Alexandria -->
+  <!-- Google Fonts: Cairo & Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- FontAwesome 6 Icons -->
+  <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- Custom Landing Stylesheet -->
+  <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="/landing/css/landing.css">
 </head>
-<body class="bg-[#FAF8F5] text-slate-800 antialiased selection:bg-gold-500 selection:text-white">
+<body class="bg-[#FBFBFB] text-slate-800 antialiased min-h-screen flex flex-col justify-between">
 
-  <!-- ========================================================================= -->
-  <!-- 1. NAVIGATION BAR -->
-  <!-- ========================================================================= -->
-  <header id="main-navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 glass-nav">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-20">
-        
-        <!-- Logo & Brand -->
-        <a href="#hero" class="flex items-center gap-3.5 group">
-          <div class="w-12 h-12 rounded-xl overflow-hidden border border-gold-500/40 shadow-lg shadow-gold-500/10 group-hover:border-gold-400 transition-colors bg-emerald-950 flex-shrink-0">
-            <img src="/images/kuba-logo.jpg" alt="Kuba Tours Logo" class="w-full h-full object-cover">
-          </div>
-          <div class="flex flex-col">
-            <span class="text-xl font-extrabold tracking-wider text-white flex items-center gap-1.5 font-serif-luxury">
-              KUBA <span class="text-gold-400 font-normal text-sm">TOURS</span>
-            </span>
-            <span class="text-[10px] tracking-widest text-gold-300/80 uppercase font-medium" data-i18n="brandTagline">
-              ذكريات ذهبية
-            </span>
-          </div>
+  <!-- ==================== HEADER ==================== -->
+  <header class="site-header sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo & Name -->
+      <a href="/" class="flex items-center gap-3">
+        <img src="/images/kuba-logo.jpg" alt="Kuba Logo" class="w-9 h-9 rounded-xl object-cover shadow-sm">
+        <div>
+          <span class="text-base font-extrabold text-slate-900 tracking-wide block leading-none">KUBA</span>
+          <span class="text-[10px] text-slate-500 font-medium tracking-wider block mt-0.5" data-i18n="brandTag">ذكريات ذهبية</span>
+        </div>
+      </a>
+
+      <!-- Actions: Language Toggle & Download Button -->
+      <div class="flex items-center gap-3">
+        <button id="lang-btn" class="px-3 py-1.5 rounded-full border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+          English
+        </button>
+
+        <a href="#download" class="btn-primary px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 shadow-sm">
+          <i class="fa-solid fa-mobile-screen-button text-xs"></i>
+          <span data-i18n="navDownload">تحميل التطبيق</span>
         </a>
-
-        <!-- Desktop Navigation Links -->
-        <nav class="hidden lg:flex items-center gap-8">
-          <a href="#hero" class="text-sm font-medium text-slate-200 hover:text-gold-400 transition-colors" data-i18n="navHome">الرئيسية</a>
-          <a href="#stories" class="text-sm font-medium text-slate-200 hover:text-gold-400 transition-colors" data-i18n="navExperiences">اليخوت والتجارب</a>
-          <a href="#why-us" class="text-sm font-medium text-slate-200 hover:text-gold-400 transition-colors" data-i18n="navStays">الإقامات الفاخرة</a>
-          <a href="#destinations" class="text-sm font-medium text-slate-200 hover:text-gold-400 transition-colors" data-i18n="navDestinations">الوجهات</a>
-          <a href="#app" class="text-sm font-medium text-slate-200 hover:text-gold-400 transition-colors" data-i18n="navApp">عن التطبيق</a>
-          <a href="#reviews" class="text-sm font-medium text-slate-200 hover:text-gold-400 transition-colors" data-i18n="navReviews">آراء النزلاء</a>
-          <a href="#faq" class="text-sm font-medium text-slate-200 hover:text-gold-400 transition-colors" data-i18n="navFaq">الأسئلة</a>
-        </nav>
-
-        <!-- Right Actions: Language Switch & Download Button -->
-        <div class="hidden md:flex items-center gap-4">
-          <!-- Language Toggle Button -->
-          <button id="lang-toggle-btn" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-gold-500/40 text-xs font-semibold text-gold-300 hover:text-white hover:bg-gold-500/20 transition-all cursor-pointer">
-            <i class="fa-solid fa-globe text-gold-400"></i>
-            <span class="lang-label">English</span>
-          </button>
-
-          <!-- Download CTA -->
-          <a href="#download" class="flex items-center gap-2 px-5 py-2.5 rounded-full gold-gradient-bg text-emerald-950 font-bold text-xs uppercase tracking-wider hover:opacity-95 transition-all shadow-lg shadow-gold-500/20 transform hover:-translate-y-0.5">
-            <i class="fa-solid fa-mobile-screen-button"></i>
-            <span data-i18n="navDownload">حمّل التطبيق</span>
-          </a>
-        </div>
-
-        <!-- Mobile Menu Hamburger -->
-        <div class="flex items-center gap-3 lg:hidden">
-          <button id="lang-toggle-mobile" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-gold-500/40 text-[11px] font-semibold text-gold-300">
-            <i class="fa-solid fa-globe text-gold-400"></i>
-            <span class="lang-label">EN</span>
-          </button>
-          <button id="mobile-menu-btn" aria-label="Open Menu" class="p-2 text-slate-200 hover:text-gold-400">
-            <i class="fa-solid fa-bars text-2xl"></i>
-          </button>
-        </div>
-
       </div>
+
     </div>
   </header>
 
-  <!-- Mobile Menu Slide-Over Drawer -->
-  <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden transition-opacity"></div>
-  <div id="mobile-menu-drawer" class="fixed top-0 bottom-0 end-0 w-80 bg-emerald-950 border-s border-gold-500/30 z-50 p-6 flex flex-col justify-between transition-transform duration-300 translate-x-full">
-    <div>
-      <div class="flex items-center justify-between pb-6 border-b border-emerald-800">
-        <div class="flex items-center gap-3">
-          <img src="/images/kuba-logo.jpg" alt="Kuba Logo" class="w-10 h-10 rounded-lg border border-gold-500/40 object-cover">
-          <div>
-            <div class="text-white font-bold text-base">KUBA TOURS</div>
-            <div class="text-gold-400 text-xs">Golden Memories</div>
-          </div>
-        </div>
-        <button id="mobile-menu-close" aria-label="Close Menu" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark text-2xl"></i>
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="flex-1 max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
+    
+    <!-- Hero / Headline -->
+    <div class="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
+      <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 leading-tight mb-3" data-i18n="heroTitle">
+        كوبا — عطلتك الأجمل في سهل حشيش والبحر الأحمر
+      </h1>
+      <p class="text-sm sm:text-base text-slate-600 leading-relaxed" data-i18n="heroSubtitle">
+        تطبيقك المفضل لحجز أرقى الفلل والشاليهات الشاطئية ورحلات اليخوت الخاصة بكل سهولة وخصوصية.
+      </p>
+
+      <!-- View Switcher Tabs (Slider / View All) -->
+      <div class="inline-flex p-1 bg-slate-100 rounded-xl mt-6 border border-slate-200 text-xs font-semibold">
+        <button id="btn-view-slider" class="px-4 py-1.5 rounded-lg bg-white shadow-sm text-slate-900 font-bold transition-all cursor-pointer" data-i18n="viewSlider">
+          عرض متتالي (سلايدر)
+        </button>
+        <button id="btn-view-grid" class="px-4 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 transition-all cursor-pointer" data-i18n="viewGrid">
+          عرض الكل
         </button>
       </div>
-
-      <nav class="flex flex-col gap-4 mt-6">
-        <a href="#hero" class="mobile-nav-link text-slate-200 hover:text-gold-400 py-2 text-base font-medium" data-i18n="navHome">الرئيسية</a>
-        <a href="#stories" class="mobile-nav-link text-slate-200 hover:text-gold-400 py-2 text-base font-medium" data-i18n="navExperiences">اليخوت والتجارب</a>
-        <a href="#why-us" class="mobile-nav-link text-slate-200 hover:text-gold-400 py-2 text-base font-medium" data-i18n="navStays">الإقامات الفاخرة</a>
-        <a href="#destinations" class="mobile-nav-link text-slate-200 hover:text-gold-400 py-2 text-base font-medium" data-i18n="navDestinations">الوجهات</a>
-        <a href="#app" class="mobile-nav-link text-slate-200 hover:text-gold-400 py-2 text-base font-medium" data-i18n="navApp">عن التطبيق</a>
-        <a href="#reviews" class="mobile-nav-link text-slate-200 hover:text-gold-400 py-2 text-base font-medium" data-i18n="navReviews">آراء النزلاء</a>
-        <a href="#faq" class="mobile-nav-link text-slate-200 hover:text-gold-400 py-2 text-base font-medium" data-i18n="navFaq">الأسئلة الشائعة</a>
-      </nav>
     </div>
 
-    <div class="pt-6 border-t border-emerald-800 space-y-4">
-      <a href="#download" class="mobile-nav-link flex items-center justify-center gap-2 w-full py-3 rounded-xl gold-gradient-bg text-emerald-950 font-bold text-sm">
-        <i class="fa-solid fa-download"></i>
-        <span data-i18n="navDownload">حمّل التطبيق</span>
-      </a>
-      <div class="text-center text-xs text-slate-400">
-        <span data-i18n="footerCall">خدمة العملاء: متاحون 24/7</span>
+    <!-- ==================== 1. SLIDER VIEW (DEFAULT) ==================== -->
+    <div id="slider-view" class="mb-14">
+      <div id="slider-container" class="slider-container">
+        
+        <!-- Track containing all 5 posters -->
+        <div id="slider-track" class="slider-track">
+          
+          <!-- Slide 1 (1.jpg) -->
+          <div class="slider-slide">
+            <div class="poster-card">
+              <img src="/images/1.jpg" alt="Kuba - Sahl Hasheesh Summer" class="poster-img">
+            </div>
+          </div>
+
+          <!-- Slide 2 (2.jpg) -->
+          <div class="slider-slide">
+            <div class="poster-card">
+              <img src="/images/2.jpg" alt="Kuba - A Night to Remember" class="poster-img">
+            </div>
+          </div>
+
+          <!-- Slide 3 (3.jpg) -->
+          <div class="slider-slide">
+            <div class="poster-card">
+              <img src="/images/3.jpg" alt="Kuba - Winter Looks Better Here" class="poster-img">
+            </div>
+          </div>
+
+          <!-- Slide 4 (4.jpg) -->
+          <div class="slider-slide">
+            <div class="poster-card">
+              <img src="/images/4.jpg" alt="Kuba - Meet Me By The Sea" class="poster-img">
+            </div>
+          </div>
+
+          <!-- Slide 5 (5.jpg) -->
+          <div class="slider-slide">
+            <div class="poster-card">
+              <img src="/images/5.jpg" alt="Kuba - Escape But Make It Private" class="poster-img">
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Prev / Next Navigation Arrows -->
+        <button id="slider-prev" class="slider-btn prev" aria-label="Previous Slide">
+          <i class="fa-solid fa-chevron-right rtl:inline ltr:hidden text-sm"></i>
+          <i class="fa-solid fa-chevron-left rtl:hidden ltr:inline text-sm"></i>
+        </button>
+        <button id="slider-next" class="slider-btn next" aria-label="Next Slide">
+          <i class="fa-solid fa-chevron-left rtl:inline ltr:hidden text-sm"></i>
+          <i class="fa-solid fa-chevron-right rtl:hidden ltr:inline text-sm"></i>
+        </button>
+
+      </div>
+
+      <!-- Dot Indicators -->
+      <div class="flex items-center justify-center gap-2 mt-5">
+        <button class="slider-dot active" data-index="0" aria-label="Slide 1"></button>
+        <button class="slider-dot" data-index="1" aria-label="Slide 2"></button>
+        <button class="slider-dot" data-index="2" aria-label="Slide 3"></button>
+        <button class="slider-dot" data-index="3" aria-label="Slide 4"></button>
+        <button class="slider-dot" data-index="4" aria-label="Slide 5"></button>
       </div>
     </div>
-  </div>
 
-
-  <!-- ========================================================================= -->
-  <!-- 2. HERO SECTION -->
-  <!-- ========================================================================= -->
-  <section id="hero" class="relative pt-32 pb-20 md:pt-40 md:pb-28 emerald-dark-bg text-white overflow-hidden">
-    <!-- Ambient Background Lighting Orbs -->
-    <div class="absolute top-1/4 -start-20 w-96 h-96 bg-gold-500/10 rounded-full blur-3xl pointer-events-none animate-glow"></div>
-    <div class="absolute bottom-10 -end-20 w-[30rem] h-[30rem] bg-emerald-600/15 rounded-full blur-3xl pointer-events-none"></div>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      
-      <!-- Top VIP Pill -->
-      <div class="flex justify-center mb-6">
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card-dark border border-gold-500/30 text-xs sm:text-sm text-gold-300 font-semibold shadow-inner">
-          <i class="fa-solid fa-crown text-gold-400 text-xs"></i>
-          <span data-i18n="heroBadge">المنصة الرائدة لتجارب وسياحة البحر الأحمر ومصر</span>
+    <!-- ==================== 2. GRID VIEW (ALL 5 POSTERS) ==================== -->
+    <div id="grid-view" class="hidden mb-14">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div class="poster-card">
+          <img src="/images/1.jpg" alt="Poster 1" class="poster-img">
+        </div>
+        <div class="poster-card">
+          <img src="/images/2.jpg" alt="Poster 2" class="poster-img">
+        </div>
+        <div class="poster-card">
+          <img src="/images/3.jpg" alt="Poster 3" class="poster-img">
+        </div>
+        <div class="poster-card">
+          <img src="/images/4.jpg" alt="Poster 4" class="poster-img">
+        </div>
+        <div class="poster-card sm:col-span-2 md:col-span-1">
+          <img src="/images/5.jpg" alt="Poster 5" class="poster-img">
         </div>
       </div>
+    </div>
 
-      <!-- Main Heading -->
-      <div class="text-center max-w-4xl mx-auto mb-8">
-        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-6 font-serif-luxury">
-          <span data-i18n="heroTitlePrefix">عِش سحر مصر بأرقى</span>
-          <br>
-          <span class="gold-gradient-text" data-i18n="heroTitleHighlight">تجارب الفخامة والخصوصية</span>
-        </h1>
-        <p class="text-base sm:text-lg lg:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed" data-i18n="heroDesc">
-          من مياه سهل حشيش الفيروزية إلى أفخم الفلل الشاطئية ورحلات اليخوت الخاصة، يمنحك تطبيق كوبا رحلات استثنائية مصممة خصيصاً لأصحاب الذوق الرفيع وبأعلى معايير الخصوصية.
-        </p>
+    <!-- ==================== DOWNLOAD SECTION ==================== -->
+    <section id="download" class="max-w-md mx-auto bg-white rounded-3xl p-6 sm:p-8 text-center border border-slate-100 shadow-sm">
+      <div class="w-12 h-12 rounded-xl mx-auto mb-3 overflow-hidden shadow-sm">
+        <img src="/images/kuba-logo.jpg" alt="Kuba App" class="w-full h-full object-cover">
       </div>
 
-      <!-- Hero Action Buttons -->
-      <div class="flex flex-wrap items-center justify-center gap-4 mb-14">
-        <a href="#stories" class="px-8 py-4 rounded-full gold-gradient-bg text-emerald-950 font-bold text-sm sm:text-base hover:opacity-95 transition-all shadow-xl shadow-gold-500/25 transform hover:-translate-y-1 flex items-center gap-2.5">
-          <i class="fa-solid fa-compass text-emerald-900"></i>
-          <span data-i18n="heroCtaExplore">استكشف التجارب الحصرية</span>
+      <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 mb-1" data-i18n="downloadTitle">
+        حمّل تطبيق كوبا الآن
+      </h2>
+      <p class="text-xs text-slate-500 mb-6" data-i18n="downloadSubtitle">
+        ابدأ التخطيط لإجازتك القادمة واحجز يختك أو إقامتك الفاخرة بلمسة واحدة
+      </p>
+
+      <!-- App Store & Google Play Badges -->
+      <div class="flex items-center justify-center gap-3">
+        <a href="#download" class="badge-link">
+          <img src="/images/App%20Store.svg" alt="Download on the App Store" class="h-10 w-auto">
         </a>
-        <a href="#download" class="px-8 py-4 rounded-full glass-card-dark border border-gold-500/40 text-gold-300 hover:text-white hover:bg-gold-500/10 font-bold text-sm sm:text-base transition-all transform hover:-translate-y-1 flex items-center gap-2.5">
-          <i class="fa-solid fa-cloud-arrow-down text-gold-400"></i>
-          <span data-i18n="heroCtaDownload">تحميل التطبيق الآن</span>
+        <a href="#download" class="badge-link">
+          <img src="/images/Google%20Play.svg" alt="Get it on Google Play" class="h-10 w-auto">
         </a>
       </div>
 
-      <!-- Search & Discover Widget -->
-      <div class="max-w-4xl mx-auto glass-card-dark rounded-3xl p-4 sm:p-6 border border-gold-500/30 shadow-2xl mb-16">
-        <form class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          
-          <!-- Destination Field -->
-          <div class="space-y-1.5">
-            <label class="block text-xs font-semibold text-gold-300/90" data-i18n="searchDestLabel">الوجهة السياحية</label>
-            <div class="relative">
-              <select class="w-full bg-emerald-900/60 border border-emerald-700/60 rounded-xl py-3 px-3.5 text-xs sm:text-sm text-white focus:outline-none focus:border-gold-400 appearance-none">
-                <option value="sahl-hasheesh">سهل حشيش (Sahl Hasheesh)</option>
-                <option value="el-gouna">الجونة (El Gouna)</option>
-                <option value="hurghada">الغردقة (Hurghada)</option>
-                <option value="north-coast">الساحل الشمالي (North Coast)</option>
-                <option value="sharm">شرم الشيخ ودهب (Sharm & Dahab)</option>
-              </select>
-              <i class="fa-solid fa-location-dot absolute end-3 top-3.5 text-gold-400 pointer-events-none text-xs"></i>
-            </div>
-          </div>
+      <p class="text-[11px] text-slate-400 mt-4" data-i18n="downloadNote">
+        متاح مجاناً على متجري App Store و Google Play
+      </p>
+    </section>
 
-          <!-- Experience Type -->
-          <div class="space-y-1.5">
-            <label class="block text-xs font-semibold text-gold-300/90" data-i18n="searchExpLabel">نوع التجربة</label>
-            <div class="relative">
-              <select class="w-full bg-emerald-900/60 border border-emerald-700/60 rounded-xl py-3 px-3.5 text-xs sm:text-sm text-white focus:outline-none focus:border-gold-400 appearance-none">
-                <option data-i18n="searchExpOption1">يخوت خاصة ورحلات بحرية</option>
-                <option data-i18n="searchExpOption2">فلل وشاليهات شاطئية</option>
-                <option data-i18n="searchExpOption3">أجنحة ومنتجعات 5 نجوم</option>
-                <option data-i18n="searchExpOption4">خدمة كونسيرج وتنقل VIP</option>
-              </select>
-              <i class="fa-solid fa-sailboat absolute end-3 top-3.5 text-gold-400 pointer-events-none text-xs"></i>
-            </div>
-          </div>
+  </main>
 
-          <!-- Date -->
-          <div class="space-y-1.5">
-            <label class="block text-xs font-semibold text-gold-300/90" data-i18n="searchDateLabel">تاريخ الوصول</label>
-            <div class="relative">
-              <input type="date" value="2026-11-01" class="w-full bg-emerald-900/60 border border-emerald-700/60 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm text-white focus:outline-none focus:border-gold-400">
-            </div>
-          </div>
-
-          <!-- Submit Button -->
-          <div>
-            <button id="hero-search-btn" type="button" class="w-full py-3.5 px-4 rounded-xl gold-gradient-bg text-emerald-950 font-bold text-xs sm:text-sm hover:opacity-95 transition-all shadow-md flex items-center justify-center gap-2">
-              <i class="fa-solid fa-magnifying-glass"></i>
-              <span data-i18n="searchBtn">بحث واستكشاف</span>
-            </button>
-          </div>
-
-        </form>
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="border-t border-slate-100 bg-white py-5 text-center text-xs text-slate-500 mt-12">
+    <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <img src="/images/kuba-logo.jpg" alt="Logo" class="w-5 h-5 rounded-md object-cover">
+        <span class="font-bold text-slate-800">KUBA TOURS</span>
       </div>
-
-      <!-- Trust & Key Stats Strip -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto pt-6 border-t border-emerald-800/80 text-center">
-        <div class="p-2">
-          <div class="text-2xl sm:text-3xl font-extrabold gold-gradient-text" data-i18n="stat1Number">500+</div>
-          <div class="text-xs sm:text-sm text-slate-300 mt-1 font-medium" data-i18n="stat1Label">وحدة وفيلا فاخرة</div>
-        </div>
-        <div class="p-2">
-          <div class="text-2xl sm:text-3xl font-extrabold gold-gradient-text" data-i18n="stat2Number">120+</div>
-          <div class="text-xs sm:text-sm text-slate-300 mt-1 font-medium" data-i18n="stat2Label">يخت وقارب VIP مرخّص</div>
-        </div>
-        <div class="p-2">
-          <div class="text-2xl sm:text-3xl font-extrabold gold-gradient-text" data-i18n="stat3Number">15,000+</div>
-          <div class="text-xs sm:text-sm text-slate-300 mt-1 font-medium" data-i18n="stat3Label">ضيف سعيد ومستمتع</div>
-        </div>
-        <div class="p-2">
-          <div class="text-2xl sm:text-3xl font-extrabold gold-gradient-text" data-i18n="stat4Number">99.8%</div>
-          <div class="text-xs sm:text-sm text-slate-300 mt-1 font-medium" data-i18n="stat4Label">تقييم الرضا والأمان</div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-
-  <!-- ========================================================================= -->
-  <!-- 3. FEATURED STORY ALBUM (IMAGES 1 TO 5) -->
-  <!-- ========================================================================= -->
-  <section id="stories" class="py-24 bg-[#F8F5EE] relative">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <!-- Section Header -->
-      <div class="text-center max-w-3xl mx-auto mb-14">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full badge-gold text-xs font-bold uppercase tracking-wider mb-3">
-          <i class="fa-solid fa-camera-retro"></i>
-          <span data-i18n="storiesTag">ألبوم التجارب الاستثنائية</span>
-        </div>
-        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 font-serif-luxury">
-          <span data-i18n="storiesTitle">لحظات صُنعت لتخلد في الذاكرة</span>
-        </h2>
-        <p class="text-slate-600 text-base sm:text-lg leading-relaxed" data-i18n="storiesSubtitle">
-          شاهد كيف تبدو الحياة مع كوبا.. من شواطئ سهل حشيش إلى أعالي البحار في اليخوت الخاصة
-        </p>
-
-        <!-- Filter Tabs -->
-        <div class="flex flex-wrap justify-center gap-2 sm:gap-3 mt-8">
-          <button class="gallery-tab active px-5 py-2 rounded-full text-xs sm:text-sm font-semibold border border-slate-300 transition-all cursor-pointer" data-filter="all" data-i18n="filterAll">جميع التجارب</button>
-          <button class="gallery-tab px-5 py-2 rounded-full text-xs sm:text-sm font-semibold border border-slate-300 text-slate-700 hover:border-gold-500 transition-all cursor-pointer" data-filter="yachts" data-i18n="filterYachts">رحلات اليخوت</button>
-          <button class="gallery-tab px-5 py-2 rounded-full text-xs sm:text-sm font-semibold border border-slate-300 text-slate-700 hover:border-gold-500 transition-all cursor-pointer" data-filter="stays" data-i18n="filterStays">الفلل والشاليهات</button>
-          <button class="gallery-tab px-5 py-2 rounded-full text-xs sm:text-sm font-semibold border border-slate-300 text-slate-700 hover:border-gold-500 transition-all cursor-pointer" data-filter="sahl-hasheesh" data-i18n="filterSahlHasheesh">سهل حشيش</button>
-          <button class="gallery-tab px-5 py-2 rounded-full text-xs sm:text-sm font-semibold border border-slate-300 text-slate-700 hover:border-gold-500 transition-all cursor-pointer" data-filter="private" data-i18n="filterPrivate">خصوصية VIP</button>
-        </div>
-      </div>
-
-      <!-- Stories Grid -->
-      <div id="stories-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        
-        <!-- ================= CARD 1 (1.jpg) ================= -->
-        <div class="story-card bg-white rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 hover:shadow-2xl hover:border-gold-400 transition-all duration-300 flex flex-col" data-category="sahl-hasheesh">
-          <div class="img-zoom-container relative aspect-[4/5] bg-slate-100 cursor-pointer" onclick="openLightbox(0)">
-            <img src="/images/1.jpg" alt="Summer in Sahl Hasheesh - Kuba" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-            
-            <!-- Floating Top Badge -->
-            <div class="absolute top-4 start-4">
-              <span class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-900/90 text-gold-300 border border-gold-500/40 backdrop-blur-md shadow" data-i18n="card1Badge">
-                سهل حشيش • صيف استثنائي
-              </span>
-            </div>
-
-            <!-- Zoom Button -->
-            <button class="absolute top-4 end-4 w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-gold-500 hover:text-emerald-950 transition-colors backdrop-blur-md" title="تكبير الصورة">
-              <i class="fa-solid fa-expand text-sm"></i>
-            </button>
-
-            <!-- Bottom Preview Caption -->
-            <div class="absolute bottom-4 start-4 end-4 text-white">
-              <h3 class="text-xl font-bold leading-tight drop-shadow-md" data-i18n="card1Title">
-                كوبا هتخلي صيفك أحلى في سهل حشيش
-              </h3>
-            </div>
-          </div>
-
-          <div class="p-6 flex-1 flex flex-col justify-between">
-            <p class="text-slate-600 text-sm leading-relaxed mb-6" data-i18n="card1Desc">
-              انتعاش الصيف وأجمل الأوقات العائلية والأصدقاء على شواطئ البحر الأحمر الساحرة مع كافة وسائل الراحة والرفاهية المطلقة.
-            </p>
-
-            <!-- 4 Badges directly from image 1 -->
-            <div class="grid grid-cols-2 gap-2 text-xs font-medium text-slate-700 pt-4 border-t border-slate-100">
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-umbrella-beach text-gold-600"></i>
-                <span data-i18n="card1Feat1">شاطئ خاص</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-house-chimney text-gold-600"></i>
-                <span data-i18n="card1Feat2">فلل وشاليهات فاخرة</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-sailboat text-gold-600"></i>
-                <span data-i18n="card1Feat3">يخت ورحلات بحرية</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-shield-halved text-gold-600"></i>
-                <span data-i18n="card1Feat4">أمان وخصوصية تامة</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ================= CARD 2 (2.jpg) ================= -->
-        <div class="story-card bg-white rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 hover:shadow-2xl hover:border-gold-400 transition-all duration-300 flex flex-col" data-category="yachts">
-          <div class="img-zoom-container relative aspect-[4/5] bg-slate-100 cursor-pointer" onclick="openLightbox(1)">
-            <img src="/images/2.jpg" alt="A Night to Remember - Kuba Tours" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-            
-            <div class="absolute top-4 start-4">
-              <span class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-900/90 text-gold-300 border border-gold-500/40 backdrop-blur-md shadow" data-i18n="card2Badge">
-                غروب ساحر • أمسيات لا تُنسى
-              </span>
-            </div>
-
-            <button class="absolute top-4 end-4 w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-gold-500 hover:text-emerald-950 transition-colors backdrop-blur-md">
-              <i class="fa-solid fa-expand text-sm"></i>
-            </button>
-
-            <div class="absolute bottom-4 start-4 end-4 text-white">
-              <h3 class="text-xl font-bold leading-tight drop-shadow-md" data-i18n="card2Title">
-                أمسية من وحي الخيال وسط أمواج البحر الأحمر
-              </h3>
-            </div>
-          </div>
-
-          <div class="p-6 flex-1 flex flex-col justify-between">
-            <p class="text-slate-600 text-sm leading-relaxed mb-6" data-i18n="card2Desc">
-              استمتع بمشروبك المفضل مع طبق فواكه استوائي على متن يخت فاخر في اللحظة التي تلتقي فيها الشمس بسلاسل جبال البحر الأحمر.
-            </p>
-
-            <div class="grid grid-cols-2 gap-2 text-xs font-medium text-slate-700 pt-4 border-t border-slate-100">
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-sun text-gold-600"></i>
-                <span data-i18n="card2Feat1">إطلالة بانورامية للغروب</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-music text-gold-600"></i>
-                <span data-i18n="card2Feat2">أجواء موسيقية هادئة</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-martini-glass-citrus text-gold-600"></i>
-                <span data-i18n="card2Feat3">ضيافة ومأكولات فاخرة</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-anchor text-gold-600"></i>
-                <span data-i18n="card2Feat4">طاقم بحري محترف</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ================= CARD 3 (3.jpg) ================= -->
-        <div class="story-card bg-white rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 hover:shadow-2xl hover:border-gold-400 transition-all duration-300 flex flex-col" data-category="yachts">
-          <div class="img-zoom-container relative aspect-[4/5] bg-slate-100 cursor-pointer" onclick="openLightbox(2)">
-            <img src="/images/3.jpg" alt="Winter Looks Better Here - Kuba" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-            
-            <div class="absolute top-4 start-4">
-              <span class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-900/90 text-gold-300 border border-gold-500/40 backdrop-blur-md shadow" data-i18n="card3Badge">
-                شمس الشتاء • دفء البحر الأحمر
-              </span>
-            </div>
-
-            <button class="absolute top-4 end-4 w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-gold-500 hover:text-emerald-950 transition-colors backdrop-blur-md">
-              <i class="fa-solid fa-expand text-sm"></i>
-            </button>
-
-            <div class="absolute bottom-4 start-4 end-4 text-white">
-              <h3 class="text-xl font-bold leading-tight drop-shadow-md" data-i18n="card3Title">
-                شتاء أدفأ وأجمل هنا في سهل حشيش
-              </h3>
-            </div>
-          </div>
-
-          <div class="p-6 flex-1 flex flex-col justify-between">
-            <p class="text-slate-600 text-sm leading-relaxed mb-6" data-i18n="card3Desc">
-              اهرب من برد الشتاء إلى المياه الفيروزية والشمس المشرقة طوال العام، مع أحدث يخوت الميجا يخت والإقامات الساحلية المترفة.
-            </p>
-
-            <div class="grid grid-cols-2 gap-2 text-xs font-medium text-slate-700 pt-4 border-t border-slate-100">
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-temperature-arrow-up text-gold-600"></i>
-                <span data-i18n="card3Feat1">طقس مشمس على مدار العام</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-ship text-gold-600"></i>
-                <span data-i18n="card3Feat2">يخوت بحرية حديثة</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-water text-gold-600"></i>
-                <span data-i18n="card3Feat3">إقامات شاطئية دافئة</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-mask-snorkel text-gold-600"></i>
-                <span data-i18n="card3Feat4">رحلات جزر بحرية وغوص</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ================= CARD 4 (4.jpg) ================= -->
-        <div class="story-card bg-white rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 hover:shadow-2xl hover:border-gold-400 transition-all duration-300 flex flex-col md:col-span-1 lg:col-span-1" data-category="stays">
-          <div class="img-zoom-container relative aspect-[4/5] bg-slate-100 cursor-pointer" onclick="openLightbox(3)">
-            <img src="/images/4.jpg" alt="Meet Me By The Sea - Kuba" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-            
-            <div class="absolute top-4 start-4">
-              <span class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-900/90 text-gold-300 border border-gold-500/40 backdrop-blur-md shadow" data-i18n="card4Badge">
-                إطلالة مباشرة على البحر
-              </span>
-            </div>
-
-            <button class="absolute top-4 end-4 w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-gold-500 hover:text-emerald-950 transition-colors backdrop-blur-md">
-              <i class="fa-solid fa-expand text-sm"></i>
-            </button>
-
-            <div class="absolute bottom-4 start-4 end-4 text-white">
-              <h3 class="text-xl font-bold leading-tight drop-shadow-md" data-i18n="card4Title">
-                على ضفاف الفخامة والسكينة المطلقة
-              </h3>
-            </div>
-          </div>
-
-          <div class="p-6 flex-1 flex flex-col justify-between">
-            <p class="text-slate-600 text-sm leading-relaxed mb-6" data-i18n="card4Desc">
-              استيقظ كل صباح على صوت الأمواج وتأمل مشهد البحر من شرفة فيلتك الخاصة المطلة على المياه الفيروزية واليخوت الراسية.
-            </p>
-
-            <div class="grid grid-cols-2 gap-2 text-xs font-medium text-slate-700 pt-4 border-t border-slate-100">
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-gem text-gold-600"></i>
-                <span data-i18n="card4Feat1">واجهة بحرية خاصة</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-water-ladder text-gold-600"></i>
-                <span data-i18n="card4Feat2">مسابح خاصة وإنفينيتي</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-landmark text-gold-600"></i>
-                <span data-i18n="card4Feat3">تصميم معماري راقٍ</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-bell-concierge text-gold-600"></i>
-                <span data-i18n="card4Feat4">خدمة كونسيرج 24/7</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ================= CARD 5 (5.jpg) ================= -->
-        <div class="story-card bg-white rounded-3xl overflow-hidden shadow-xl border border-slate-200/80 hover:shadow-2xl hover:border-gold-400 transition-all duration-300 flex flex-col md:col-span-2 lg:col-span-2" data-category="private">
-          <div class="img-zoom-container relative aspect-[16/10] sm:aspect-[16/9] bg-slate-100 cursor-pointer" onclick="openLightbox(4)">
-            <img src="/images/5.jpg" alt="Escape But Make It Private - Kuba" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent"></div>
-            
-            <div class="absolute top-4 start-4">
-              <span class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-900/90 text-gold-300 border border-gold-500/40 backdrop-blur-md shadow" data-i18n="card5Badge">
-                خصوصية مطلقة • VIP
-              </span>
-            </div>
-
-            <button class="absolute top-4 end-4 w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-gold-500 hover:text-emerald-950 transition-colors backdrop-blur-md">
-              <i class="fa-solid fa-expand text-sm"></i>
-            </button>
-
-            <div class="absolute bottom-6 start-6 end-6 text-white max-w-xl">
-              <h3 class="text-2xl sm:text-3xl font-extrabold leading-tight drop-shadow-md mb-2 font-serif-luxury" data-i18n="card5Title">
-                الهروب المثالي.. بخصوصية استثنائية لك وحدك
-              </h3>
-              <p class="text-slate-200 text-xs sm:text-sm line-clamp-2" data-i18n="card5Desc">
-                رحلات بحرية خاصة ومغلقة بالكامل مصممة للعائلات وكبار الشخصيات لضمان أقصى درجات الراحة والانعزال عن صخب العالم.
-              </p>
-            </div>
-          </div>
-
-          <div class="p-6 flex-1 flex flex-col justify-between">
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-medium text-slate-700">
-              <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-50">
-                <i class="fa-solid fa-user-shield text-gold-600 text-base"></i>
-                <span data-i18n="card5Feat1">يخت خاص بالكامل لك ولعائلتك</span>
-              </div>
-              <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-50">
-                <i class="fa-solid fa-route text-gold-600 text-base"></i>
-                <span data-i18n="card5Feat2">مسارات بحرية مخصصة</span>
-              </div>
-              <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-50">
-                <i class="fa-solid fa-utensils text-gold-600 text-base"></i>
-                <span data-i18n="card5Feat3">شيف خاص حسب الطلب</span>
-              </div>
-              <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-50">
-                <i class="fa-solid fa-lock text-gold-600 text-base"></i>
-                <span data-i18n="card5Feat4">سرية تامة وراحة بال</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  </section>
-
-
-  <!-- ========================================================================= -->
-  <!-- 4. LIGHTBOX MODAL (FOR VIEWING IMAGES 1-5 IN FULL SCREEN) -->
-  <!-- ========================================================================= -->
-  <div id="lightbox-modal" class="lightbox-modal">
-    <div class="relative max-w-5xl w-full max-h-[92vh] flex flex-col items-center">
-      
-      <!-- Close Button -->
-      <button onclick="closeLightbox()" class="absolute -top-12 end-0 text-white/80 hover:text-gold-400 text-2xl p-2 transition-colors">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-
-      <!-- Nav Next/Prev Buttons -->
-      <button onclick="document.documentElement.dir === 'rtl' ? nextLightbox() : prevLightbox()" class="absolute start-2 sm:-start-14 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/60 text-white hover:bg-gold-500 hover:text-emerald-950 transition-colors flex items-center justify-center text-lg z-10 backdrop-blur-md">
-        <i class="fa-solid fa-chevron-right rtl-only"></i>
-        <i class="fa-solid fa-chevron-left ltr-only"></i>
-      </button>
-
-      <button onclick="document.documentElement.dir === 'rtl' ? prevLightbox() : nextLightbox()" class="absolute end-2 sm:-end-14 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/60 text-white hover:bg-gold-500 hover:text-emerald-950 transition-colors flex items-center justify-center text-lg z-10 backdrop-blur-md">
-        <i class="fa-solid fa-chevron-left rtl-only"></i>
-        <i class="fa-solid fa-chevron-right ltr-only"></i>
-      </button>
-
-      <!-- Main Image Container -->
-      <div class="rounded-2xl overflow-hidden max-h-[72vh] flex items-center justify-center border border-gold-500/40 shadow-2xl bg-black">
-        <img id="lightbox-image" src="/images/1.jpg" alt="Preview" class="max-h-[72vh] w-auto object-contain">
-      </div>
-
-      <!-- Caption Box -->
-      <div class="mt-4 p-4 rounded-xl bg-emerald-950/90 border border-gold-500/30 text-white max-w-2xl w-full text-center">
-        <span id="lightbox-badge" class="inline-block text-[11px] font-bold text-gold-300 uppercase tracking-widest mb-1">Badge</span>
-        <h3 id="lightbox-title" class="text-base sm:text-lg font-bold text-white mb-1">Title</h3>
-        <p id="lightbox-desc" class="text-xs sm:text-sm text-slate-300">Description</p>
-      </div>
-
-    </div>
-  </div>
-
-
-  <!-- ========================================================================= -->
-  <!-- 5. WHY DISCERNING TRAVELERS CHOOSE KUBA (4 PILLARS) -->
-  <!-- ========================================================================= -->
-  <section id="why-us" class="py-24 bg-white relative">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <div class="text-center max-w-3xl mx-auto mb-16">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full badge-gold text-xs font-bold uppercase tracking-wider mb-3">
-          <i class="fa-solid fa-gem"></i>
-          <span data-i18n="whyTag">لماذا يختارنا السياح؟</span>
-        </div>
-        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 font-serif-luxury">
-          <span data-i18n="whyTitle">معايير عالمية وضيافة مصرية أصيلة</span>
-        </h2>
-        <p class="text-slate-600 text-base sm:text-lg leading-relaxed" data-i18n="whySubtitle">
-          نهتم بأدق التفاصيل لنضمن لك إجازة لا تشوبها شائبة
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        
-        <!-- Pillar 1 -->
-        <div class="p-8 rounded-3xl bg-[#FAF8F5] border border-slate-200/80 hover:border-gold-500/50 hover:shadow-xl transition-all duration-300 group">
-          <div class="w-14 h-14 rounded-2xl bg-emerald-900/10 text-emerald-800 flex items-center justify-center text-2xl mb-6 group-hover:bg-gold-500 group-hover:text-emerald-950 transition-colors">
-            <i class="fa-solid fa-circle-check"></i>
-          </div>
-          <h3 class="text-lg font-bold text-slate-900 mb-2.5 font-serif-luxury" data-i18n="pillar1Title">
-            وحدات ويخوت موثقة 100%
-          </h3>
-          <p class="text-slate-600 text-sm leading-relaxed" data-i18n="pillar1Desc">
-            فريقنا يعاين كل وحدة ويخت شخصياً للتأكد من مطابقتها لأعلى معايير النظافة والرفاهية والسلامة.
-          </p>
-        </div>
-
-        <!-- Pillar 2 -->
-        <div class="p-8 rounded-3xl bg-[#FAF8F5] border border-slate-200/80 hover:border-gold-500/50 hover:shadow-xl transition-all duration-300 group">
-          <div class="w-14 h-14 rounded-2xl bg-emerald-900/10 text-emerald-800 flex items-center justify-center text-2xl mb-6 group-hover:bg-gold-500 group-hover:text-emerald-950 transition-colors">
-            <i class="fa-solid fa-bolt"></i>
-          </div>
-          <h3 class="text-lg font-bold text-slate-900 mb-2.5 font-serif-luxury" data-i18n="pillar2Title">
-            حجز فوري وشفافية كاملة
-          </h3>
-          <p class="text-slate-600 text-sm leading-relaxed" data-i18n="pillar2Desc">
-            لا رسوم خفية أو مفاجآت. أسعار واضحة بعملات متعددة وحجز مؤكد فوري في ثوانٍ معدودة.
-          </p>
-        </div>
-
-        <!-- Pillar 3 -->
-        <div class="p-8 rounded-3xl bg-[#FAF8F5] border border-slate-200/80 hover:border-gold-500/50 hover:shadow-xl transition-all duration-300 group">
-          <div class="w-14 h-14 rounded-2xl bg-emerald-900/10 text-emerald-800 flex items-center justify-center text-2xl mb-6 group-hover:bg-gold-500 group-hover:text-emerald-950 transition-colors">
-            <i class="fa-solid fa-bell-concierge"></i>
-          </div>
-          <h3 class="text-lg font-bold text-slate-900 mb-2.5 font-serif-luxury" data-i18n="pillar3Title">
-            خدمة كونسيرج ومرافقة VIP
-          </h3>
-          <p class="text-slate-600 text-sm leading-relaxed" data-i18n="pillar3Desc">
-            فريق مخصص لمساعدتك على مدار الساعة، من استقبال المطار وتأجير سيارات الجولف وحتى ترتيب المفاجآت الخاصة.
-          </p>
-        </div>
-
-        <!-- Pillar 4 -->
-        <div class="p-8 rounded-3xl bg-[#FAF8F5] border border-slate-200/80 hover:border-gold-500/50 hover:shadow-xl transition-all duration-300 group">
-          <div class="w-14 h-14 rounded-2xl bg-emerald-900/10 text-emerald-800 flex items-center justify-center text-2xl mb-6 group-hover:bg-gold-500 group-hover:text-emerald-950 transition-colors">
-            <i class="fa-solid fa-shield-halved"></i>
-          </div>
-          <h3 class="text-lg font-bold text-slate-900 mb-2.5 font-serif-luxury" data-i18n="pillar4Title">
-            أمان وخصوصية لا مساومة عليها
-          </h3>
-          <p class="text-slate-600 text-sm leading-relaxed" data-i18n="pillar4Desc">
-            نوفر لك خيارات حصرية تناسب العائلات التي تبحث عن الخصوصية التامة وشواطئ ومسابح غير مكشوفة.
-          </p>
-        </div>
-
-      </div>
-
-    </div>
-  </section>
-
-
-  <!-- ========================================================================= -->
-  <!-- 6. TOP RED SEA DESTINATIONS -->
-  <!-- ========================================================================= -->
-  <section id="destinations" class="py-24 emerald-dark-bg text-white relative overflow-hidden">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      
-      <div class="text-center max-w-3xl mx-auto mb-16">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-card-dark text-xs font-bold text-gold-300 uppercase tracking-wider mb-3 border border-gold-500/30">
-          <i class="fa-solid fa-map-location-dot text-gold-400"></i>
-          <span data-i18n="destTag">أفضل الوجهات</span>
-        </div>
-        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-4 font-serif-luxury">
-          <span data-i18n="destTitle">استكشف أروع سواحل مصر</span>
-        </h2>
-        <p class="text-slate-300 text-base sm:text-lg leading-relaxed" data-i18n="destSubtitle">
-          مواقع ساحرة تم انتقاؤها لتوفر لك تجربة لا تُنسى
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        <!-- Destination 1: Sahl Hasheesh -->
-        <div class="group relative rounded-3xl overflow-hidden border border-gold-500/30 shadow-2xl aspect-[4/5] flex flex-col justify-end p-6 cursor-pointer">
-          <img src="/images/1.jpg" alt="Sahl Hasheesh" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-          <div class="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-950/40 to-transparent"></div>
-          
-          <div class="relative z-10">
-            <span class="text-gold-400 text-xs font-bold tracking-widest uppercase mb-1 block">Red Sea Luxury</span>
-            <h3 class="text-2xl font-bold text-white mb-2 font-serif-luxury" data-i18n="dest1Name">سهل حشيش</h3>
-            <p class="text-slate-300 text-xs line-clamp-2" data-i18n="dest1Desc">
-              عاصمة الرفاهية والهدوء وشواطئ الرمال البيضاء
-            </p>
-          </div>
-        </div>
-
-        <!-- Destination 2: El Gouna -->
-        <div class="group relative rounded-3xl overflow-hidden border border-gold-500/30 shadow-2xl aspect-[4/5] flex flex-col justify-end p-6 cursor-pointer">
-          <img src="/images/3.jpg" alt="El Gouna" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-          <div class="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-950/40 to-transparent"></div>
-          
-          <div class="relative z-10">
-            <span class="text-gold-400 text-xs font-bold tracking-widest uppercase mb-1 block">Lagoon Life</span>
-            <h3 class="text-2xl font-bold text-white mb-2 font-serif-luxury" data-i18n="dest2Name">الجونة</h3>
-            <p class="text-slate-300 text-xs line-clamp-2" data-i18n="dest2Desc">
-              مدينة البحيرات والأنشطة البحرية والحياة العصرية
-            </p>
-          </div>
-        </div>
-
-        <!-- Destination 3: North Coast -->
-        <div class="group relative rounded-3xl overflow-hidden border border-gold-500/30 shadow-2xl aspect-[4/5] flex flex-col justify-end p-6 cursor-pointer">
-          <img src="/images/4.jpg" alt="North Coast" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-          <div class="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-950/40 to-transparent"></div>
-          
-          <div class="relative z-10">
-            <span class="text-gold-400 text-xs font-bold tracking-widest uppercase mb-1 block">Mediterranean Jewel</span>
-            <h3 class="text-2xl font-bold text-white mb-2 font-serif-luxury" data-i18n="dest3Name">الساحل الشمالي</h3>
-            <p class="text-slate-300 text-xs line-clamp-2" data-i18n="dest3Desc">
-              مياه البحر المتوسط التركوازية وأرقى القرى السياحية
-            </p>
-          </div>
-        </div>
-
-        <!-- Destination 4: Sharm & Dahab -->
-        <div class="group relative rounded-3xl overflow-hidden border border-gold-500/30 shadow-2xl aspect-[4/5] flex flex-col justify-end p-6 cursor-pointer">
-          <img src="/images/2.jpg" alt="Sharm El Sheikh & Dahab" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-          <div class="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-950/40 to-transparent"></div>
-          
-          <div class="relative z-10">
-            <span class="text-gold-400 text-xs font-bold tracking-widest uppercase mb-1 block">Sinai Wonders</span>
-            <h3 class="text-2xl font-bold text-white mb-2 font-serif-luxury" data-i18n="dest4Name">شرم الشيخ ودهب</h3>
-            <p class="text-slate-300 text-xs line-clamp-2" data-i18n="dest4Desc">
-              سحر الغوص والشعاب المرجانية والأجواء الطبيعية الخلابة
-            </p>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  </section>
-
-
-  <!-- ========================================================================= -->
-  <!-- 7. KUBA MOBILE APP SHOWCASE -->
-  <!-- ========================================================================= -->
-  <section id="app" class="py-24 bg-[#F8F5EE] relative overflow-hidden">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-        
-        <!-- Left: Text & Features List -->
-        <div class="lg:col-span-7 space-y-8">
-          <div>
-            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full badge-gold text-xs font-bold uppercase tracking-wider mb-3">
-              <i class="fa-solid fa-mobile-screen"></i>
-              <span data-i18n="appShowcaseTag">تطبيق كوبا للهواتف</span>
-            </div>
-            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 font-serif-luxury">
-              <span data-i18n="appShowcaseTitle">عالم من الفخامة بين يديك</span>
-            </h2>
-            <p class="text-slate-600 text-base sm:text-lg leading-relaxed" data-i18n="appShowcaseDesc">
-              صُمم تطبيق كوبا ليمنحك تجربة حجز سلسة وذكية. تصفح بالصور عالية الدقة، قارن الأسعار، وتواصل مباشرة مع أصحاب الوحدات وقادة اليخوت.
-            </p>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
-            <div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex items-start gap-3.5">
-              <div class="w-10 h-10 rounded-xl bg-gold-500/15 text-gold-600 flex items-center justify-center flex-shrink-0 text-base">
-                <i class="fa-solid fa-sliders"></i>
-              </div>
-              <div>
-                <p class="text-slate-800 text-xs sm:text-sm font-semibold" data-i18n="appFeat1">تصفية ذكية حسب الموقع والمميزات والميزانية</p>
-              </div>
-            </div>
-
-            <div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex items-start gap-3.5">
-              <div class="w-10 h-10 rounded-xl bg-gold-500/15 text-gold-600 flex items-center justify-center flex-shrink-0 text-base">
-                <i class="fa-solid fa-calendar-check"></i>
-              </div>
-              <div>
-                <p class="text-slate-800 text-xs sm:text-sm font-semibold" data-i18n="appFeat2">تقويم تفاعلي وتأكيد الحجز في ثوانٍ</p>
-              </div>
-            </div>
-
-            <div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex items-start gap-3.5">
-              <div class="w-10 h-10 rounded-xl bg-gold-500/15 text-gold-600 flex items-center justify-center flex-shrink-0 text-base">
-                <i class="fa-solid fa-comments"></i>
-              </div>
-              <div>
-                <p class="text-slate-800 text-xs sm:text-sm font-semibold" data-i18n="appFeat3">محادثة فورية مع قبطان اليخت أو المضيف</p>
-              </div>
-            </div>
-
-            <div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex items-start gap-3.5">
-              <div class="w-10 h-10 rounded-xl bg-gold-500/15 text-gold-600 flex items-center justify-center flex-shrink-0 text-base">
-                <i class="fa-solid fa-credit-card"></i>
-              </div>
-              <div>
-                <p class="text-slate-800 text-xs sm:text-sm font-semibold" data-i18n="appFeat4">دفع آمن بالبطاقات الائتمانية والعملات المتعددة</p>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Direct Download CTA Button -->
-          <div class="pt-2">
-            <a href="#download" class="inline-flex items-center gap-3 px-8 py-4 rounded-full gold-gradient-bg text-emerald-950 font-bold text-sm sm:text-base hover:opacity-95 transition-all shadow-xl shadow-gold-500/20 transform hover:-translate-y-1">
-              <i class="fa-solid fa-arrow-down-to-bracket text-emerald-900"></i>
-              <span data-i18n="heroCtaDownload">تحميل التطبيق الآن</span>
-            </a>
-          </div>
-
-        </div>
-
-        <!-- Right: Sleek Smartphone Mockup -->
-        <div class="lg:col-span-5 flex justify-center relative">
-          
-          <div class="phone-mockup animate-float">
-            <div class="phone-notch"></div>
-            
-            <div class="phone-screen flex flex-col justify-between">
-              <!-- In-App Header -->
-              <div class="p-4 pt-10 bg-emerald-950 text-white flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <img src="/images/kuba-logo.jpg" alt="Logo" class="w-7 h-7 rounded-md object-cover border border-gold-500/40">
-                  <span class="text-xs font-bold tracking-wider">KUBA TOURS</span>
-                </div>
-                <div class="w-6 h-6 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center text-[10px]">
-                  <i class="fa-solid fa-bell"></i>
-                </div>
-              </div>
-
-              <!-- App Screen Body with Image 3 preview -->
-              <div class="p-3.5 flex-1 overflow-hidden space-y-3">
-                <div class="rounded-2xl overflow-hidden relative aspect-[16/11] border border-gold-500/30 shadow-md">
-                  <img src="/images/3.jpg" alt="App Preview" class="w-full h-full object-cover">
-                  <div class="absolute bottom-2 start-2 end-2 bg-emerald-950/80 backdrop-blur-sm rounded-lg p-2 text-white">
-                    <div class="flex justify-between items-center">
-                      <span class="text-[11px] font-bold">Royal Ocean Yacht</span>
-                      <span class="text-[10px] text-gold-400">★ 4.9 (88)</span>
-                    </div>
-                    <span class="text-[9px] text-slate-300">Sahl Hasheesh Marina</span>
-                  </div>
-                </div>
-
-                <div class="rounded-2xl overflow-hidden relative aspect-[16/11] border border-gold-500/30 shadow-md">
-                  <img src="/images/1.jpg" alt="App Preview 2" class="w-full h-full object-cover">
-                  <div class="absolute bottom-2 start-2 end-2 bg-emerald-950/80 backdrop-blur-sm rounded-lg p-2 text-white">
-                    <div class="flex justify-between items-center">
-                      <span class="text-[11px] font-bold">Panoramic Beach Villa</span>
-                      <span class="text-[10px] text-gold-400">★ 5.0 (42)</span>
-                    </div>
-                    <span class="text-[9px] text-slate-300">Private Shoreline Access</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Bottom Tab Bar -->
-              <div class="p-2.5 bg-white border-t border-slate-200 flex justify-around text-slate-600 text-xs">
-                <div class="flex flex-col items-center text-emerald-800 font-bold">
-                  <i class="fa-solid fa-compass"></i>
-                  <span class="text-[9px] mt-0.5">Explore</span>
-                </div>
-                <div class="flex flex-col items-center hover:text-emerald-800">
-                  <i class="fa-solid fa-heart"></i>
-                  <span class="text-[9px] mt-0.5">Saved</span>
-                </div>
-                <div class="flex flex-col items-center hover:text-emerald-800">
-                  <i class="fa-solid fa-receipt"></i>
-                  <span class="text-[9px] mt-0.5">Trips</span>
-                </div>
-                <div class="flex flex-col items-center hover:text-emerald-800">
-                  <i class="fa-solid fa-user"></i>
-                  <span class="text-[9px] mt-0.5">Profile</span>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-  </section>
-
-
-  <!-- ========================================================================= -->
-  <!-- 8. GUEST REVIEWS & SOCIAL PROOF -->
-  <!-- ========================================================================= -->
-  <section id="reviews" class="py-24 bg-white relative">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <div class="text-center max-w-3xl mx-auto mb-16">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full badge-gold text-xs font-bold uppercase tracking-wider mb-3">
-          <i class="fa-solid fa-star text-gold-500"></i>
-          <span data-i18n="reviewsTag">تجارب حقيقية</span>
-        </div>
-        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 font-serif-luxury">
-          <span data-i18n="reviewsTitle">ماذا يقول ضيوفنا وسياحنا؟</span>
-        </h2>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        
-        <!-- Review 1 -->
-        <div class="p-8 rounded-3xl bg-[#FAF8F5] border border-slate-200/80 shadow-md flex flex-col justify-between">
-          <div>
-            <div class="flex items-center gap-1 text-gold-500 mb-4 text-sm">
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-            </div>
-            <p class="text-slate-700 text-sm sm:text-base leading-relaxed italic mb-6" data-i18n="review1Text">
-              "رحلة اليخت في سهل حشيش عبر تطبيق كوبا كانت خيالية! طاقم محترف وخدمة 5 نجوم وخصوصية تامة لعائلتي. بالتأكيد سأكرر التجربة."
-            </p>
-          </div>
-          <div class="pt-4 border-t border-slate-200/60">
-            <h4 class="font-bold text-slate-900 text-sm" data-i18n="review1Author">د. طارق المنصوري</h4>
-            <span class="text-xs text-slate-500" data-i18n="review1Location">الرياض، المملكة العربية السعودية</span>
-          </div>
-        </div>
-
-        <!-- Review 2 -->
-        <div class="p-8 rounded-3xl bg-[#FAF8F5] border border-slate-200/80 shadow-md flex flex-col justify-between">
-          <div>
-            <div class="flex items-center gap-1 text-gold-500 mb-4 text-sm">
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-            </div>
-            <p class="text-slate-700 text-sm sm:text-base leading-relaxed italic mb-6" data-i18n="review2Text">
-              "The villa in Sahl Hasheesh was absolutely stunning. Booking through Kuba was seamless and the 24/7 concierge made our vacation unforgettable!"
-            </p>
-          </div>
-          <div class="pt-4 border-t border-slate-200/60">
-            <h4 class="font-bold text-slate-900 text-sm" data-i18n="review2Author">Sophie & Liam Miller</h4>
-            <span class="text-xs text-slate-500" data-i18n="review2Location">لندن، المملكة المتحدة</span>
-          </div>
-        </div>
-
-        <!-- Review 3 -->
-        <div class="p-8 rounded-3xl bg-[#FAF8F5] border border-slate-200/80 shadow-md flex flex-col justify-between">
-          <div>
-            <div class="flex items-center gap-1 text-gold-500 mb-4 text-sm">
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-            </div>
-            <p class="text-slate-700 text-sm sm:text-base leading-relaxed italic mb-6" data-i18n="review3Text">
-              "من أفضل التطبيقات السياحية في مصر. الوضوح والمصداقية ونظافة الشاليه فاقت توقعاتنا بكثير. شكراً لفريق كوبا على الاهتمام."
-            </p>
-          </div>
-          <div class="pt-4 border-t border-slate-200/60">
-            <h4 class="font-bold text-slate-900 text-sm" data-i18n="review3Author">م. كريم عبد الرحمن</h4>
-            <span class="text-xs text-slate-500" data-i18n="review3Location">القاهرة، مصر</span>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  </section>
-
-
-  <!-- ========================================================================= -->
-  <!-- 9. DOWNLOAD SECTION (WITH EXACT App Store.svg & Google Play.svg) -->
-  <!-- ========================================================================= -->
-  <section id="download" class="py-28 emerald-dark-bg text-white relative overflow-hidden">
-    <!-- Ambient Light Accent -->
-    <div class="absolute -top-32 start-1/2 -translate-x-1/2 w-[40rem] h-[25rem] bg-gold-500/15 rounded-full blur-3xl pointer-events-none"></div>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      
-      <div class="max-w-4xl mx-auto glass-card-dark rounded-3xl p-8 sm:p-14 border border-gold-500/40 shadow-2xl text-center relative overflow-hidden">
-        
-        <div class="w-20 h-20 mx-auto mb-6 rounded-2xl overflow-hidden border-2 border-gold-400 shadow-xl shadow-gold-500/20 bg-emerald-950 flex items-center justify-center">
-          <img src="/images/kuba-logo.jpg" alt="Kuba Tours App" class="w-full h-full object-cover">
-        </div>
-
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-card-dark text-xs font-bold text-gold-300 uppercase tracking-wider mb-4 border border-gold-500/30">
-          <i class="fa-solid fa-cloud-arrow-down text-gold-400"></i>
-          <span data-i18n="downloadTag">ابدأ رحلتك الآن</span>
-        </div>
-
-        <h2 class="text-3xl sm:text-5xl font-extrabold text-white mb-4 font-serif-luxury">
-          <span data-i18n="downloadTitle">حمّل تطبيق كوبا واستمتع بأروع إجازة</span>
-        </h2>
-        
-        <p class="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto mb-10 leading-relaxed" data-i18n="downloadSubtitle">
-          التطبيق متاح الآن مجاناً على متجري أبل ستور وجوجل بلاي. اختر وجهتك القادمة واحجز يختك أو إقامتك الفاخرة بلمسة واحدة.
-        </p>
-
-        <!-- The App Store & Google Play Badges requested by user -->
-        <div class="flex flex-wrap items-center justify-center gap-6 mb-8">
-          
-          <!-- App Store Badge -->
-          <a href="#download" class="store-badge-card flex items-center justify-center py-2.5 px-6 rounded-2xl cursor-pointer" title="Download on the App Store">
-            <img src="/images/App%20Store.svg" alt="Download on the App Store" class="h-11 w-auto">
-          </a>
-
-          <!-- Google Play Badge -->
-          <a href="#download" class="store-badge-card flex items-center justify-center py-2.5 px-6 rounded-2xl cursor-pointer" title="Get it on Google Play">
-            <img src="/images/Google%20Play.svg" alt="Get it on Google Play" class="h-11 w-auto">
-          </a>
-
-        </div>
-
-        <!-- QR Code and Compatibility Note -->
-        <div class="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-emerald-900/60 border border-emerald-700/60 text-xs text-slate-300">
-          <i class="fa-solid fa-qrcode text-gold-400 text-sm"></i>
-          <span data-i18n="downloadQrText">امسح الرمز بكاميرا هاتفك للتحميل الفوري</span>
-          <span class="text-slate-500">•</span>
-          <span class="text-gold-300" data-i18n="downloadNote">يدعم iOS 14+ و Android 8.0+</span>
-        </div>
-
-      </div>
-
-    </div>
-  </section>
-
-
-  <!-- ========================================================================= -->
-  <!-- 10. FAQ SECTION -->
-  <!-- ========================================================================= -->
-  <section id="faq" class="py-24 bg-white relative">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <div class="text-center mb-16">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full badge-gold text-xs font-bold uppercase tracking-wider mb-3">
-          <i class="fa-solid fa-circle-question"></i>
-          <span data-i18n="faqTag">الأسئلة المتكررة</span>
-        </div>
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-4 font-serif-luxury">
-          <span data-i18n="faqTitle">كل ما تريد معرفته عن كوبا</span>
-        </h2>
-      </div>
-
-      <div class="space-y-4">
-        
-        <!-- FAQ 1 -->
-        <div class="faq-item rounded-2xl border border-slate-200 bg-[#FAF8F5] overflow-hidden">
-          <button class="faq-question w-full p-5 text-start font-bold text-slate-900 flex justify-between items-center text-sm sm:text-base cursor-pointer">
-            <span data-i18n="faq1Q">كيف يمكنني حجز يخت خاص أو فيلا عبر كوبا؟</span>
-            <i class="faq-icon fa-solid fa-chevron-down text-gold-600 transition-transform duration-300 text-xs"></i>
-          </button>
-          <div class="faq-answer px-5 max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
-            <p class="text-slate-600 text-sm pb-5 leading-relaxed" data-i18n="faq1A">
-              يمكنك ببساطة تحميل التطبيق أو تصفح الوحدات، اختيار التواريخ وعدد الضيوف، وإتمام الحجز في خطوات بسيطة مع تأكيد فوري.
-            </p>
-          </div>
-        </div>
-
-        <!-- FAQ 2 -->
-        <div class="faq-item rounded-2xl border border-slate-200 bg-[#FAF8F5] overflow-hidden">
-          <button class="faq-question w-full p-5 text-start font-bold text-slate-900 flex justify-between items-center text-sm sm:text-base cursor-pointer">
-            <span data-i18n="faq2Q">هل الرحلات البحرية تشمل طاقماً مرخصاً وضيافة؟</span>
-            <i class="faq-icon fa-solid fa-chevron-down text-gold-600 transition-transform duration-300 text-xs"></i>
-          </button>
-          <div class="faq-answer px-5 max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
-            <p class="text-slate-600 text-sm pb-5 leading-relaxed" data-i18n="faq2A">
-              نعم، جميع يخوتنا مجهزة بقباطنة وطواقم بحرية مرخصة مع كافة وسائل الأمان، وتتوفر خيارات المأكولات والمشروبات والأنشطة المائية حسب رغبتك.
-            </p>
-          </div>
-        </div>
-
-        <!-- FAQ 3 -->
-        <div class="faq-item rounded-2xl border border-slate-200 bg-[#FAF8F5] overflow-hidden">
-          <button class="faq-question w-full p-5 text-start font-bold text-slate-900 flex justify-between items-center text-sm sm:text-base cursor-pointer">
-            <span data-i18n="faq3Q">هل يوفر كوبا خصوصية للعائلات والمجموعات الخاصة؟</span>
-            <i class="faq-icon fa-solid fa-chevron-down text-gold-600 transition-transform duration-300 text-xs"></i>
-          </button>
-          <div class="faq-answer px-5 max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
-            <p class="text-slate-600 text-sm pb-5 leading-relaxed" data-i18n="faq3A">
-              بالتأكيد، الخصوصية هي جوهر خدماتنا. الفلل واليخوت الخاصة توفر عزلة تامة وراحة مطلقة دون أي تطفل.
-            </p>
-          </div>
-        </div>
-
-        <!-- FAQ 4 -->
-        <div class="faq-item rounded-2xl border border-slate-200 bg-[#FAF8F5] overflow-hidden">
-          <button class="faq-question w-full p-5 text-start font-bold text-slate-900 flex justify-between items-center text-sm sm:text-base cursor-pointer">
-            <span data-i18n="faq4Q">ما هي العملات وطرق الدفع المتاحة؟</span>
-            <i class="faq-icon fa-solid fa-chevron-down text-gold-600 transition-transform duration-300 text-xs"></i>
-          </button>
-          <div class="faq-answer px-5 max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
-            <p class="text-slate-600 text-sm pb-5 leading-relaxed" data-i18n="faq4A">
-              يدعم التطبيق الدفع بالجنيه المصري والدولار واليورو والريال السعودي، عبر جميع البطاقات الائتمانية وبوابات الدفع الإلكترونية الآمنة.
-            </p>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  </section>
-
-
-  <!-- ========================================================================= -->
-  <!-- 11. FOOTER -->
-  <!-- ========================================================================= -->
-  <footer class="bg-emerald-950 text-white border-t border-emerald-900 pt-16 pb-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-emerald-900/80">
-        
-        <!-- Brand Info -->
-        <div class="lg:col-span-2 space-y-4">
-          <div class="flex items-center gap-3">
-            <img src="/images/kuba-logo.jpg" alt="Kuba Logo" class="w-12 h-12 rounded-xl object-cover border border-gold-500/40">
-            <div>
-              <div class="text-xl font-bold tracking-wider text-white font-serif-luxury">KUBA TOURS</div>
-              <div class="text-gold-400 text-xs tracking-widest uppercase">Golden Memories</div>
-            </div>
-          </div>
-          <p class="text-slate-400 text-sm leading-relaxed max-w-sm" data-i18n="footerDesc">
-            كوبا تورز — بوابتك السياحية الفاخرة لتجارب لا تُنسى في البحر الأحمر وأرقى سواحل مصر. فلل شاطئية، شاليهات ديلوكس، ويخوت خاصة مصممة لراحتك.
-          </p>
-          <div class="flex items-center gap-3 pt-2 text-slate-300">
-            <a href="https://instagram.com" target="_blank" rel="noopener" class="w-9 h-9 rounded-full bg-emerald-900/80 flex items-center justify-center hover:bg-gold-500 hover:text-emerald-950 transition-colors">
-              <i class="fa-brands fa-instagram text-sm"></i>
-            </a>
-            <a href="https://facebook.com" target="_blank" rel="noopener" class="w-9 h-9 rounded-full bg-emerald-900/80 flex items-center justify-center hover:bg-gold-500 hover:text-emerald-950 transition-colors">
-              <i class="fa-brands fa-facebook-f text-sm"></i>
-            </a>
-            <a href="https://wa.me" target="_blank" rel="noopener" class="w-9 h-9 rounded-full bg-emerald-900/80 flex items-center justify-center hover:bg-gold-500 hover:text-emerald-950 transition-colors">
-              <i class="fa-brands fa-whatsapp text-sm"></i>
-            </a>
-            <a href="https://tiktok.com" target="_blank" rel="noopener" class="w-9 h-9 rounded-full bg-emerald-900/80 flex items-center justify-center hover:bg-gold-500 hover:text-emerald-950 transition-colors">
-              <i class="fa-brands fa-tiktok text-sm"></i>
-            </a>
-          </div>
-        </div>
-
-        <!-- Quick Links -->
-        <div class="space-y-3">
-          <h4 class="text-gold-400 font-bold text-sm tracking-wider uppercase" data-i18n="footerLinksTitle">روابط سريعة</h4>
-          <ul class="space-y-2 text-sm text-slate-400">
-            <li><a href="#hero" class="hover:text-gold-400 transition-colors" data-i18n="navHome">الرئيسية</a></li>
-            <li><a href="#stories" class="hover:text-gold-400 transition-colors" data-i18n="navExperiences">اليخوت والتجارب</a></li>
-            <li><a href="#why-us" class="hover:text-gold-400 transition-colors" data-i18n="navStays">الإقامات الفاخرة</a></li>
-            <li><a href="#app" class="hover:text-gold-400 transition-colors" data-i18n="navApp">عن التطبيق</a></li>
-            <li><a href="#download" class="hover:text-gold-400 transition-colors" data-i18n="navDownload">حمّل التطبيق</a></li>
-          </ul>
-        </div>
-
-        <!-- Top Destinations -->
-        <div class="space-y-3">
-          <h4 class="text-gold-400 font-bold text-sm tracking-wider uppercase" data-i18n="footerDestTitle">الوجهات الشهيرة</h4>
-          <ul class="space-y-2 text-sm text-slate-400">
-            <li><a href="#destinations" class="hover:text-gold-400 transition-colors" data-i18n="dest1Name">سهل حشيش</a></li>
-            <li><a href="#destinations" class="hover:text-gold-400 transition-colors" data-i18n="dest2Name">الجونة</a></li>
-            <li><a href="#destinations" class="hover:text-gold-400 transition-colors" data-i18n="dest3Name">الساحل الشمالي</a></li>
-            <li><a href="#destinations" class="hover:text-gold-400 transition-colors" data-i18n="dest4Name">شرم الشيخ ودهب</a></li>
-          </ul>
-        </div>
-
-        <!-- Contact & Concierge -->
-        <div class="space-y-3">
-          <h4 class="text-gold-400 font-bold text-sm tracking-wider uppercase" data-i18n="footerContactTitle">تواصل معنا</h4>
-          <div class="space-y-2 text-sm text-slate-400">
-            <p class="flex items-center gap-2">
-              <i class="fa-solid fa-headset text-gold-400"></i>
-              <span data-i18n="footerCall">خدمة العملاء: متاحون 24/7</span>
-            </p>
-            <p class="flex items-center gap-2">
-              <i class="fa-solid fa-location-dot text-gold-400"></i>
-              <span data-i18n="footerLocation">سهل حشيش • الغردقة • البحر الأحمر، مصر</span>
-            </p>
-            <p class="flex items-center gap-2">
-              <i class="fa-solid fa-envelope text-gold-400"></i>
-              <span>concierge@kuba-app.com</span>
-            </p>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Copyright & Legal -->
-      <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-        <p data-i18n="footerRights">جميع الحقوق محفوظة © كوبا تورز (Kuba Tours) 2026</p>
-        <div class="flex items-center gap-6">
-          <a href="#" class="hover:text-gold-400 transition-colors" data-i18n="footerPrivacy">سياسة الخصوصية</a>
-          <a href="#" class="hover:text-gold-400 transition-colors" data-i18n="footerTerms">الشروط والأحكام</a>
-        </div>
-      </div>
-
+      <p data-i18n="copyright">جميع الحقوق محفوظة © كوبا تورز (Kuba Tours) 2026</p>
     </div>
   </footer>
 
-  <!-- Custom Landing Script -->
+  <!-- Script -->
   <script src="/landing/js/landing.js"></script>
 </body>
 </html>
