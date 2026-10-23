@@ -76,6 +76,7 @@ app.use(i18nMiddleware);
 
 app.use('/uploads', express.static(getUploadsRoot()));
 app.use('/images', express.static(path.join(__dirname, '..', 'images')));
+app.use('/landing', express.static(path.join(__dirname, '..', 'landing')));
 
 // Serve Dashboard UI
 app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, '..', 'dashboard', 'index.html')));
@@ -104,11 +105,15 @@ app.use('/api/v1/admin/regions', adminRegionRoutes);
 app.use('/api/v1/admin/unit-types', adminUnitTypeRoutes);
 app.use('/api/v1/admin/bookings', adminBookingRoutes);
 
-app.get('/', (req, res) => {
-    res.status(200).json({
-        status: 'success',
-        message: 'API is running successfully',
-    });
+// Root Route - Serves Luxury Landing Page or JSON Healthcheck
+app.get(['/', '/index.html'], (req, res) => {
+    if (req.query.format === 'json' || (req.headers.accept && req.headers.accept.includes('application/json') && !req.headers.accept.includes('text/html'))) {
+        return res.status(200).json({
+            status: 'success',
+            message: 'API is running successfully',
+        });
+    }
+    return res.sendFile(path.join(__dirname, '..', 'landing', 'index.html'));
 });
 
 app.all('*splat', (req, _res, next) => {

@@ -1,0 +1,253 @@
+/* Kuba Luxury Landing Page Stylesheet */
+:root {
+  --primary-emerald: #1B3B2B;
+  --deep-forest: #0F241A;
+  --dark-surface: #0A1711;
+  --accent-gold: #D4AF37;
+  --accent-gold-light: #F3E5AB;
+  --accent-gold-dark: #AA820A;
+  --sand-cream: #FAF7F0;
+  --sand-warm: #F3EDE0;
+  --text-dark: #121F17;
+  --text-muted: #5F7367;
+  --border-gold: rgba(212, 175, 55, 0.25);
+  --border-emerald: rgba(27, 59, 43, 0.15);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-dark: rgba(15, 36, 26, 0.75);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0B1912;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #D4AF37, #1B3B2B);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #E5C158;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Outfit', 'Cairo', sans-serif;
+  color: var(--text-dark);
+  background-color: #FAF8F5;
+  overflow-x: hidden;
+}
+
+/* Language font switching */
+body[dir="rtl"] {
+  font-family: 'Cairo', sans-serif;
+}
+body[dir="ltr"] {
+  font-family: 'Outfit', sans-serif;
+}
+
+.font-serif-luxury {
+  font-family: 'Playfair Display', 'Alexandria', serif;
+}
+body[dir="rtl"] .font-serif-luxury {
+  font-family: 'Alexandria', 'Cairo', sans-serif;
+}
+
+/* Luxury Gold Gradients & Shimmers */
+.gold-gradient-text {
+  background: linear-gradient(135deg, #ECC86A 0%, #D4AF37 50%, #9F7B16 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.emerald-gradient-text {
+  background: linear-gradient(135deg, #1B3B2B 0%, #2A5A41 50%, #153123 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-gradient-bg {
+  background: linear-gradient(135deg, #E5C158 0%, #D4AF37 50%, #B88E1C 100%);
+  box-shadow: 0 10px 25px -5px rgba(212, 175, 55, 0.4);
+}
+
+.gold-gradient-bg:hover {
+  background: linear-gradient(135deg, #F3D270 0%, #DEB83E 50%, #C49821 100%);
+  box-shadow: 0 15px 30px -5px rgba(212, 175, 55, 0.55);
+}
+
+.gold-border-glow {
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+}
+
+.emerald-dark-bg {
+  background: radial-gradient(circle at 50% 0%, #244C37 0%, #142E21 55%, #0B1912 100%);
+}
+
+/* Glassmorphism */
+.glass-nav {
+  background: rgba(15, 36, 26, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.glass-card-light {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.glass-card-dark {
+  background: rgba(15, 36, 26, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(212, 175, 55, 0.22);
+}
+
+/* Hero floating animation */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(0.5deg);
+  }
+}
+
+.animate-float {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.08);
+  }
+}
+
+.animate-glow {
+  animation: pulseGlow 5s ease-in-out infinite;
+}
+
+/* Image Card Hover Zoom */
+.img-zoom-container {
+  overflow: hidden;
+  position: relative;
+}
+
+.img-zoom-container img {
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease;
+}
+
+.img-zoom-container:hover img {
+  transform: scale(1.08);
+}
+
+/* Badges */
+.badge-gold {
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: #C59B27;
+}
+
+.dark .badge-gold,
+.emerald-dark-bg .badge-gold {
+  color: #F3E5AB;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+}
+
+/* Lightbox Modal */
+.lightbox-modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  background: rgba(8, 18, 13, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.lightbox-modal.active {
+  display: flex;
+}
+
+/* App Badges Styling */
+.store-badge-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.store-badge-card:hover {
+  transform: translateY(-4px);
+  border-color: #D4AF37;
+  box-shadow: 0 12px 30px -5px rgba(212, 175, 55, 0.3);
+}
+
+/* Phone Frame */
+.phone-mockup {
+  position: relative;
+  width: 320px;
+  height: 640px;
+  background: #0F241A;
+  border-radius: 46px;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 0 8px #2A5A41, 0 0 0 11px rgba(212, 175, 55, 0.4);
+  overflow: hidden;
+  padding: 12px;
+}
+
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  border-radius: 36px;
+  background: #FAF7F0;
+  overflow: hidden;
+  position: relative;
+}
+
+.phone-notch {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 22px;
+  background: #0F241A;
+  border-radius: 12px;
+  z-index: 40;
+}
+
+/* Tabs */
+.gallery-tab.active {
+  background: #1B3B2B;
+  color: #FAF7F0;
+  border-color: #D4AF37;
+}
+
+/* RTL specific adjustments */
+body[dir="rtl"] .space-x-reverse > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
+
+body[dir="rtl"] .ltr-only {
+  display: none !important;
+}
+
+body[dir="ltr"] .rtl-only {
+  display: none !important;
+}
