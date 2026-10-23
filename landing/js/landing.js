@@ -1,5 +1,5 @@
 /**
- * Kuba Tours - Luxury Green & White Portfolio Theme Script
+ * Kuba Tours - Luxury Green Portfolio Theme Script
  * Bilingual (AR/EN) + Horizontal Gallery Scroll + Lightbox
  */
 
@@ -9,19 +9,10 @@ const content = {
     brandTitle: "KUBA TOURS",
     brandTag: "ذكريات ذهبية",
     navHome: "الرئيسية",
-    navServices: "خدماتنا",
-    navAbout: "عن كوبا",
     navGallery: "معرض التجارب",
     navDownload: "تحميل التطبيق",
     navContact: "تواصل معنا",
     langBtn: "English",
-
-    // Hero Text
-    heroBadge: "المنصة الرائدة لعطلات البحر الأحمر وسهل حشيش",
-    heroTitle: "بوابتك لعالم الرفاهية واليخوت الفاخرة",
-    heroSubtitle: "تطبيق كوبا يجمع لك أرقى الفلل والشاليهات الشاطئية، حجز وتأجير اليخوت الخاصة، وسيارات الجولف مع خصوصية وأمان تام.",
-    heroCtaGallery: "استكشف البوسترات",
-    heroCtaDownload: "حمّل التطبيق",
 
     // Horizontal Gallery
     galleryTag: "ألبوم البوسترات والتجارب الحصرية",
@@ -55,34 +46,7 @@ const content = {
     card8Title: "مغامرتك الفاخرة القادمة",
     card8Sub: "إطلالة جوية ساحرة لخليج سهل حشيش",
 
-    // Services
-    servicesTag: "ماذا يقدم لك تطبيق كوبا؟",
-    servicesTitle: "خدمات حصرية متكاملة لعطلة لا مثيل لها",
-    servicesSubtitle: "كل ما تحتاجه لإجازة استثنائية في سهل حشيش متاح بين يديك في تطبيق واحد.",
-    srv1Title: "شقق وفنادق فاخرة",
-    srv1Desc: "شاليهات وفلل شاطئية راقية بمواقع استثنائية ومسابح خاصة مع أعلى معايير النظافة والخصوصية.",
-    srv2Title: "حجز وتأجير يخوت",
-    srv2Desc: "يخوت خاصة حديثة مع طواقم مرخصة لرحلات الجزر والغطس والغروب والحفلات الخاصة.",
-    srv3Title: "تأجير سيارات جولف",
-    srv3Desc: "تنقل بحرية داخل منتجعات وممشى سهل حشيش السياحي بكل سهولة وأناقة.",
-    srv4Title: "حجز فوري وموثوق",
-    srv4Desc: "تأكيد فوري لحجزك عبر التطبيق بخطوات سلسة وشفافة ودفع آمن متعدد العملات.",
-    srv5Title: "أفضل العروض والأسعار",
-    srv5Desc: "باقات موسمية حصرية وأسعار مباشرة تضمن لك أعلى قيمة لإجازتك.",
-
-    // About & Logo
-    aboutTag: "عن كوبا تورز",
-    aboutTitle: "شعارنا: ذكريات ذهبية تصنع الفارق",
-    aboutP1: "كوبا هو التطبيق السياحي الرائد المصمم خصيصاً ليمنح السياح والعائلات أرقى تجربة إقامة وبحر في سهل حشيش والبحر الأحمر.",
-    aboutP2: "نجمع بين كرم الضيافة وأعلى معايير الخصوصية والأمان لنضمن لك ولأحبابك لحظات لا تُنسى.",
-    stat1Num: "100%",
-    stat1Label: "خصوصية وأمان",
-    stat2Num: "5 نجوم",
-    stat2Label: "معايير الضيافة",
-    stat3Num: "24/7",
-    stat3Label: "خدمة كونسيرج",
-
-    // Download Section
+    // Download Section (No white box, all white text)
     downloadTag: "حمّل التطبيق الآن",
     downloadTitle: "ابدأ رحلتك وصمم إجازتك القادمة بلمسة واحدة",
     downloadSubtitle: "تطبيق كوبا متاح الآن مجاناً على هواتف آبل وأندرويد. تصفح، اختر، واحجز يختك أو شاليهك في ثوانٍ.",
@@ -107,19 +71,10 @@ const content = {
     brandTitle: "KUBA TOURS",
     brandTag: "Golden Memories",
     navHome: "Home",
-    navServices: "Services",
-    navAbout: "About",
     navGallery: "Showcase",
     navDownload: "Download App",
     navContact: "Contact",
     langBtn: "العربية",
-
-    // Hero Text
-    heroBadge: "The Premier Red Sea & Sahl Hasheesh Platform",
-    heroTitle: "Your Gateway to Sahl Hasheesh & Luxury Yacht Escapes",
-    heroSubtitle: "Kuba App brings together luxury beachfront villas, private yacht charters, and golf cart rentals with unmatched comfort, safety, and total privacy.",
-    heroCtaGallery: "Explore Showcase",
-    heroCtaDownload: "Download App",
 
     // Horizontal Gallery
     galleryTag: "Exclusive Visual Journal & Posters",
@@ -153,34 +108,7 @@ const content = {
     card8Title: "Your Next Luxurious Adventure",
     card8Sub: "Magnificent aerial coastline views of Sahl Hasheesh Bay",
 
-    // Services
-    servicesTag: "What Kuba Offers",
-    servicesTitle: "Integrated Premium Services for an Unmatched Holiday",
-    servicesSubtitle: "Every single element of your vacation has been thoughtfully curated for luxury and peace of mind.",
-    srv1Title: "Apartments & Hotels",
-    srv1Desc: "Handpicked beachfront chalets and luxury villas with private pools and breathtaking views across Sahl Hasheesh.",
-    srv2Title: "Yacht Charter",
-    srv2Desc: "Private luxury yachts with certified marine crew for island hopping, sunset cruises, coral reef diving, and private celebrations.",
-    srv3Title: "Golf Cart Rental",
-    srv3Desc: "Effortlessly cruise through Sahl Hasheesh resorts, beaches, and seaside promenades with convenient golf cart rentals.",
-    srv4Title: "Easy & Instant Booking",
-    srv4Desc: "Direct, transparent mobile booking with instant digital confirmation and zero hassle.",
-    srv5Title: "Best Deals & Pricing",
-    srv5Desc: "Direct-from-source pricing with exclusive year-round packages and complete cost transparency.",
-
-    // About & Logo
-    aboutTag: "About Kuba Tours",
-    aboutTitle: "Our Motto: Golden Memories that Last Forever",
-    aboutP1: "Kuba is the premier travel app designed specifically for travelers and families seeking refined luxury and tranquility along the Red Sea.",
-    aboutP2: "We combine authentic warmth with strict standards of privacy and marine safety to ensure an unforgettable vacation.",
-    stat1Num: "100%",
-    stat1Label: "Privacy & Safety",
-    stat2Num: "5-Star",
-    stat2Label: "Hospitality Standard",
-    stat3Num: "24/7",
-    stat3Label: "Dedicated Concierge",
-
-    // Download Section
+    // Download Section (No white box, all white text)
     downloadTag: "Download Today",
     downloadTitle: "Begin Your Voyage and Plan Your Escape in Seconds",
     downloadSubtitle: "The Kuba App is available for free on iOS and Android. Discover, select, and confirm your private stay or yacht charter in taps.",
@@ -233,7 +161,7 @@ function setupHorizontalGallery() {
 
   const getScrollAmount = () => {
     const card = track.querySelector('.h-poster-card');
-    return card ? card.offsetWidth + 24 : 400;
+    return card ? card.offsetWidth + 24 : 420;
   };
 
   if (btnNext) {
