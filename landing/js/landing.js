@@ -89,7 +89,14 @@ function setLanguage(lang) {
   });
 
   const langBtn = document.getElementById('lang-btn');
-  if (langBtn) langBtn.textContent = t.langBtn;
+  if (langBtn) {
+    const textSpan = langBtn.querySelector('.lang-text');
+    if (textSpan) {
+      textSpan.textContent = t.langBtn;
+    } else {
+      langBtn.textContent = t.langBtn;
+    }
+  }
 }
 
 // ==================== AUTO-SCROLL RIGHT-TO-LEFT ====================
