@@ -629,7 +629,7 @@
     },
     {
       "name": "Regions",
-      "description": "Region endpoints — public.",
+      "description": "Public reads. Writes require an admin Bearer token (dashboard uses /admin/regions). A region zone is a polygon in points; saving 3 or more points also stores center and a GeoJSON boundaries polygon, and assigns advertisements whose coordinates fall inside that zone.",
       "item": [
         {
           "name": "Get All Regions",
@@ -652,7 +652,7 @@
                 }
               ]
             },
-            "description": "Returns all regions. Optional: ?active=true|false"
+            "description": "Returns all regions. Each region includes points [{latitude, longitude}], color (default #2D4F2E), center {latitude, longitude}, and boundaries (GeoJSON Polygon, set when points has at least 3 vertices). Optional: ?active=true|false"
           }
         },
         {
@@ -676,7 +676,7 @@
                 }
               ]
             },
-            "description": "Returns region + its banners, advertisements, categories. Pass regionId as query param."
+            "description": "Returns the region plus its banners, chalets, advertisements, and categories. Advertisements include listings assigned to this region and listings whose latitude/longitude fall inside the region zone (when the zone has at least 3 points). Pass regionId as a query param."
           }
         },
         {
@@ -699,7 +699,8 @@
                   "value": "<REGION_ID>"
                 }
               ]
-            }
+            },
+            "description": "Returns one region, including points, color, center, and boundaries."
           }
         },
         {
@@ -724,14 +725,95 @@
                 }
               ]
             },
-            "description": "Returns region + its banners, advertisements, categories. ID in URL path."
+            "description": "Same payload as Get Region Data (by query param). Region id is in the path. Advertisements include listings inside the zone, not only listings whose region field matches."
+          }
+        },
+        {
+          "name": "Create Region (zone)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "Admin token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"North Coast\",\n  \"order\": 1,\n  \"active\": true,\n  \"color\": \"#2D4F2E\",\n  \"points\": [\n    { \"latitude\": 31.35, \"longitude\": 27.2 },\n    { \"latitude\": 31.35, \"longitude\": 28.9 },\n    { \"latitude\": 30.85, \"longitude\": 28.9 },\n    { \"latitude\": 30.85, \"longitude\": 27.2 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Admin only. points is an array of {latitude, longitude} (also accepts lat/lng, or a JSON string in multipart). With 3 or more points the server stores center and boundaries and sets region on advertisements inside the polygon. color defaults to #2D4F2E. Optional image: multipart field image, or a URL in image. name is required."
+          }
+        },
+        {
+          "name": "Update Region (zone)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "Admin token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"North Coast\",\n  \"color\": \"#1B4332\",\n  \"points\": [\n    { \"latitude\": 31.40, \"longitude\": 27.1 },\n    { \"latitude\": 31.40, \"longitude\": 29.0 },\n    { \"latitude\": 30.80, \"longitude\": 29.0 },\n    { \"latitude\": 30.80, \"longitude\": 27.1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Admin only. Send only fields to change. Updating points rebuilds center and boundaries and reassigns advertisements that fall inside the new zone. An empty points array clears the zone."
           }
         }
       ]
     },
     {
       "name": "Advertisements",
-      "description": "Listing/advertisement endpoints — public reads.",
+      "description": "Public reads. Filtering by region includes listings assigned to that region and, when the region has a zone of at least 3 points, listings whose coordinates fall inside the zone. On admin create/update, if region is omitted and latitude plus longitude are sent, the server assigns the active region whose zone contains that point.",
       "item": [
         {
           "name": "Get All Advertisements",
@@ -755,7 +837,8 @@
                 {
                   "key": "region",
                   "value": "<REGION_ID>",
-                  "disabled": true
+                  "disabled": true,
+                  "description": "Region id. Also accepts regionId. Matches the region field and coordinates inside the zone."
                 },
                 {
                   "key": "unitType",
@@ -810,7 +893,7 @@
                 }
               ]
             },
-            "description": "Returns advertisements with pagination and filters."
+            "description": "Returns advertisements with pagination and filters. region (or regionId) matches listings on that region and listings inside its zone polygon."
           }
         },
         {

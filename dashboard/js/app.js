@@ -5,6 +5,25 @@ const I18N = {
         appName: 'لوحة تحكم كوبا',
         appSubtitle: 'الإدارة والتحكم الشامل بالتطبيق',
         overview: 'نظرة عامة',
+        overviewSubtitle: 'ملخص سريع لحالة التطبيق والأقسام',
+        navGroupGeneral: 'عام',
+        navGroupPeople: 'المستخدمون',
+        navGroupContent: 'المحتوى',
+        navGroupApp: 'واجهة التطبيق',
+        navGroupSystem: 'النظام',
+        sectionUsers: 'المستخدمون والحجوزات',
+        sectionListings: 'العقارات والمواقع',
+        sectionApp: 'واجهة التطبيق',
+        bookings: 'الحجوزات والطلبات',
+        kpiRegistered: 'المسجلين في النظام',
+        kpiActiveHint: 'حسابات نشطة ومفعلة',
+        kpiBookingsHint: 'طلبات الحجز المسجلة',
+        kpiAdsHint: 'شاليهات ووحدات سكنية',
+        kpiRegionsHint: 'المدن والمحافظات',
+        kpiTypesHint: 'شاليهات، فنادق، يخوت',
+        kpiCategoriesHint: 'تصنيفات العرض الرئيسية',
+        kpiBannersHint: 'بانرات الواجهة النشطة',
+        kpiOnboardingHint: 'شاشات البداية',
         users: 'إدارة المستخدمين',
         onboarding: 'شاشات الترحيب',
         categoriesBanners: 'الفئات والبانرات',
@@ -120,6 +139,25 @@ const I18N = {
         appName: 'Kuba Admin Dashboard',
         appSubtitle: 'Comprehensive Application Management',
         overview: 'Overview',
+        overviewSubtitle: 'A short snapshot of the app and its sections',
+        navGroupGeneral: 'General',
+        navGroupPeople: 'People',
+        navGroupContent: 'Content',
+        navGroupApp: 'App surface',
+        navGroupSystem: 'System',
+        sectionUsers: 'Users and bookings',
+        sectionListings: 'Listings and places',
+        sectionApp: 'App surface',
+        bookings: 'Bookings and requests',
+        kpiRegistered: 'Registered in the system',
+        kpiActiveHint: 'Active enabled accounts',
+        kpiBookingsHint: 'Recorded booking requests',
+        kpiAdsHint: 'Chalets and units',
+        kpiRegionsHint: 'Cities and regions',
+        kpiTypesHint: 'Chalets, hotels, yachts',
+        kpiCategoriesHint: 'Main listing categories',
+        kpiBannersHint: 'Active home banners',
+        kpiOnboardingHint: 'Welcome screens',
         users: 'Users Management',
         onboarding: 'Onboarding Screens',
         categoriesBanners: 'Categories & Banners',
@@ -430,24 +468,38 @@ function updateAdminProfileUI() {
 
 // ─── NAVIGATION & TABS ────────────────────────────────────────────────────────
 
+const PAGE_TITLES = {
+    overview: 'overview',
+    users: 'users',
+    regions: 'regions',
+    advertisements: 'advertisements',
+    'unit-types': 'unitTypes',
+    onboarding: 'onboarding',
+    categories: 'categoriesTitle',
+    banners: 'bannersTitle',
+    system: 'systemStatus',
+};
+
+function updatePageTitle() {
+    const el = document.getElementById('page-title');
+    if (!el) return;
+    const key = PAGE_TITLES[state.currentTab] || 'overview';
+    el.setAttribute('data-i18n', key);
+    el.textContent = t(key);
+}
+
 function switchTab(tab) {
     state.currentTab = tab;
     document.querySelectorAll('.nav-link').forEach(link => {
-        if (link.dataset.tab === tab) {
-            link.classList.add('active');
-        } else {
-            link.classList.remove('active');
-        }
+        link.classList.toggle('active', link.dataset.tab === tab);
     });
 
     document.querySelectorAll('.tab-view').forEach(view => {
-        if (view.id === `view-${tab}`) {
-            view.classList.remove('hidden');
-        } else {
-            view.classList.add('hidden');
-        }
+        view.classList.toggle('hidden', view.id !== `view-${tab}`);
     });
 
+    updatePageTitle();
+    document.getElementById('sidebar')?.classList.remove('open');
     loadCurrentTab();
 }
 
@@ -1669,6 +1721,11 @@ function renderRegions() {
 }
 
 function openAddRegionModal() {
+    exitMapFullscreen();
+    const navLat = document.getElementById('region-nav-latitude');
+    const navLng = document.getElementById('region-nav-longitude');
+    if (navLat) navLat.value = '';
+    if (navLng) navLng.value = '';
     state.editingRegionId = null;
     document.getElementById('region-modal-title').textContent = t('addRegion');
     document.getElementById('region-form').reset();
@@ -1691,6 +1748,11 @@ function openAddRegionModal() {
 }
 
 function openEditRegionModal(regionId) {
+    exitMapFullscreen();
+    const navLat = document.getElementById('region-nav-latitude');
+    const navLng = document.getElementById('region-nav-longitude');
+    if (navLat) navLat.value = '';
+    if (navLng) navLng.value = '';
     const region = state.regions.find(r => (r.id || r._id) === regionId);
     if (!region) return;
 
@@ -3146,7 +3208,276 @@ function getCurrentLocationForAd() {
     );
 }
 
+let activeMapPulseCircle = null;
+let currentFullscreenMapType = null;
+
+function parseCoordsString(str) {
+    if (!str || typeof str !== 'string') return null;
+    const cleaned = str.trim().replace(/[^\d.,\s-]/g, ' ');
+    const parts = cleaned.split(/[\s,]+/).filter(Boolean).map(Number);
+    if (parts.length >= 2) {
+        const lat = parts[0];
+        const lng = parts[1];
+        if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            return { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
+        }
+    }
+    return null;
+}
+
+function handleAdCoordPaste(e) {
+    const text = (e.clipboardData || window.clipboardData)?.getData('text');
+    if (!text) return;
+    const parsed = parseCoordsString(text);
+    if (parsed) {
+        e.preventDefault();
+        const latInput = document.getElementById('ad-modal-latitude');
+        const lngInput = document.getElementById('ad-modal-longitude');
+        if (latInput) latInput.value = parsed.lat;
+        if (lngInput) lngInput.value = parsed.lng;
+        initAdMapPicker();
+        setAdMapCoordinates(parsed.lat, parsed.lng, true);
+        if (adMapInstance) {
+            adMapInstance.setView([parsed.lat, parsed.lng], 15);
+            addMapPulseEffect(adMapInstance, parsed.lat, parsed.lng);
+        }
+        showToast(`📍 تم لصق وتثبيت الإحداثيات: ${parsed.lat}, ${parsed.lng}`, 'success');
+    }
+}
+
+function applyAdCoordinatesFromInputs() {
+    const latInput = document.getElementById('ad-modal-latitude');
+    const lngInput = document.getElementById('ad-modal-longitude');
+    if (!latInput || !lngInput) return;
+
+    let latVal = latInput.value.trim();
+    let lngVal = lngInput.value.trim();
+
+    const parsed = parseCoordsString(`${latVal}, ${lngVal}`) || parseCoordsString(latVal) || parseCoordsString(lngVal);
+    if (parsed) {
+        latInput.value = parsed.lat;
+        lngInput.value = parsed.lng;
+        initAdMapPicker();
+        setAdMapCoordinates(parsed.lat, parsed.lng, true);
+        if (adMapInstance) {
+            adMapInstance.setView([parsed.lat, parsed.lng], 15);
+            addMapPulseEffect(adMapInstance, parsed.lat, parsed.lng);
+        }
+        showToast(`📍 تم تثبيت المؤشر على الإحداثيات: ${parsed.lat}, ${parsed.lng}`, 'success');
+    } else {
+        showToast('يرجى إدخال خط عرض وطول صحيحين (مثال: 30.044420 و 31.235712)', 'error');
+    }
+}
+
+function handleRegionCoordPaste(e) {
+    const text = (e.clipboardData || window.clipboardData)?.getData('text');
+    if (!text) return;
+    const parsed = parseCoordsString(text);
+    if (parsed) {
+        e.preventDefault();
+        const latInput = document.getElementById('region-nav-latitude');
+        const lngInput = document.getElementById('region-nav-longitude');
+        if (latInput) latInput.value = parsed.lat;
+        if (lngInput) lngInput.value = parsed.lng;
+        initRegionZoneMap();
+        if (regionZoneMap) {
+            regionZoneMap.setView([parsed.lat, parsed.lng], 14);
+            addMapPulseEffect(regionZoneMap, parsed.lat, parsed.lng);
+        }
+        showToast(`📍 تم لصق الإحداثيات والانتقال للموقع: ${parsed.lat}, ${parsed.lng}`, 'success');
+    }
+}
+
+function goToRegionCoordinates() {
+    const latInput = document.getElementById('region-nav-latitude');
+    const lngInput = document.getElementById('region-nav-longitude');
+    if (!latInput || !lngInput) return;
+
+    let latVal = latInput.value.trim();
+    let lngVal = lngInput.value.trim();
+
+    const parsed = parseCoordsString(`${latVal}, ${lngVal}`) || parseCoordsString(latVal) || parseCoordsString(lngVal);
+    if (parsed) {
+        latInput.value = parsed.lat;
+        lngInput.value = parsed.lng;
+        initRegionZoneMap();
+        if (regionZoneMap) {
+            regionZoneMap.setView([parsed.lat, parsed.lng], 14);
+            addMapPulseEffect(regionZoneMap, parsed.lat, parsed.lng);
+        }
+        showToast(`📍 تم الانتقال لموقع الإحداثيات: ${parsed.lat}, ${parsed.lng}`, 'success');
+    } else {
+        showToast('يرجى إدخال خط عرض وطول صحيحين (مثال: 27.864442 و 34.295447)', 'error');
+    }
+}
+
+function addRegionPointFromInputs() {
+    const latInput = document.getElementById('region-nav-latitude');
+    const lngInput = document.getElementById('region-nav-longitude');
+    if (!latInput || !lngInput) return;
+
+    let latVal = latInput.value.trim();
+    let lngVal = lngInput.value.trim();
+
+    const parsed = parseCoordsString(`${latVal}, ${lngVal}`) || parseCoordsString(latVal) || parseCoordsString(lngVal);
+    if (parsed) {
+        initRegionZoneMap();
+        addRegionZonePoint(parsed.lat, parsed.lng);
+        if (regionZoneMap) {
+            regionZoneMap.setView([parsed.lat, parsed.lng], regionZoneMap.getZoom());
+        }
+        showToast(`✅ تمت إضافة النقطة (${parsed.lat}, ${parsed.lng}) إلى نطاق المنطقة`, 'success');
+    } else {
+        showToast('يرجى إدخال خط عرض وطول صحيحين لإضافة النقطة', 'error');
+    }
+}
+
+function addMapPulseEffect(map, lat, lng) {
+    if (!map || typeof L === 'undefined') return;
+    if (activeMapPulseCircle) {
+        try { map.removeLayer(activeMapPulseCircle); } catch (_) {}
+        activeMapPulseCircle = null;
+    }
+
+    activeMapPulseCircle = L.circle([lat, lng], {
+        radius: 350,
+        color: '#2D4F2E',
+        fillColor: '#2D4F2E',
+        fillOpacity: 0.25,
+        weight: 2
+    }).addTo(map);
+
+    setTimeout(() => {
+        if (activeMapPulseCircle) {
+            try { map.removeLayer(activeMapPulseCircle); } catch (_) {}
+            activeMapPulseCircle = null;
+        }
+    }, 3500);
+}
+
+function toggleMapFullscreen(type) {
+    const boxId = type === 'ad' ? 'ad-map-box' : (type === 'region' ? 'region-map-box' : 'preview-map-box');
+    const btnId = type === 'ad' ? 'ad-map-fullscreen-btn' : (type === 'region' ? 'region-map-fullscreen-btn' : 'preview-map-fullscreen-btn');
+    const textId = type === 'ad' ? 'ad-map-fullscreen-text' : (type === 'region' ? 'region-map-fullscreen-text' : 'preview-map-fullscreen-text');
+
+    const box = document.getElementById(boxId);
+    const btn = document.getElementById(btnId);
+    const text = document.getElementById(textId);
+    if (!box) return;
+
+    let targetMap = null;
+    if (type === 'ad') {
+        initAdMapPicker();
+        targetMap = adMapInstance;
+    } else if (type === 'region') {
+        initRegionZoneMap();
+        targetMap = regionZoneMap;
+    } else if (type === 'preview') {
+        targetMap = regionPreviewMapInstance;
+    }
+
+    const isFullscreen = box.classList.contains('kuba-map-fullscreen');
+
+    if (isFullscreen) {
+        exitMapFullscreen();
+    } else {
+        if (currentFullscreenMapType) {
+            exitMapFullscreen();
+        }
+
+        box.classList.add('kuba-map-fullscreen');
+        currentFullscreenMapType = type;
+
+        if (btn) {
+            btn.classList.add('bg-slate-800', 'text-white');
+            btn.classList.remove('bg-white', 'text-slate-700');
+            const icon = btn.querySelector('i');
+            if (icon) icon.className = 'fas fa-compress';
+        }
+        if (text) text.textContent = 'تصغير الخريطة (Esc)';
+
+        document.body.style.overflow = 'hidden';
+
+        setTimeout(() => {
+            if (targetMap) targetMap.invalidateSize();
+        }, 80);
+        setTimeout(() => {
+            if (targetMap) targetMap.invalidateSize();
+        }, 250);
+
+        showToast('اضغط Esc أو زر التصغير للرجوع للحجم الطبيعي', 'info');
+    }
+}
+
+function exitMapFullscreen() {
+    if (!currentFullscreenMapType) return;
+    const type = currentFullscreenMapType;
+    const boxId = type === 'ad' ? 'ad-map-box' : (type === 'region' ? 'region-map-box' : 'preview-map-box');
+    const btnId = type === 'ad' ? 'ad-map-fullscreen-btn' : (type === 'region' ? 'region-map-fullscreen-btn' : 'preview-map-fullscreen-btn');
+    const textId = type === 'ad' ? 'ad-map-fullscreen-text' : (type === 'region' ? 'region-map-fullscreen-text' : 'preview-map-fullscreen-text');
+
+    const box = document.getElementById(boxId);
+    const btn = document.getElementById(btnId);
+    const text = document.getElementById(textId);
+
+    if (box) box.classList.remove('kuba-map-fullscreen');
+
+    if (btn) {
+        btn.classList.remove('bg-slate-800');
+        if (type === 'ad' || type === 'region') {
+            btn.classList.add('bg-[#2D4F2E]', 'text-white');
+        } else {
+            btn.classList.add('bg-white', 'text-slate-700');
+        }
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = 'fas fa-expand';
+    }
+    if (text) text.textContent = 'ملء الشاشة';
+
+    document.body.style.overflow = '';
+    currentFullscreenMapType = null;
+
+    let targetMap = null;
+    if (type === 'ad') targetMap = adMapInstance;
+    else if (type === 'region') targetMap = regionZoneMap;
+    else if (type === 'preview') targetMap = regionPreviewMapInstance;
+
+    setTimeout(() => {
+        if (targetMap) targetMap.invalidateSize();
+    }, 80);
+    setTimeout(() => {
+        if (targetMap) targetMap.invalidateSize();
+    }, 250);
+}
+
+function toggleMapHeight(type) {
+    const mapId = type === 'ad' ? 'ad-map-picker' : 'region-zone-map';
+    const textId = type === 'ad' ? 'ad-map-height-text' : 'region-map-height-text';
+    const mapEl = document.getElementById(mapId);
+    const text = document.getElementById(textId);
+    if (!mapEl) return;
+
+    let targetMap = type === 'ad' ? adMapInstance : regionZoneMap;
+
+    const isTall = mapEl.classList.contains('kuba-map-tall');
+    if (isTall) {
+        mapEl.classList.remove('kuba-map-tall');
+        if (text) text.textContent = 'توسيع';
+    } else {
+        mapEl.classList.add('kuba-map-tall');
+        if (text) text.textContent = 'تقليص';
+    }
+
+    setTimeout(() => {
+        if (targetMap) targetMap.invalidateSize();
+    }, 120);
+    setTimeout(() => {
+        if (targetMap) targetMap.invalidateSize();
+    }, 280);
+}
+
 function openAddAdvertisementModal() {
+    exitMapFullscreen();
     state.editingAdvertisementId = null;
     document.getElementById('advertisement-modal-title').textContent = t('addAdvertisement');
     document.getElementById('advertisement-form').reset();
@@ -3176,6 +3507,7 @@ function openAddAdvertisementModal() {
 }
 
 async function openEditAdvertisementModal(adId) {
+    exitMapFullscreen();
     const ad = state.advertisements.find(a => (a.id || a._id) === adId);
     if (!ad) return;
 
@@ -3451,6 +3783,7 @@ function applyLanguage() {
 }
 
 function closeModal(modalId) {
+    exitMapFullscreen();
     document.getElementById(modalId)?.classList.remove('active');
 }
 
@@ -3491,6 +3824,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
+            if (currentFullscreenMapType) {
+                exitMapFullscreen();
+                return;
+            }
             const attrModal = document.getElementById('attribute-modal');
             if (attrModal && attrModal.classList.contains('active')) {
                 attrModal.classList.remove('active');

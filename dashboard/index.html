@@ -2,6 +2,13 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <script>
+        (function () {
+            var path = location.pathname;
+            var mount = path.indexOf('/dashboard') === 0 ? '/dashboard/' : '/admin/';
+            document.write('<base href="' + mount + '">');
+        })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kuba | لوحة التحكم الإدارية</title>
     <!-- Tailwind CSS CDN -->
@@ -75,8 +82,8 @@
         <div class="app-container">
 
             <!-- Sidebar -->
-            <aside class="sidebar p-4 bg-white" id="sidebar">
-                <div class="flex items-center gap-3 px-3 py-3 mb-6 border-b border-slate-100">
+            <aside class="sidebar bg-white" id="sidebar">
+                <div class="sidebar-brand flex items-center gap-3 border-b border-slate-100">
                     <div class="w-10 h-10 rounded-xl overflow-hidden shadow-md shadow-[#2D4F2E]/20 border border-slate-100 flex items-center justify-center bg-white shrink-0">
                         <img src="images/kuba-logo.jpeg" alt="Kuba Logo" class="w-full h-full object-cover">
                     </div>
@@ -86,46 +93,65 @@
                     </div>
                 </div>
 
-                <nav class="flex-1 space-y-1">
-                    <a href="#" class="nav-link active" data-tab="overview">
-                        <i class="fas fa-chart-pie w-5 text-center text-[#2D4F2E]"></i>
-                        <span data-i18n="overview">نظرة عامة</span>
-                    </a>
-                    <a href="#" class="nav-link" data-tab="users">
-                        <i class="fas fa-users w-5 text-center text-[#2D4F2E]"></i>
-                        <span data-i18n="users">إدارة المستخدمين</span>
-                    </a>
-                    <a href="#" class="nav-link" data-tab="regions">
-                        <i class="fas fa-map-location-dot w-5 text-center text-[#2D4F2E]"></i>
-                        <span data-i18n="regions">المناطق</span>
-                    </a>
-                    <a href="#" class="nav-link" data-tab="advertisements">
-                        <i class="fas fa-hotel w-5 text-center text-[#2D4F2E]"></i>
-                        <span data-i18n="advertisements">الإعلانات والشاليهات</span>
-                    </a>
-                    <a href="#" class="nav-link" data-tab="unit-types">
-                        <i class="fas fa-cubes w-5 text-center text-[#2D4F2E]"></i>
-                        <span data-i18n="unitTypes">أنواع الوحدات</span>
-                    </a>
-                    <a href="#" class="nav-link" data-tab="onboarding">
-                        <i class="fas fa-mobile-screen w-5 text-center text-[#2D4F2E]"></i>
-                        <span data-i18n="onboarding">شاشات الترحيب</span>
-                    </a>
-                    <a href="#" class="nav-link" data-tab="categories">
-                        <i class="fas fa-layer-group w-5 text-center text-[#2D4F2E]"></i>
-                        <span data-i18n="categoriesTitle">التصنيفات</span>
-                    </a>
-                    <a href="#" class="nav-link" data-tab="banners">
-                        <i class="fas fa-images w-5 text-center text-[#2D4F2E]"></i>
-                        <span data-i18n="bannersTitle">البانرات الإعلانية</span>
-                    </a>
-                    <a href="#" class="nav-link" data-tab="system">
-                        <i class="fas fa-terminal w-5 text-center text-[#2D4F2E]"></i>
-                        <span data-i18n="systemStatus">فحص النظام والـ APIs</span>
-                    </a>
+                <nav class="sidebar-nav">
+                    <div class="nav-group">
+                        <span class="nav-group-label" data-i18n="navGroupGeneral">عام</span>
+                        <a href="#" class="nav-link active" data-tab="overview">
+                            <i class="fas fa-chart-pie w-5 text-center"></i>
+                            <span data-i18n="overview">نظرة عامة</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-group">
+                        <span class="nav-group-label" data-i18n="navGroupPeople">المستخدمون</span>
+                        <a href="#" class="nav-link" data-tab="users">
+                            <i class="fas fa-users w-5 text-center"></i>
+                            <span data-i18n="users">إدارة المستخدمين</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-group">
+                        <span class="nav-group-label" data-i18n="navGroupContent">المحتوى</span>
+                        <a href="#" class="nav-link" data-tab="regions">
+                            <i class="fas fa-map-location-dot w-5 text-center"></i>
+                            <span data-i18n="regions">المناطق</span>
+                        </a>
+                        <a href="#" class="nav-link" data-tab="advertisements">
+                            <i class="fas fa-hotel w-5 text-center"></i>
+                            <span data-i18n="advertisements">الإعلانات والشاليهات</span>
+                        </a>
+                        <a href="#" class="nav-link" data-tab="unit-types">
+                            <i class="fas fa-cubes w-5 text-center"></i>
+                            <span data-i18n="unitTypes">أنواع الوحدات</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-group">
+                        <span class="nav-group-label" data-i18n="navGroupApp">واجهة التطبيق</span>
+                        <a href="#" class="nav-link" data-tab="categories">
+                            <i class="fas fa-layer-group w-5 text-center"></i>
+                            <span data-i18n="categoriesTitle">التصنيفات</span>
+                        </a>
+                        <a href="#" class="nav-link" data-tab="banners">
+                            <i class="fas fa-images w-5 text-center"></i>
+                            <span data-i18n="bannersTitle">البانرات الإعلانية</span>
+                        </a>
+                        <a href="#" class="nav-link" data-tab="onboarding">
+                            <i class="fas fa-mobile-screen w-5 text-center"></i>
+                            <span data-i18n="onboarding">شاشات الترحيب</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-group">
+                        <span class="nav-group-label" data-i18n="navGroupSystem">النظام</span>
+                        <a href="#" class="nav-link" data-tab="system">
+                            <i class="fas fa-terminal w-5 text-center"></i>
+                            <span data-i18n="systemStatus">فحص النظام والـ APIs</span>
+                        </a>
+                    </div>
                 </nav>
 
-                <div class="p-3 border-t border-slate-100 flex items-center justify-between">
+                <div class="sidebar-foot border-t border-slate-100 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <div class="w-2.5 h-2.5 rounded-full bg-[#2D4F2E] animate-pulse"></div>
                         <span class="text-xs text-slate-600 font-medium" data-i18n="online">متصل بالسيرفر</span>
@@ -142,13 +168,13 @@
 
                 <!-- Header / Navbar -->
                 <header class="h-16 px-6 bg-white/95 backdrop-blur border-b border-slate-200 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
                         <button class="lg:hidden text-slate-600 hover:text-slate-900 p-2" onclick="document.getElementById('sidebar').classList.toggle('open')">
                             <i class="fas fa-bars text-lg"></i>
                         </button>
-                        <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500 font-medium">
-                            <img src="images/kuba-logo.jpeg" alt="Kuba Logo" class="w-5 h-5 rounded-md object-cover shadow-xs border border-slate-200">
-                            <span class="text-slate-700 font-bold">Kuba App</span>
+                        <div class="min-w-0">
+                            <div class="text-[11px] text-slate-400 font-semibold leading-none mb-0.5" data-i18n="appName">لوحة تحكم كوبا</div>
+                            <h1 id="page-title" class="text-sm font-extrabold text-slate-900 truncate" data-i18n="overview">نظرة عامة</h1>
                         </div>
                     </div>
 
@@ -180,144 +206,107 @@
                 <div class="p-6 flex-1 space-y-6">
 
                     <!-- 1. OVERVIEW VIEW -->
-                    <section id="view-overview" class="tab-view space-y-6">
-                        <!-- KPI Stats -->
-                        <!-- KPI Stats -->
-                        <!-- KPI Stats: Perfectly Balanced 3x3 Grid -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <!-- 1. إجمالي المستخدمين -->
-                            <div onclick="switchTab('users')" class="card p-4 bg-white hover:border-[#2D4F2E]/40 hover:shadow-md transition cursor-pointer">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="totalUsers">إجمالي المستخدمين</span>
-                                    <div class="w-9 h-9 rounded-xl bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center shadow-sm">
-                                        <i class="fas fa-users text-sm"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-total-users">0</div>
-                                <div class="text-[11px] text-[#2D4F2E] mt-1 flex items-center gap-1 font-semibold">
-                                    <i class="fas fa-arrow-trend-up"></i>
-                                    <span>المسجلين في النظام</span>
-                                </div>
+                    <section id="view-overview" class="tab-view space-y-8">
+                        <div class="page-head">
+                            <div>
+                                <h2 data-i18n="overview">نظرة عامة</h2>
+                                <p data-i18n="overviewSubtitle">ملخص سريع لحالة التطبيق والأقسام</p>
                             </div>
+                        </div>
 
-                            <!-- 2. المستخدمون النشطون -->
-                            <div onclick="switchTab('users')" class="card p-4 bg-white hover:border-indigo-400 hover:shadow-md transition cursor-pointer">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="activeUsers">المستخدمون النشطون</span>
-                                    <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-sm">
-                                        <i class="fas fa-user-check text-sm"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-active-users">0</div>
-                                <div class="text-[11px] text-indigo-600 font-semibold mt-1 flex items-center gap-1">
-                                    <i class="fas fa-circle-check"></i>
-                                    <span>حسابات نشطة ومفعلة</span>
-                                </div>
+                        <div class="dash-block">
+                            <div class="dash-block-title">
+                                <h3 data-i18n="sectionUsers">المستخدمون والحجوزات</h3>
                             </div>
-
-                            <!-- 3. الحجوزات -->
-                            <div onclick="switchTab('advertisements')" class="card p-4 bg-white hover:border-cyan-400 hover:shadow-md transition cursor-pointer">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500">الحجوزات والطلبات</span>
-                                    <div class="w-9 h-9 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shadow-sm">
-                                        <i class="fas fa-calendar-check text-sm"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-bookings">0</div>
-                                <div class="text-[11px] text-cyan-600 font-semibold mt-1 flex items-center gap-1">
-                                    <i class="fas fa-receipt"></i>
-                                    <span>طلبات الحجز المسجلة</span>
-                                </div>
+                            <div class="kpi-grid">
+                                <button type="button" onclick="switchTab('users')" class="kpi-card">
+                                    <span class="kpi-top">
+                                        <span class="kpi-label" data-i18n="totalUsers">إجمالي المستخدمين</span>
+                                        <span class="kpi-icon"><i class="fas fa-users"></i></span>
+                                    </span>
+                                    <span class="kpi-value" id="stat-total-users">0</span>
+                                    <span class="kpi-hint" data-i18n="kpiRegistered">المسجلين في النظام</span>
+                                </button>
+                                <button type="button" onclick="switchTab('users')" class="kpi-card">
+                                    <span class="kpi-top">
+                                        <span class="kpi-label" data-i18n="activeUsers">المستخدمون النشطون</span>
+                                        <span class="kpi-icon"><i class="fas fa-user-check"></i></span>
+                                    </span>
+                                    <span class="kpi-value" id="stat-active-users">0</span>
+                                    <span class="kpi-hint" data-i18n="kpiActiveHint">حسابات نشطة ومفعلة</span>
+                                </button>
+                                <button type="button" onclick="switchTab('advertisements')" class="kpi-card">
+                                    <span class="kpi-top">
+                                        <span class="kpi-label" data-i18n="bookings">الحجوزات والطلبات</span>
+                                        <span class="kpi-icon"><i class="fas fa-calendar-check"></i></span>
+                                    </span>
+                                    <span class="kpi-value" id="stat-bookings">0</span>
+                                    <span class="kpi-hint" data-i18n="kpiBookingsHint">طلبات الحجز المسجلة</span>
+                                </button>
                             </div>
+                        </div>
 
-                            <!-- 4. الإعلانات والشاليهات -->
-                            <div onclick="switchTab('advertisements')" class="card p-4 bg-white hover:border-teal-400 hover:shadow-md transition cursor-pointer">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="advertisements">الإعلانات والشاليهات</span>
-                                    <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shadow-sm">
-                                        <i class="fas fa-hotel text-sm"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-advertisements">0</div>
-                                <div class="text-[11px] text-teal-600 font-semibold mt-1 flex items-center gap-1">
-                                    <i class="fas fa-umbrella-beach"></i>
-                                    <span>شاليهات ووحدات سكنية</span>
-                                </div>
+                        <div class="dash-block">
+                            <div class="dash-block-title">
+                                <h3 data-i18n="sectionListings">العقارات والمواقع</h3>
                             </div>
-
-                            <!-- 5. المناطق -->
-                            <div onclick="switchTab('regions')" class="card p-4 bg-white hover:border-emerald-400 hover:shadow-md transition cursor-pointer">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="regions">المناطق المعتمدة</span>
-                                    <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm">
-                                        <i class="fas fa-map-location-dot text-sm"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-regions">0</div>
-                                <div class="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center gap-1">
-                                    <i class="fas fa-location-crosshairs"></i>
-                                    <span>المدن والمحافظات</span>
-                                </div>
+                            <div class="kpi-grid">
+                                <button type="button" onclick="switchTab('advertisements')" class="kpi-card">
+                                    <span class="kpi-top">
+                                        <span class="kpi-label" data-i18n="advertisements">الإعلانات والشاليهات</span>
+                                        <span class="kpi-icon"><i class="fas fa-hotel"></i></span>
+                                    </span>
+                                    <span class="kpi-value" id="stat-advertisements">0</span>
+                                    <span class="kpi-hint" data-i18n="kpiAdsHint">شاليهات ووحدات سكنية</span>
+                                </button>
+                                <button type="button" onclick="switchTab('regions')" class="kpi-card">
+                                    <span class="kpi-top">
+                                        <span class="kpi-label" data-i18n="regions">المناطق المعتمدة</span>
+                                        <span class="kpi-icon"><i class="fas fa-map-location-dot"></i></span>
+                                    </span>
+                                    <span class="kpi-value" id="stat-regions">0</span>
+                                    <span class="kpi-hint" data-i18n="kpiRegionsHint">المدن والمحافظات</span>
+                                </button>
+                                <button type="button" onclick="switchTab('unit-types')" class="kpi-card">
+                                    <span class="kpi-top">
+                                        <span class="kpi-label" data-i18n="unitTypes">أنواع الوحدات</span>
+                                        <span class="kpi-icon"><i class="fas fa-cubes"></i></span>
+                                    </span>
+                                    <span class="kpi-value" id="stat-unit-types">0</span>
+                                    <span class="kpi-hint" data-i18n="kpiTypesHint">شاليهات، فنادق، يخوت</span>
+                                </button>
                             </div>
+                        </div>
 
-                            <!-- 6. أنواع الوحدات -->
-                            <div onclick="switchTab('unit-types')" class="card p-4 bg-white hover:border-emerald-500 hover:shadow-md transition cursor-pointer">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500">أنواع الوحدات</span>
-                                    <div class="w-9 h-9 rounded-xl bg-[#eaf1ea] text-[#2D4F2E] flex items-center justify-center shadow-sm">
-                                        <i class="fas fa-cubes text-sm"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-unit-types">0</div>
-                                <div class="text-[11px] text-[#2D4F2E] font-semibold mt-1 flex items-center gap-1">
-                                    <i class="fas fa-shapes"></i>
-                                    <span>شاليهات، فنادق، يخوت...</span>
-                                </div>
+                        <div class="dash-block">
+                            <div class="dash-block-title">
+                                <h3 data-i18n="sectionApp">واجهة التطبيق</h3>
                             </div>
-
-                            <!-- 7. التصنيفات -->
-                            <div onclick="switchTab('categories')" class="card p-4 bg-white hover:border-blue-400 hover:shadow-md transition cursor-pointer">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="categoriesTitle">التصنيفات</span>
-                                    <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm">
-                                        <i class="fas fa-layer-group text-sm"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-categories">0</div>
-                                <div class="text-[11px] text-blue-600 font-semibold mt-1 flex items-center gap-1">
-                                    <i class="fas fa-tag"></i>
-                                    <span>تصنيفات العرض الرئيسية</span>
-                                </div>
-                            </div>
-
-                            <!-- 8. البانرات -->
-                            <div onclick="switchTab('banners')" class="card p-4 bg-white hover:border-rose-400 hover:shadow-md transition cursor-pointer">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="bannersTitle">البانرات الإعلانية</span>
-                                    <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm">
-                                        <i class="fas fa-images text-sm"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-banners">0</div>
-                                <div class="text-[11px] text-rose-600 font-semibold mt-1 flex items-center gap-1">
-                                    <i class="fas fa-rectangle-ad"></i>
-                                    <span>بانرات الواجهة النشطة</span>
-                                </div>
-                            </div>
-
-                            <!-- 9. شاشات الترحيب -->
-                            <div onclick="switchTab('onboarding')" class="card p-4 bg-white hover:border-purple-400 hover:shadow-md transition cursor-pointer">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-xs font-bold text-slate-500" data-i18n="totalOnboarding">شاشات الترحيب</span>
-                                    <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-sm">
-                                        <i class="fas fa-mobile-screen text-sm"></i>
-                                    </div>
-                                </div>
-                                <div class="text-2xl font-extrabold text-slate-900" id="stat-onboarding">0</div>
-                                <div class="text-[11px] text-purple-600 font-semibold mt-1 flex items-center gap-1">
-                                    <i class="fas fa-compass"></i>
-                                    <span>شاشات Onboarding</span>
-                                </div>
+                            <div class="kpi-grid">
+                                <button type="button" onclick="switchTab('categories')" class="kpi-card">
+                                    <span class="kpi-top">
+                                        <span class="kpi-label" data-i18n="categoriesTitle">التصنيفات</span>
+                                        <span class="kpi-icon"><i class="fas fa-layer-group"></i></span>
+                                    </span>
+                                    <span class="kpi-value" id="stat-categories">0</span>
+                                    <span class="kpi-hint" data-i18n="kpiCategoriesHint">تصنيفات العرض الرئيسية</span>
+                                </button>
+                                <button type="button" onclick="switchTab('banners')" class="kpi-card">
+                                    <span class="kpi-top">
+                                        <span class="kpi-label" data-i18n="bannersTitle">البانرات الإعلانية</span>
+                                        <span class="kpi-icon"><i class="fas fa-images"></i></span>
+                                    </span>
+                                    <span class="kpi-value" id="stat-banners">0</span>
+                                    <span class="kpi-hint" data-i18n="kpiBannersHint">بانرات الواجهة النشطة</span>
+                                </button>
+                                <button type="button" onclick="switchTab('onboarding')" class="kpi-card">
+                                    <span class="kpi-top">
+                                        <span class="kpi-label" data-i18n="totalOnboarding">شاشات الترحيب</span>
+                                        <span class="kpi-icon"><i class="fas fa-mobile-screen"></i></span>
+                                    </span>
+                                    <span class="kpi-value" id="stat-onboarding">0</span>
+                                    <span class="kpi-hint" data-i18n="kpiOnboardingHint">شاشات البداية</span>
+                                </button>
                             </div>
                         </div>
 
@@ -353,33 +342,31 @@
                                     </div>
                                 </div>
 
-                                <div class="pt-4 border-t border-slate-100 space-y-2">
+                                <div class="pt-4 border-t border-slate-100">
                                     <div class="text-xs font-bold text-slate-700 mb-2" data-i18n="quickActions">إجراءات سريعة</div>
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <button onclick="openAddRegionModal()" class="gold-btn text-xs py-2 text-center">
-                                            <i class="fas fa-map-location-dot me-1"></i> <span data-i18n="addRegion">إضافة منطقة</span>
+                                    <div class="quick-list">
+                                        <button type="button" onclick="openAddUserModal()" class="btn-secondary text-xs">
+                                            <i class="fas fa-user-plus"></i> <span data-i18n="addUser">إضافة مستخدم جديد</span>
                                         </button>
-                                        <button onclick="openAddAdvertisementModal()" class="btn-secondary text-xs py-2 text-center">
-                                            <i class="fas fa-hotel text-[#2D4F2E] me-1"></i> <span data-i18n="addAdvertisement">إضافة إعلان</span>
+                                        <button type="button" onclick="openAddRegionModal()" class="btn-secondary text-xs">
+                                            <i class="fas fa-map-location-dot"></i> <span data-i18n="addRegion">إضافة منطقة</span>
+                                        </button>
+                                        <button type="button" onclick="openAddAdvertisementModal()" class="btn-secondary text-xs">
+                                            <i class="fas fa-hotel"></i> <span data-i18n="addAdvertisement">إضافة إعلان</span>
+                                        </button>
+                                        <button type="button" onclick="openAddUnitTypeModal()" class="btn-secondary text-xs">
+                                            <i class="fas fa-cubes"></i> <span>إضافة نوع وحدة</span>
+                                        </button>
+                                        <button type="button" onclick="openAddCategoryModal()" class="btn-secondary text-xs">
+                                            <i class="fas fa-tags"></i> <span data-i18n="addCategory">إضافة تصنيف</span>
+                                        </button>
+                                        <button type="button" onclick="openAddBannerModal()" class="btn-secondary text-xs">
+                                            <i class="fas fa-bullhorn"></i> <span data-i18n="addBanner">إضافة بانر</span>
+                                        </button>
+                                        <button type="button" onclick="openAddOnboardingModal()" class="btn-secondary text-xs">
+                                            <i class="fas fa-mobile-screen"></i> <span data-i18n="addOnboarding">إضافة شاشة ترحيب</span>
                                         </button>
                                     </div>
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <button onclick="openAddCategoryModal()" class="btn-secondary text-xs py-2 text-center">
-                                            <i class="fas fa-tags text-[#2D4F2E] me-1"></i> <span data-i18n="addCategory">إضافة تصنيف</span>
-                                        </button>
-                                        <button onclick="openAddBannerModal()" class="btn-secondary text-xs py-2 text-center">
-                                            <i class="fas fa-bullhorn text-[#2D4F2E] me-1"></i> <span data-i18n="addBanner">إضافة بانر</span>
-                                        </button>
-                                    </div>
-                                    <button onclick="openAddUnitTypeModal()" class="gold-btn w-full text-xs py-2">
-                                        <i class="fas fa-cubes me-1"></i> <span>إضافة نوع وحدة جديد</span>
-                                    </button>
-                                    <button onclick="openAddUserModal()" class="btn-secondary w-full text-xs py-2">
-                                        <i class="fas fa-user-plus text-[#2D4F2E]"></i> <span data-i18n="addUser">إضافة مستخدم جديد</span>
-                                    </button>
-                                    <button onclick="openAddOnboardingModal()" class="btn-secondary w-full text-xs py-2">
-                                        <i class="fas fa-plus-circle text-[#2D4F2E]"></i> <span data-i18n="addOnboarding">إضافة شاشة ترحيب</span>
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -387,7 +374,7 @@
 
                     <!-- 2. USERS MANAGEMENT VIEW -->
                     <section id="view-users" class="tab-view hidden space-y-4">
-                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                        <div class="page-head">
                             <div>
                                 <h2 class="text-lg font-bold text-slate-900" data-i18n="users">إدارة المستخدمين</h2>
                                 <p class="text-xs text-slate-500">إدارة حسابات التطبيق والصلاحيات والحالات</p>
@@ -464,7 +451,7 @@
 
                     <!-- 3. ONBOARDING SCREENS VIEW -->
                     <section id="view-onboarding" class="tab-view hidden space-y-4">
-                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                        <div class="page-head">
                             <div>
                                 <h2 class="text-lg font-bold text-slate-900" data-i18n="onboarding">شاشات الترحيب (Onboarding)</h2>
                                 <p class="text-xs text-slate-500">تخصيص الشاشات التمهيدية لتطبيق الموبايل باللغتين العربية والإنجليزية</p>
@@ -489,7 +476,7 @@
                     <!-- 4. CATEGORIES VIEW -->
                     <section id="view-categories" class="tab-view hidden space-y-6">
                         <!-- Header with Quick Actions -->
-                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                        <div class="page-head">
                             <div>
                                 <h2 class="text-lg font-bold text-slate-900" data-i18n="categoriesTitle">إدارة التصنيفات (Categories)</h2>
                                 <p class="text-xs text-slate-500">إدارة تصنيفات التطبيق (فنادق، شقق ساحلية، شاليهات...) وتنظيم عرضها للمستخدمين</p>
@@ -529,7 +516,7 @@
                     <!-- 5. BANNERS VIEW -->
                     <section id="view-banners" class="tab-view hidden space-y-6">
                         <!-- Header with Quick Actions -->
-                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                        <div class="page-head">
                             <div>
                                 <h2 class="text-lg font-bold text-slate-900" data-i18n="bannersTitle">إدارة البانرات الإعلانية (Banners)</h2>
                                 <p class="text-xs text-slate-500">بانرات العروض الترويجية في واجهة التطبيق وربطها بإعلانات وشاليهات ومناطق محددة</p>
@@ -576,7 +563,7 @@
 
                     <!-- REGIONS MANAGEMENT VIEW -->
                     <section id="view-regions" class="tab-view hidden space-y-4">
-                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                        <div class="page-head">
                             <div>
                                 <h2 class="text-lg font-bold text-slate-900" data-i18n="regions">إدارة المناطق (Regions)</h2>
                                 <p class="text-xs text-slate-500" data-i18n="regionsSubtitle">المناطق المتاحة في التطبيق التي يختار منها المستخدم بعد تسجيل الدخول لتصفية الشاليهات والإعلانات والبانرات</p>
@@ -615,7 +602,7 @@
 
                     <!-- ADVERTISEMENTS MANAGEMENT VIEW -->
                     <section id="view-advertisements" class="tab-view hidden space-y-4">
-                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                        <div class="page-head">
                             <div>
                                 <h2 class="text-lg font-bold text-slate-900" data-i18n="advertisements">إدارة الإعلانات والشاليهات</h2>
                                 <p class="text-xs text-slate-500" data-i18n="advertisementsSubtitle">إدارة إعلانات الوحدات، الشقق، والشاليهات التابعة لكل منطقة وتصنيف</p>
@@ -675,7 +662,7 @@
 
                     <!-- UNIT TYPES MANAGEMENT VIEW -->
                     <section id="view-unit-types" class="tab-view hidden space-y-4">
-                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                        <div class="page-head">
                             <div>
                                 <h2 class="text-lg font-bold text-slate-900" data-i18n="unitTypes">إدارة أنواع الوحدات والخدمات</h2>
                                 <p class="text-xs text-slate-500">إدارة أنواع الوحدات (شاليه، شقة، غرفة فندقية، يخت، Golf Car...) وتحديد خصائصها الديناميكية ووحدات تسعيرها</p>
@@ -718,9 +705,11 @@
 
                     <!-- 5. SYSTEM & API CONSOLE VIEW -->
                     <section id="view-system" class="tab-view hidden space-y-4">
-                        <div>
-                            <h2 class="text-lg font-bold text-slate-900" data-i18n="systemStatus">فحص النظام والـ APIs</h2>
-                            <p class="text-xs text-slate-500">أدوات فحص صحة الخادم وقاعدة البيانات ونقاط الاتصال</p>
+                        <div class="page-head">
+                            <div>
+                                <h2 data-i18n="systemStatus">فحص النظام والـ APIs</h2>
+                                <p>أدوات فحص صحة الخادم وقاعدة البيانات ونقاط الاتصال</p>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1012,7 +1001,7 @@
                 </div>
 
                 <!-- Region Zone & Geofence (Polygon / Circle) Section -->
-                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3">
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3" id="region-map-section">
                     <div class="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-200">
                         <div class="flex items-center gap-2">
                             <i class="fas fa-draw-polygon text-[#2D4F2E] text-xs"></i>
@@ -1033,17 +1022,61 @@
                                 <i class="fas fa-eraser"></i>
                             </button>
                             <input type="color" id="region-modal-color" value="#2D4F2E" onchange="updateRegionZoneColor()" class="w-6 h-6 rounded border border-slate-300 cursor-pointer p-0" title="لون النطاق">
+                            <button type="button" onclick="toggleMapHeight('region')" id="region-map-height-btn" class="text-[11px] bg-white border border-slate-300 text-slate-700 hover:text-[#2D4F2E] hover:border-[#2D4F2E] px-2 py-1 rounded-lg transition flex items-center gap-1 shadow-sm cursor-pointer" title="توسيع ارتفاع الخريطة">
+                                <i class="fas fa-arrows-up-down text-slate-500"></i>
+                                <span id="region-map-height-text">توسيع</span>
+                            </button>
+                            <button type="button" onclick="toggleMapFullscreen('region')" id="region-map-fullscreen-btn" class="text-[11px] bg-[#2D4F2E] text-white hover:bg-[#223e23] px-2.5 py-1 rounded-lg transition flex items-center gap-1 shadow-sm cursor-pointer" title="عرض الخريطة ملء الشاشة">
+                                <i class="fas fa-expand"></i>
+                                <span id="region-map-fullscreen-text">ملء الشاشة</span>
+                            </button>
                         </div>
                     </div>
 
                     <p class="text-[11px] text-slate-500 leading-relaxed">
-                        انقر على الخريطة لوضع نقاط متتالية حول حدود المنطقة لتشكيل نطاق (Zone) يغطي مساحتها بالكامل. أي إعلان يتم وضعه داخل هذا النطاق سيرتبط بالمنطقة تلقائياً.
+                        انقر على الخريطة لوضع نقاط متتالية حول حدود المنطقة، أو اكتب الإحداثيات (خط العرض وخط الطول) أدناه للانتقال لموقع المنطقة فوراً أو إضافتها كنقطة في النطاق.
                     </p>
 
-                    <div class="relative">
-                        <div id="region-zone-map" class="w-full h-72 rounded-xl border border-slate-300 bg-slate-100 overflow-hidden shadow-inner" style="z-index: 1;"></div>
-                        <div id="region-zone-hint-badge" class="absolute bottom-2 start-2 z-[400] bg-white/95 backdrop-blur px-2.5 py-1 rounded-md text-[10px] text-slate-700 shadow border border-slate-200">
-                            <span id="region-zone-status-text">انقر على الخريطة لإضافة أول نقطة</span>
+                    <!-- Region Map Box Wrapper -->
+                    <div id="region-map-box" class="relative rounded-xl border border-slate-300 bg-white p-2.5 shadow-sm space-y-2">
+                        <!-- Coordinates Input Bar -->
+                        <div class="bg-slate-50 border border-slate-200 p-2.5 rounded-lg flex flex-wrap items-end gap-2 text-xs">
+                            <div class="flex-1 min-w-[130px]">
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+                                    خط العرض (Latitude)
+                                </label>
+                                <div class="relative">
+                                    <input type="text" id="region-nav-latitude" class="form-input text-xs ps-7 py-1.5 w-full bg-white" placeholder="مثال: 27.864442" onkeydown="if(event.key==='Enter') goToRegionCoordinates();" onpaste="handleRegionCoordPaste(event)">
+                                    <i class="fas fa-arrows-up-down absolute top-2.5 start-2 text-slate-400 text-[11px]"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-[130px]">
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+                                    خط الطول (Longitude)
+                                </label>
+                                <div class="relative">
+                                    <input type="text" id="region-nav-longitude" class="form-input text-xs ps-7 py-1.5 w-full bg-white" placeholder="مثال: 34.295447" onkeydown="if(event.key==='Enter') goToRegionCoordinates();" onpaste="handleRegionCoordPaste(event)">
+                                    <i class="fas fa-arrows-left-right absolute top-2.5 start-2 text-slate-400 text-[11px]"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" onclick="goToRegionCoordinates()" class="bg-[#2D4F2E] hover:bg-[#223e23] text-white text-xs px-3 py-1.5 rounded-lg transition font-medium flex items-center gap-1 shadow-sm cursor-pointer" title="الانتقال إلى هذا الموقع على الخريطة">
+                                    <i class="fas fa-crosshairs text-[11px]"></i>
+                                    <span>انتقال للموقع</span>
+                                </button>
+                                <button type="button" onclick="addRegionPointFromInputs()" class="bg-white border border-[#2D4F2E] text-[#2D4F2E] hover:bg-[#eaf1ea] text-xs px-2.5 py-1.5 rounded-lg transition font-medium flex items-center gap-1 shadow-sm cursor-pointer" title="إضافة هذه الإحداثيات كنقطة في النطاق">
+                                    <i class="fas fa-plus text-[11px]"></i>
+                                    <span>إضافة كنقطة</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Map Canvas Container -->
+                        <div class="relative rounded-lg overflow-hidden border border-slate-200">
+                            <div id="region-zone-map" class="kuba-map-canvas w-full h-72 rounded-lg bg-slate-100 transition-all duration-300" style="z-index: 1;"></div>
+                            <div id="region-zone-hint-badge" class="absolute bottom-2 start-2 z-[400] bg-white/95 backdrop-blur px-2.5 py-1 rounded-md text-[10px] text-slate-700 shadow border border-slate-200">
+                                <span id="region-zone-status-text">انقر على الخريطة لإضافة أول نقطة</span>
+                            </div>
                         </div>
                     </div>
 
@@ -1073,19 +1106,27 @@
 
     <!-- ─── REGION ZONE PREVIEW MODAL ────────────────────────────────────── -->
     <div id="region-zone-preview-modal" class="modal-overlay">
-        <div class="modal-content p-6 bg-white max-w-2xl">
+        <div class="modal-content p-6 bg-white max-w-3xl">
             <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
                 <div class="flex items-center gap-2">
                     <i class="fas fa-map-location-dot text-[#2D4F2E]"></i>
                     <h3 id="region-zone-preview-title" class="font-bold text-slate-900 text-base">نطاق المنطقة</h3>
                 </div>
-                <button onclick="closeModal('region-zone-preview-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="toggleMapFullscreen('preview')" id="preview-map-fullscreen-btn" class="text-[11px] bg-white border border-slate-300 text-slate-700 hover:text-[#2D4F2E] px-2.5 py-1 rounded-lg transition flex items-center gap-1 shadow-sm cursor-pointer" title="عرض ملء الشاشة">
+                        <i class="fas fa-expand text-[#2D4F2E]"></i>
+                        <span id="preview-map-fullscreen-text">ملء الشاشة</span>
+                    </button>
+                    <button onclick="closeModal('region-zone-preview-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+                </div>
             </div>
             <div id="region-zone-preview-info" class="text-xs text-slate-500 mb-3 flex items-center justify-between">
                 <span>عرض النطاق الجغرافي والإعلانات الواقعة داخله</span>
                 <span id="region-zone-preview-ads-count" class="badge badge-brand text-[10px]">0 إعلان</span>
             </div>
-            <div id="region-zone-preview-map" class="w-full h-80 rounded-xl border border-slate-300 bg-slate-100 overflow-hidden shadow-inner" style="z-index: 1;"></div>
+            <div id="preview-map-box" class="relative rounded-xl border border-slate-300 bg-white p-2 shadow-sm">
+                <div id="region-zone-preview-map" class="kuba-map-canvas w-full h-80 rounded-lg bg-slate-100 overflow-hidden" style="z-index: 1;"></div>
+            </div>
             <div class="flex justify-end pt-3 mt-3 border-t border-slate-100">
                 <button type="button" onclick="closeModal('region-zone-preview-modal')" class="btn-secondary text-xs">إغلاق</button>
             </div>
@@ -1501,55 +1542,73 @@
                 </div>
 
                 <!-- 4.1 Interactive Map & GPS Coordinates -->
-                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3">
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3" id="ad-map-section">
                     <div class="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-200">
                         <div class="flex items-center gap-2">
                             <i class="fas fa-map-location-dot text-[#2D4F2E] text-xs"></i>
                             <span class="text-xs font-bold text-slate-900">الموقع الجغرافي على الخريطة (خط الطول والعرض)</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button type="button" onclick="getCurrentLocationForAd()" class="text-[11px] bg-white border border-slate-300 text-slate-700 hover:text-[#2D4F2E] hover:border-[#2D4F2E] px-2.5 py-1 rounded-lg transition flex items-center gap-1 shadow-sm cursor-pointer">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <button type="button" onclick="getCurrentLocationForAd()" class="text-[11px] bg-white border border-slate-300 text-slate-700 hover:text-[#2D4F2E] hover:border-[#2D4F2E] px-2.5 py-1 rounded-lg transition flex items-center gap-1 shadow-sm cursor-pointer" title="تحديد موقعي الحالي">
                                 <i class="fas fa-crosshairs text-[#2D4F2E]"></i>
                                 <span>موقعي الحالي</span>
                             </button>
-                            <button type="button" onclick="clearAdCoordinates()" class="text-[11px] bg-white border border-slate-300 text-slate-500 hover:text-red-600 hover:border-red-300 px-2.5 py-1 rounded-lg transition flex items-center gap-1 shadow-sm cursor-pointer">
+                            <button type="button" onclick="clearAdCoordinates()" class="text-[11px] bg-white border border-slate-300 text-slate-500 hover:text-red-600 hover:border-red-300 px-2.5 py-1 rounded-lg transition flex items-center gap-1 shadow-sm cursor-pointer" title="مسح الإحداثيات">
                                 <i class="fas fa-eraser"></i>
                                 <span>مسح الإحداثيات</span>
+                            </button>
+                            <button type="button" onclick="toggleMapHeight('ad')" id="ad-map-height-btn" class="text-[11px] bg-white border border-slate-300 text-slate-700 hover:text-[#2D4F2E] hover:border-[#2D4F2E] px-2 py-1 rounded-lg transition flex items-center gap-1 shadow-sm cursor-pointer" title="توسيع ارتفاع الخريطة">
+                                <i class="fas fa-arrows-up-down text-slate-500"></i>
+                                <span id="ad-map-height-text">توسيع</span>
+                            </button>
+                            <button type="button" onclick="toggleMapFullscreen('ad')" id="ad-map-fullscreen-btn" class="text-[11px] bg-[#2D4F2E] text-white hover:bg-[#223e23] px-2.5 py-1 rounded-lg transition flex items-center gap-1 shadow-sm cursor-pointer" title="عرض الخريطة ملء الشاشة">
+                                <i class="fas fa-expand"></i>
+                                <span id="ad-map-fullscreen-text">ملء الشاشة</span>
                             </button>
                         </div>
                     </div>
 
                     <p class="text-[11px] text-slate-500 leading-relaxed">
-                        انقر على الخريطة أو اسحب المؤشر لتحديد موقع الإعلان بدقة. كما يمكنك كتابة خط الطول والعرض يدوياً.
+                        انقر على الخريطة لتحديد موقع الإعلان، أو اكتب الإحداثيات (خط العرض وخط الطول) أدناه للانتقال وتثبيت المؤشر مباشرة في حال كنت تعرف إحداثيات المكان.
                     </p>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">
-                                خط العرض (Latitude)
-                            </label>
-                            <div class="relative">
-                                <input type="number" id="ad-modal-latitude" step="any" oninput="onAdCoordinateInput()" class="form-input text-xs ps-8" placeholder="مثال: 30.044420">
-                                <i class="fas fa-arrows-up-down absolute top-3 start-2.5 text-slate-400 text-xs"></i>
+                    <!-- Map Box Wrapper -->
+                    <div id="ad-map-box" class="relative rounded-xl border border-slate-300 bg-white p-2.5 shadow-sm space-y-2">
+                        <!-- Coordinates Input Bar -->
+                        <div class="bg-slate-50 border border-slate-200 p-2.5 rounded-lg flex flex-wrap items-end gap-2 text-xs">
+                            <div class="flex-1 min-w-[140px]">
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+                                    خط العرض (Latitude)
+                                </label>
+                                <div class="relative">
+                                    <input type="text" id="ad-modal-latitude" oninput="onAdCoordinateInput()" onpaste="handleAdCoordPaste(event)" onkeydown="if(event.key==='Enter') applyAdCoordinatesFromInputs();" class="form-input text-xs ps-7 py-1.5 w-full bg-white" placeholder="مثال: 30.044420">
+                                    <i class="fas fa-arrows-up-down absolute top-2.5 start-2 text-slate-400 text-[11px]"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-[140px]">
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+                                    خط الطول (Longitude)
+                                </label>
+                                <div class="relative">
+                                    <input type="text" id="ad-modal-longitude" oninput="onAdCoordinateInput()" onpaste="handleAdCoordPaste(event)" onkeydown="if(event.key==='Enter') applyAdCoordinatesFromInputs();" class="form-input text-xs ps-7 py-1.5 w-full bg-white" placeholder="مثال: 31.235712">
+                                    <i class="fas fa-arrows-left-right absolute top-2.5 start-2 text-slate-400 text-[11px]"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" onclick="applyAdCoordinatesFromInputs()" class="bg-[#2D4F2E] hover:bg-[#223e23] text-white text-xs px-3 py-1.5 rounded-lg transition font-medium flex items-center gap-1 shadow-sm cursor-pointer" title="الانتقال للموقع وتثبيت المؤشر">
+                                    <i class="fas fa-location-dot text-[11px]"></i>
+                                    <span>تثبيت وانتقال</span>
+                                </button>
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">
-                                خط الطول (Longitude)
-                            </label>
-                            <div class="relative">
-                                <input type="number" id="ad-modal-longitude" step="any" oninput="onAdCoordinateInput()" class="form-input text-xs ps-8" placeholder="مثال: 31.235712">
-                                <i class="fas fa-arrows-left-right absolute top-3 start-2.5 text-slate-400 text-xs"></i>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Map Container -->
-                    <div class="relative">
-                        <div id="ad-map-picker" class="w-full h-64 rounded-xl border border-slate-300 bg-slate-100 overflow-hidden shadow-inner" style="z-index: 1;"></div>
-                        <div id="ad-map-coords-badge" class="absolute bottom-2 start-2 z-[400] bg-white/95 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-mono text-slate-700 shadow border border-slate-200 hidden">
-                            <i class="fas fa-location-dot text-[#2D4F2E] me-1"></i>
-                            <span id="ad-map-coords-text">--</span>
+                        <!-- Map Canvas Container -->
+                        <div class="relative rounded-lg overflow-hidden border border-slate-200">
+                            <div id="ad-map-picker" class="kuba-map-canvas w-full h-64 rounded-lg bg-slate-100 transition-all duration-300" style="z-index: 1;"></div>
+                            <div id="ad-map-coords-badge" class="absolute bottom-2 start-2 z-[400] bg-white/95 backdrop-blur px-2.5 py-1 rounded-md text-[10px] font-mono text-slate-700 shadow border border-slate-200 hidden">
+                                <i class="fas fa-location-dot text-[#2D4F2E] me-1"></i>
+                                <span id="ad-map-coords-text">--</span>
+                            </div>
                         </div>
                     </div>
                 </div>
