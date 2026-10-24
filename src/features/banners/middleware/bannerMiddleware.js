@@ -5,9 +5,6 @@ const APIError = require('../../../utils/apiError');
 
 const ALLOWED_POSITIONS = ['top', 'center', 'bottom'];
 
-/**
- * Validates MongoDB ObjectId in route params.
- */
 const validateBannerId = (req, _res, next) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next(new APIError('errors.invalidBannerId', 400));
@@ -15,9 +12,6 @@ const validateBannerId = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates payload for creating a banner.
- */
 const validateCreateBanner = async (req, _res, next) => {
     try {
         const advertisementId = req.body.advertisementId ? req.body.advertisementId.toString().trim() : '';
@@ -64,9 +58,6 @@ const validateCreateBanner = async (req, _res, next) => {
     }
 };
 
-/**
- * Validates payload for updating a banner.
- */
 const validateUpdateBanner = async (req, _res, next) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {

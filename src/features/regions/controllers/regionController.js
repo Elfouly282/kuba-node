@@ -8,11 +8,63 @@ const Category = require('../../categories/models/categoryModel');
 const APIError = require('../../../utils/apiError');
 const { getUploadsRoot } = require('../../../config/uploadsPath');
 const { getImageUrl, getRelativeImagePath } = require('../../../utils/imageUrl');
+const { isPointInPolygon, getPolygonBoundingBox } = require('../../../utils/geospatial');
+
+const parsePoints = (raw) => {
+    if (!raw) return [];
+    let arr = raw;
+    if (typeof raw === 'string') {
+        try {
+            arr = JSON.parse(raw);
+        } catch (_) {
+            return [];
+        }
+    }
+    if (!Array.isArray(arr)) return [];
+    return arr
+        .map((p) => {
+            const lat = p.latitude !== undefined ? Number(p.latitude) : Number(p.lat || p[0]);
+            const lng = p.longitude !== undefined ? Number(p.longitude) : Number(p.lng || p[1]);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                return { latitude: Number(lat.toFixed(6)), longitude: Number(lng.toFixed(6)) };
+            }
+            return null;
+        })
+        .filter(Boolean);
+};
+
+const syncAdvertisementsInZone = async (regionDoc) => {
+    if (!regionDoc || !Array.isArray(regionDoc.points) || regionDoc.points.length < 3) return 0;
+    const bbox = getPolygonBoundingBox(regionDoc.points);
+    if (!bbox) return 0;
+
+    const candidateAds = await Advertisement.find({
+        latitude: { $gte: bbox.minLat, $lte: bbox.maxLat },
+        longitude: { $gte: bbox.minLng, $lte: bbox.maxLng },
+    });
+
+    const matchingAdIds = [];
+    for (const ad of candidateAds) {
+        if (isPointInPolygon({ latitude: ad.latitude, longitude: ad.longitude }, regionDoc.points)) {
+            matchingAdIds.push(ad._id);
+        }
+    }
+
+    if (matchingAdIds.length > 0) {
+        await Advertisement.updateMany(
+            { _id: { $in: matchingAdIds } },
+            { $set: { region: regionDoc._id } }
+        );
+    }
+    return matchingAdIds.length;
+};
 
 const formatRegion = (doc) => {
     if (!doc) return null;
     const obj = typeof doc.toJSON === 'function' ? doc.toJSON() : { ...doc };
     if (obj.image) obj.image = getImageUrl(obj.image);
+    obj.points = Array.isArray(obj.points) ? obj.points : [];
+    obj.color = obj.color || '#2D4F2E';
     return obj;
 };
 
@@ -131,16 +183,36 @@ exports.getRegionData = async (req, res, next) => {
 
         const rawBanners = await Banner.find({ $and: bannerConditions }).sort({ createdAt: -1 });
 
+        let adFilter = { region: regionId, active: true };
+        if (region.points && region.points.length >= 3) {
+            const bbox = getPolygonBoundingBox(region.points);
+            if (bbox) {
+                const geoCandidates = await Advertisement.find({
+                    active: true,
+                    latitude: { $gte: bbox.minLat, $lte: bbox.maxLat },
+                    longitude: { $gte: bbox.minLng, $lte: bbox.maxLng },
+                }).select('_id latitude longitude');
+                const matchedIds = geoCandidates
+                    .filter((a) => isPointInPolygon({ latitude: a.latitude, longitude: a.longitude }, region.points))
+                    .map((a) => a._id);
+                if (matchedIds.length > 0) {
+                    adFilter = {
+                        active: true,
+                        $or: [{ region: regionId }, { _id: { $in: matchedIds } }],
+                    };
+                }
+            }
+        }
+
         const rawChalets = await Advertisement.find({
-            region: regionId,
+            ...adFilter,
             type: 'chalet',
-            active: true,
         }).populate('category', 'name image').populate('region', 'name image').sort({ createdAt: -1 });
 
-        const rawAdvertisements = await Advertisement.find({
-            region: regionId,
-            active: true,
-        }).populate('category', 'name image').populate('region', 'name image').sort({ createdAt: -1 });
+        const rawAdvertisements = await Advertisement.find(adFilter)
+            .populate('category', 'name image')
+            .populate('region', 'name image')
+            .sort({ createdAt: -1 });
 
         const rawCategories = await Category.find().sort({ createdAt: -1 });
 
@@ -179,13 +251,22 @@ exports.create = async (req, res, next) => {
 
         const active = req.body.active !== undefined ? String(req.body.active) === 'true' : true;
         const order = req.body.order !== undefined ? Number(req.body.order) : 0;
+        const points = parsePoints(req.body.points);
+        const color = req.body.color ? req.body.color.trim() : '#2D4F2E';
 
-        const region = await Region.create({
+        const region = new Region({
             name,
             image,
             active,
             order,
+            points,
+            color,
         });
+        await region.save();
+
+        if (points.length >= 3) {
+            await syncAdvertisementsInZone(region);
+        }
 
         res.status(201).json({
             status: 'success',
@@ -235,7 +316,20 @@ exports.update = async (req, res, next) => {
             }
         }
 
+        if (req.body.points !== undefined) {
+            region.points = parsePoints(req.body.points);
+            region.markModified('points');
+        }
+
+        if (req.body.color !== undefined) {
+            region.color = req.body.color.trim();
+        }
+
         await region.save();
+
+        if (region.points && region.points.length >= 3) {
+            await syncAdvertisementsInZone(region);
+        }
 
         res.status(200).json({
             status: 'success',

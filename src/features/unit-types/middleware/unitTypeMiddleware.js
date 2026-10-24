@@ -1,9 +1,6 @@
 const mongoose = require('mongoose');
 const APIError = require('../../../utils/apiError');
 
-/**
- * Validates unit type ID or slug parameter.
- */
 const validateUnitTypeId = (req, _res, next) => {
     const { id } = req.params;
     if (!id || (!mongoose.Types.ObjectId.isValid(id) && typeof id !== 'string')) {
@@ -12,9 +9,6 @@ const validateUnitTypeId = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates attribute ID parameter.
- */
 const validateAttributeId = (req, _res, next) => {
     const { attrId } = req.params;
     if (!attrId || !mongoose.Types.ObjectId.isValid(attrId)) {
@@ -23,9 +17,6 @@ const validateAttributeId = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates payload for creating a unit type.
- */
 const validateCreateUnitType = (req, _res, next) => {
     const name = req.body.name ? req.body.name.trim() : '';
     if (!name) {
@@ -35,9 +26,6 @@ const validateCreateUnitType = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates payload for updating a unit type.
- */
 const validateUpdateUnitType = (req, _res, next) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next(new APIError('errors.invalidUnitTypeId', 400));
@@ -52,9 +40,6 @@ const validateUpdateUnitType = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates payload for creating a unit type attribute.
- */
 const validateCreateAttribute = (req, _res, next) => {
     const unitTypeId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(unitTypeId)) {

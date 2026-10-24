@@ -4,9 +4,6 @@ const UnitTypeAttribute = require('../../unit-types/models/unitTypeAttributeMode
 const Category = require('../../categories/models/categoryModel');
 const APIError = require('../../../utils/apiError');
 
-/**
- * Validates dynamic attributes submitted for an advertisement against its UnitType definition.
- */
 const validateAttributes = async (unitTypeId, rawAttributes = {}) => {
     if (!unitTypeId || !mongoose.Types.ObjectId.isValid(unitTypeId)) {
         return { valid: true, sanitized: rawAttributes || {} };
@@ -24,13 +21,11 @@ const validateAttributes = async (unitTypeId, rawAttributes = {}) => {
         const key = def.key;
         let value = rawAttributes[key];
 
-        // Check if required
         if (def.required && (value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0))) {
             errors.push(`Attribute '${def.name || key}' is required.`);
             continue;
         }
 
-        // If optional and not provided, fill default if available
         if (value === undefined || value === null || value === '') {
             if (def.defaultValue !== null && def.defaultValue !== undefined) {
                 sanitized[key] = def.defaultValue;
@@ -38,7 +33,6 @@ const validateAttributes = async (unitTypeId, rawAttributes = {}) => {
             continue;
         }
 
-        // Type conversion & validation
         switch (def.dataType) {
             case 'number': {
                 const numVal = Number(value);
@@ -113,9 +107,6 @@ const validateAttributes = async (unitTypeId, rawAttributes = {}) => {
     return { valid: true, sanitized };
 };
 
-/**
- * Calculates pricing structure defensively.
- */
 const buildPricingData = (body) => {
     let basePrice = 0;
     if (body['pricing.basePrice'] !== undefined) {
@@ -174,9 +165,6 @@ const buildPricingData = (body) => {
     };
 };
 
-/**
- * Validates MongoDB ObjectId in route params.
- */
 const validateAdvertisementId = (req, _res, next) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next(new APIError('errors.invalidAdvertisementId', 400));
@@ -184,9 +172,6 @@ const validateAdvertisementId = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates creation payload for advertisements.
- */
 const validateCreateAdvertisement = async (req, res, next) => {
     try {
         const { title, category, unitType, type, region } = req.body;
@@ -195,7 +180,6 @@ const validateCreateAdvertisement = async (req, res, next) => {
             return next(new APIError('validation.titleRequired', 400));
         }
 
-        // Validate Category
         let validCategory = null;
         if (category) {
             if (!mongoose.Types.ObjectId.isValid(category)) {
@@ -208,12 +192,10 @@ const validateCreateAdvertisement = async (req, res, next) => {
             validCategory = catExists._id;
         }
 
-        // Validate Region if provided
         if (region && !mongoose.Types.ObjectId.isValid(region)) {
             return next(new APIError('errors.invalidRegionId', 400));
         }
 
-        // Validate UnitType & resolve type
         let validUnitType = null;
         let resolvedType = type || 'apartment';
 
@@ -231,7 +213,6 @@ const validateCreateAdvertisement = async (req, res, next) => {
             }
         }
 
-        // Parse attributes
         let rawAttributes = {};
         if (req.body.attributes) {
             if (typeof req.body.attributes === 'string') {
@@ -245,7 +226,6 @@ const validateCreateAdvertisement = async (req, res, next) => {
             }
         }
 
-        // Validate dynamic attributes
         const attrValidation = await validateAttributes(validUnitType, rawAttributes);
         if (!attrValidation.valid) {
             return res.status(400).json({
@@ -255,7 +235,6 @@ const validateCreateAdvertisement = async (req, res, next) => {
             });
         }
 
-        // Attach parsed/sanitized data to request
         req.validatedAdData = {
             validCategory,
             validUnitType,
@@ -270,9 +249,6 @@ const validateCreateAdvertisement = async (req, res, next) => {
     }
 };
 
-/**
- * Validates update payload for advertisements.
- */
 const validateUpdateAdvertisement = async (req, res, next) => {
     try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {

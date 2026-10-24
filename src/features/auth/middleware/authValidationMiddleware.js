@@ -1,9 +1,6 @@
 const mongoose = require('mongoose');
 const APIError = require('../../../utils/apiError');
 
-/**
- * Validates sign up request payload.
- */
 const validateSignUp = (req, _res, next) => {
     const { email, password, confirmPassword, acceptTerms } = req.body;
     if (!email || !password || !confirmPassword) {
@@ -18,9 +15,6 @@ const validateSignUp = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates login request payload.
- */
 const validateLogin = (req, _res, next) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -29,9 +23,6 @@ const validateLogin = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates select region request payload.
- */
 const validateSelectRegion = (req, _res, next) => {
     const regionId = req.body.regionId || req.body.region;
     if (!regionId) {
@@ -44,9 +35,6 @@ const validateSelectRegion = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates change password payload.
- */
 const validateChangePassword = (req, _res, next) => {
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword) {
@@ -58,9 +46,6 @@ const validateChangePassword = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates forgot password payload.
- */
 const validateForgotPassword = (req, _res, next) => {
     const { email } = req.body;
     if (!email) {
@@ -69,9 +54,6 @@ const validateForgotPassword = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates reset OTP verification payload.
- */
 const validateVerifyResetOtp = (req, _res, next) => {
     const { email, otp } = req.body;
     if (!email || !otp) {
@@ -80,9 +62,6 @@ const validateVerifyResetOtp = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates reset password payload.
- */
 const validateResetPassword = (req, _res, next) => {
     if (!req.params.token) {
         return next(new APIError('errors.invalidOrExpiredToken', 400));
@@ -93,9 +72,6 @@ const validateResetPassword = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates resend email verification payload.
- */
 const validateResendVerification = (req, _res, next) => {
     if (!req.body.email) {
         return next(new APIError('errors.missingFields', 400));

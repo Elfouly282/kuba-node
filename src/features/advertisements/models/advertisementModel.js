@@ -13,24 +13,20 @@ const advertisementSchema = new mongoose.Schema(
             trim: true,
             default: '',
         },
-        // Legacy type field kept for 100% backward compatibility
         type: {
             type: String,
             default: 'apartment',
         },
-        // Reference to the dynamic UnitType
         unitType: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'UnitType',
             default: null,
             index: true,
         },
-        // Legacy price kept for 100% backward compatibility
         price: {
             type: Number,
             default: 0,
         },
-        // Advanced Pricing System
         pricing: {
             basePrice: {
                 type: Number,
@@ -114,7 +110,6 @@ const advertisementSchema = new mongoose.Schema(
             type: [String],
             default: [],
         },
-        // Dynamic attributes key-value store
         attributes: {
             type: mongoose.Schema.Types.Mixed,
             default: {},
@@ -157,13 +152,11 @@ const advertisementSchema = new mongoose.Schema(
     }
 );
 
-// Calculate final price and maintain legacy price sync before validation/saving
 advertisementSchema.pre('validate', function (next) {
     if (!this.pricing) {
         this.pricing = {};
     }
 
-    // Fallback sync between legacy price and pricing.basePrice
     if (this.pricing.basePrice === undefined || this.pricing.basePrice === null || this.pricing.basePrice === 0) {
         if (this.price && this.price > 0) {
             this.pricing.basePrice = Number(this.price);
@@ -184,10 +177,8 @@ advertisementSchema.pre('validate', function (next) {
     }
 
     this.pricing.finalPrice = Math.round(final * 100) / 100;
-    // Always sync legacy price to the final price for Flutter / existing consumer compatibility
     this.price = this.pricing.finalPrice;
 
-    // Ensure image and images array sync
     if (this.image && (!this.images || this.images.length === 0)) {
         this.images = [this.image];
     } else if ((!this.image || this.image === '') && this.images && this.images.length > 0) {
@@ -197,7 +188,6 @@ advertisementSchema.pre('validate', function (next) {
     next();
 });
 
-// Compound indexes for performant search & filters
 advertisementSchema.index({ category: 1, active: 1, 'pricing.finalPrice': 1 });
 advertisementSchema.index({ unitType: 1, active: 1, 'pricing.finalPrice': 1 });
 advertisementSchema.index({ region: 1, active: 1 });

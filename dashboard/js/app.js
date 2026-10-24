@@ -87,6 +87,8 @@ const I18N = {
         addRegion: 'إضافة منطقة جديدة',
         regionName: 'اسم المنطقة',
         regionImage: 'صورة المنطقة',
+        regionZone: 'نطاق المنطقة (Zone)',
+        zonePoints: 'نقاط النطاق',
         confirmDeleteRegion: 'هل أنت متأكد من رغبتك في حذف هذه المنطقة نهائياً؟',
         unitTypes: 'أنواع الوحدات',
         advertisements: 'الإعلانات والشاليهات',
@@ -200,6 +202,8 @@ const I18N = {
         addRegion: 'Add Region',
         regionName: 'Region Name',
         regionImage: 'Region Image',
+        regionZone: 'Region Zone',
+        zonePoints: 'Zone Points',
         confirmDeleteRegion: 'Are you sure you want to delete this region permanently?',
         unitTypes: 'Unit Types',
         advertisements: 'Advertisements & Chalets',
@@ -1281,6 +1285,325 @@ async function loadRegions() {
     }
 }
 
+// ─── REGION ZONE MAP (POLYGONS / GEOFENCES) ────────────────────────────────────
+let regionZoneMap = null;
+let regionZonePoints = []; // [{ latitude, longitude }]
+let regionZoneMarkers = [];
+let regionZonePolygon = null;
+let regionZoneColor = '#2D4F2E';
+
+let regionPreviewMapInstance = null;
+let regionPreviewPolygon = null;
+let regionPreviewMarkers = [];
+
+// Client-side Ray-Casting algorithm for Point-in-Polygon detection
+function isPointInsidePolygon(point, polygonPoints) {
+    if (!point || !Array.isArray(polygonPoints) || polygonPoints.length < 3) return false;
+    const lat = Number(point.latitude !== undefined ? point.latitude : point.lat);
+    const lng = Number(point.longitude !== undefined ? point.longitude : point.lng);
+    if (isNaN(lat) || isNaN(lng)) return false;
+
+    let inside = false;
+    const n = polygonPoints.length;
+    for (let i = 0, j = n - 1; i < n; j = i++) {
+        const p1 = polygonPoints[i];
+        const p2 = polygonPoints[j];
+        const lat1 = Number(p1.latitude !== undefined ? p1.latitude : p1.lat);
+        const lng1 = Number(p1.longitude !== undefined ? p1.longitude : p1.lng);
+        const lat2 = Number(p2.latitude !== undefined ? p2.latitude : p2.lat);
+        const lng2 = Number(p2.longitude !== undefined ? p2.longitude : p2.lng);
+        if (isNaN(lat1) || isNaN(lng1) || isNaN(lat2) || isNaN(lng2)) continue;
+
+        const intersect = ((lng1 > lng) !== (lng2 > lng)) &&
+            (lat < ((lat2 - lat1) * (lng - lng1)) / (lng2 - lng1 || 0.0000000001) + lat1);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+
+function findRegionForPointClient(lat, lng, regions) {
+    if (!regions || !Array.isArray(regions)) return null;
+    for (const r of regions) {
+        if (r.active !== false && Array.isArray(r.points) && r.points.length >= 3) {
+            if (isPointInsidePolygon({ latitude: lat, longitude: lng }, r.points)) {
+                return r;
+            }
+        }
+    }
+    return null;
+}
+
+function createVertexIcon(index) {
+    return L.divIcon({
+        className: 'kuba-vertex-icon',
+        html: `
+            <div style="background-color: ${regionZoneColor}; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 2px solid #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.35); cursor: grab;">
+                ${index}
+            </div>
+        `,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+    });
+}
+
+function initRegionZoneMap() {
+    if (typeof L === 'undefined') return;
+    const container = document.getElementById('region-zone-map');
+    if (!container) return;
+
+    if (!regionZoneMap) {
+        regionZoneMap = L.map('region-zone-map', {
+            center: [30.0444, 31.2357],
+            zoom: 7,
+            scrollWheelZoom: true,
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors',
+        }).addTo(regionZoneMap);
+
+        regionZoneMap.on('click', (e) => {
+            addRegionZonePoint(e.latlng.lat, e.latlng.lng);
+        });
+    }
+
+    setTimeout(() => {
+        if (regionZoneMap) regionZoneMap.invalidateSize();
+    }, 200);
+}
+
+function addRegionZonePoint(lat, lng) {
+    const numLat = Number(Number(lat).toFixed(6));
+    const numLng = Number(Number(lng).toFixed(6));
+
+    regionZonePoints.push({ latitude: numLat, longitude: numLng });
+    const idx = regionZonePoints.length;
+
+    const marker = L.marker([numLat, numLng], {
+        draggable: true,
+        icon: createVertexIcon(idx)
+    }).addTo(regionZoneMap);
+
+    const pointIndex = regionZonePoints.length - 1;
+    marker.on('drag', (ev) => {
+        const pos = ev.target.getLatLng();
+        regionZonePoints[pointIndex] = {
+            latitude: Number(pos.lat.toFixed(6)),
+            longitude: Number(pos.lng.toFixed(6))
+        };
+        redrawRegionZonePolygon();
+    });
+
+    regionZoneMarkers.push(marker);
+    redrawRegionZonePolygon();
+}
+
+function redrawRegionZonePolygon() {
+    if (!regionZoneMap) return;
+
+    if (regionZonePolygon) {
+        regionZoneMap.removeLayer(regionZonePolygon);
+        regionZonePolygon = null;
+    }
+
+    regionZoneMarkers.forEach((m, idx) => {
+        m.setIcon(createVertexIcon(idx + 1));
+    });
+
+    if (regionZonePoints.length >= 3) {
+        const latLngs = regionZonePoints.map(p => [p.latitude, p.longitude]);
+        regionZonePolygon = L.polygon(latLngs, {
+            color: regionZoneColor,
+            weight: 3,
+            fillColor: regionZoneColor,
+            fillOpacity: 0.35,
+        }).addTo(regionZoneMap);
+    } else if (regionZonePoints.length === 2) {
+        const latLngs = regionZonePoints.map(p => [p.latitude, p.longitude]);
+        regionZonePolygon = L.polyline(latLngs, {
+            color: regionZoneColor,
+            weight: 2,
+            dashArray: '5, 5'
+        }).addTo(regionZoneMap);
+    }
+
+    const input = document.getElementById('region-modal-points');
+    if (input) input.value = JSON.stringify(regionZonePoints);
+
+    const badge = document.getElementById('region-zone-points-count');
+    const text = document.getElementById('region-zone-status-text');
+
+    if (badge) {
+        badge.textContent = `${regionZonePoints.length} نقاط`;
+        if (regionZonePoints.length >= 3) {
+            badge.className = 'badge badge-success text-[10px]';
+        } else {
+            badge.className = 'badge bg-slate-200 text-slate-700 text-[10px]';
+        }
+    }
+
+    if (text) {
+        if (regionZonePoints.length === 0) {
+            text.textContent = 'انقر على الخريطة لإضافة أول نقطة';
+        } else if (regionZonePoints.length < 3) {
+            text.textContent = `تم وضع ${regionZonePoints.length} نقطة (أضف ${3 - regionZonePoints.length} نقطة إضافية لتشكيل نطاق مغلق)`;
+        } else {
+            text.textContent = `تم تشكيل نطاق المنطقة بنجاح (${regionZonePoints.length} نقاط) ✅`;
+        }
+    }
+}
+
+function undoLastRegionZonePoint() {
+    if (regionZonePoints.length === 0) return;
+    regionZonePoints.pop();
+    const marker = regionZoneMarkers.pop();
+    if (marker && regionZoneMap) {
+        regionZoneMap.removeLayer(marker);
+    }
+    redrawRegionZonePolygon();
+}
+
+function clearRegionZone() {
+    regionZonePoints = [];
+    if (regionZoneMarkers && regionZoneMap) {
+        regionZoneMarkers.forEach(m => regionZoneMap.removeLayer(m));
+    }
+    regionZoneMarkers = [];
+    if (regionZonePolygon && regionZoneMap) {
+        regionZoneMap.removeLayer(regionZonePolygon);
+        regionZonePolygon = null;
+    }
+    redrawRegionZonePolygon();
+}
+
+function updateRegionZoneColor() {
+    const colorInput = document.getElementById('region-modal-color');
+    if (colorInput) {
+        regionZoneColor = colorInput.value || '#2D4F2E';
+        redrawRegionZonePolygon();
+    }
+}
+
+function locateMeOnRegionMap() {
+    if (!navigator.geolocation) {
+        showToast('تحديد الموقع غير مدعوم', 'error');
+        return;
+    }
+    showToast('جاري تحديد موقعك...', 'info');
+    navigator.geolocation.getCurrentPosition((pos) => {
+        if (regionZoneMap) {
+            regionZoneMap.setView([pos.coords.latitude, pos.coords.longitude], 12);
+            showToast('تم التوجه إلى موقعك على الخريطة', 'success');
+        }
+    }, () => {
+        showToast('تعذر الحصول على الموقع الجغرافي', 'error');
+    });
+}
+
+function promptQuickCircleZone() {
+    const inputRadius = prompt('أدخل نصف قطر الدائرة بالكيلومتر (مثال: 15):', '15');
+    if (!inputRadius) return;
+    const radiusKm = parseFloat(inputRadius);
+    if (isNaN(radiusKm) || radiusKm <= 0) {
+        showToast('يرجى إدخال نصف قطر صحيح', 'error');
+        return;
+    }
+
+    initRegionZoneMap();
+    if (!regionZoneMap) return;
+
+    const center = regionZoneMap.getCenter();
+    const centerLat = center.lat;
+    const centerLng = center.lng;
+
+    clearRegionZone();
+
+    const numPoints = 16;
+    const earthRadius = 6371;
+
+    for (let i = 0; i < numPoints; i++) {
+        const angle = (i * 360 / numPoints) * (Math.PI / 180);
+        const dLat = (radiusKm / earthRadius) * (180 / Math.PI);
+        const dLng = (radiusKm / (earthRadius * Math.cos(centerLat * Math.PI / 180))) * (180 / Math.PI);
+        const lat = centerLat + dLat * Math.cos(angle);
+        const lng = centerLng + dLng * Math.sin(angle);
+        addRegionZonePoint(lat, lng);
+    }
+
+    if (regionZonePolygon) {
+        regionZoneMap.fitBounds(regionZonePolygon.getBounds());
+    }
+    showToast(`تم رسم دائرة بنصف قطر ${radiusKm} كم بنجاح (${numPoints} نقطة)`, 'success');
+}
+
+async function openRegionZonePreviewModal(regionId) {
+    const region = state.regions.find(r => (r.id || r._id) === regionId);
+    if (!region) return;
+
+    document.getElementById('region-zone-preview-title').textContent = `نطاق منطقة: ${region.name}`;
+    document.getElementById('region-zone-preview-modal').classList.add('active');
+
+    setTimeout(async () => {
+        if (typeof L === 'undefined') return;
+        const container = document.getElementById('region-zone-preview-map');
+        if (!container) return;
+
+        if (!regionPreviewMapInstance) {
+            regionPreviewMapInstance = L.map('region-zone-preview-map', {
+                center: [30.0444, 31.2357],
+                zoom: 8,
+                scrollWheelZoom: true,
+            });
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors',
+            }).addTo(regionPreviewMapInstance);
+        }
+
+        regionPreviewMapInstance.invalidateSize();
+
+        if (regionPreviewPolygon) {
+            regionPreviewMapInstance.removeLayer(regionPreviewPolygon);
+            regionPreviewPolygon = null;
+        }
+        regionPreviewMarkers.forEach(m => regionPreviewMapInstance.removeLayer(m));
+        regionPreviewMarkers = [];
+
+        const points = region.points || [];
+        if (points.length >= 3) {
+            const latLngs = points.map(p => [p.latitude, p.longitude]);
+            regionPreviewPolygon = L.polygon(latLngs, {
+                color: region.color || '#2D4F2E',
+                weight: 3,
+                fillColor: region.color || '#2D4F2E',
+                fillOpacity: 0.35,
+            }).addTo(regionPreviewMapInstance);
+
+            regionPreviewMapInstance.fitBounds(regionPreviewPolygon.getBounds(), { padding: [25, 25] });
+        } else if (region.center && region.center.latitude) {
+            regionPreviewMapInstance.setView([region.center.latitude, region.center.longitude], 12);
+        }
+
+        try {
+            const res = await apiFetch(`/api/v1/admin/advertisements?region=${regionId}`, { silent: true });
+            const ads = res?.data?.advertisements || [];
+            document.getElementById('region-zone-preview-ads-count').textContent = `${ads.length} إعلان مرتبط بالنطاق`;
+
+            ads.forEach(ad => {
+                if (ad.latitude && ad.longitude) {
+                    const pin = L.marker([ad.latitude, ad.longitude], {
+                        icon: getAdMarkerIcon() || undefined
+                    }).addTo(regionPreviewMapInstance);
+                    pin.bindPopup(`<b>${ad.title}</b><br>${ad.location || ''}<br>${ad.price || 0} ج.م`);
+                    regionPreviewMarkers.push(pin);
+                }
+            });
+        } catch (_) {}
+    }, 250);
+}
+
 function renderRegions() {
     const grid = document.getElementById('regions-grid');
     const badge = document.getElementById('badge-regions-count');
@@ -1297,6 +1620,16 @@ function renderRegions() {
         const regId = region.id || region._id;
         const imgSrc = region.image?.startsWith('http') ? region.image : (region.image ? `/uploads/${region.image}` : 'https://placehold.co/400x250?text=Region+Image');
         const isActive = region.active !== false;
+        const hasZone = Array.isArray(region.points) && region.points.length >= 3;
+
+        const zoneBadge = hasZone ? `
+            <button type="button" onclick="openRegionZonePreviewModal('${regId}')" class="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full hover:bg-emerald-100 transition flex items-center gap-1 cursor-pointer" title="عرض نطاق المنطقة والإعلانات الواقعة داخله">
+                <i class="fas fa-draw-polygon text-emerald-600"></i>
+                <span>Zone محددة (${region.points.length} نقاط)</span>
+            </button>
+        ` : `
+            <span class="text-[10px] bg-slate-100 text-slate-400 px-2 py-0.5 rounded-full">بدون نطاق</span>
+        `;
 
         return `
             <div class="card p-3 bg-white border border-slate-200 hover:border-[#2D4F2E] transition group relative flex flex-col justify-between">
@@ -1311,9 +1644,18 @@ function renderRegions() {
                         <span>${region.name}</span>
                         <span class="text-[10px] text-slate-400 font-mono">#${region.order || 0}</span>
                     </div>
-                    <div class="text-[10px] text-slate-400 font-mono truncate" title="ID: ${regId}">ID: ${regId}</div>
+                    <div class="mt-1 flex items-center justify-between">
+                        ${zoneBadge}
+                        <span class="w-3.5 h-3.5 rounded-full border border-slate-300 inline-block shadow-sm" style="background-color: ${region.color || '#2D4F2E'}" title="لون النطاق"></span>
+                    </div>
+                    <div class="text-[10px] text-slate-400 font-mono truncate mt-1" title="ID: ${regId}">ID: ${regId}</div>
                 </div>
                 <div class="flex items-center justify-end gap-1.5 pt-3 mt-2 border-t border-slate-100">
+                    ${hasZone ? `
+                        <button onclick="openRegionZonePreviewModal('${regId}')" class="p-1.5 text-xs text-emerald-600 hover:bg-emerald-50 rounded" title="عرض النطاق على الخريطة">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </button>
+                    ` : ''}
                     <button onclick="openEditRegionModal('${regId}')" class="p-1.5 text-xs text-blue-600 hover:bg-blue-50 rounded" title="${t('edit')}">
                         <i class="fas fa-edit"></i>
                     </button>
@@ -1333,6 +1675,18 @@ function openAddRegionModal() {
     document.getElementById('region-modal-active').checked = true;
     document.getElementById('region-modal-order').value = state.regions.length;
     document.getElementById('region-modal-preview').innerHTML = '';
+    document.getElementById('region-modal-color').value = '#2D4F2E';
+    regionZoneColor = '#2D4F2E';
+
+    clearRegionZone();
+    setTimeout(() => {
+        initRegionZoneMap();
+        if (regionZoneMap) {
+            regionZoneMap.invalidateSize();
+            regionZoneMap.setView([30.0444, 31.2357], 7);
+        }
+    }, 250);
+
     document.getElementById('region-modal').classList.add('active');
 }
 
@@ -1346,6 +1700,11 @@ function openEditRegionModal(regionId) {
     document.getElementById('region-modal-order').value = region.order || 0;
     document.getElementById('region-modal-active').checked = region.active !== false;
 
+    regionZoneColor = region.color || '#2D4F2E';
+    document.getElementById('region-modal-color').value = regionZoneColor;
+
+    clearRegionZone();
+
     const urlInput = document.getElementById('region-modal-image-url');
     if (region.image?.startsWith('http')) {
         urlInput.value = region.image;
@@ -1357,6 +1716,23 @@ function openEditRegionModal(regionId) {
     const imgSrc = region.image?.startsWith('http') ? region.image : (region.image ? `/uploads/${region.image}` : '');
     preview.innerHTML = imgSrc ? `<img src="${imgSrc}" class="h-20 w-auto rounded border border-slate-300 object-cover mt-2">` : '';
 
+    setTimeout(() => {
+        initRegionZoneMap();
+        if (regionZoneMap) {
+            regionZoneMap.invalidateSize();
+            if (Array.isArray(region.points) && region.points.length > 0) {
+                region.points.forEach(p => {
+                    addRegionZonePoint(p.latitude, p.longitude);
+                });
+                if (regionZonePolygon) {
+                    regionZoneMap.fitBounds(regionZonePolygon.getBounds(), { padding: [25, 25] });
+                }
+            } else {
+                regionZoneMap.setView([30.0444, 31.2357], 7);
+            }
+        }
+    }, 250);
+
     document.getElementById('region-modal').classList.add('active');
 }
 
@@ -1365,6 +1741,8 @@ async function handleRegionFormSubmit(e) {
     const name = document.getElementById('region-modal-name').value.trim();
     const order = document.getElementById('region-modal-order').value || 0;
     const active = document.getElementById('region-modal-active').checked;
+    const pointsStr = document.getElementById('region-modal-points').value || '[]';
+    const color = document.getElementById('region-modal-color').value || '#2D4F2E';
     const imageFile = document.getElementById('region-modal-image-file').files[0];
     const imageUrl = document.getElementById('region-modal-image-url').value.trim();
 
@@ -1380,11 +1758,19 @@ async function handleRegionFormSubmit(e) {
         payload.append('name', name);
         payload.append('order', order);
         payload.append('active', active);
+        payload.append('points', pointsStr);
+        payload.append('color', color);
         payload.append('image', imageFile);
-    } else if (imageUrl) {
-        payload = JSON.stringify({ name, order, active, image: imageUrl });
     } else {
-        payload = JSON.stringify({ name, order, active });
+        const bodyObj = {
+            name,
+            order,
+            active,
+            points: JSON.parse(pointsStr),
+            color,
+        };
+        if (imageUrl) bodyObj.image = imageUrl;
+        payload = JSON.stringify(bodyObj);
     }
 
     try {
@@ -1393,13 +1779,13 @@ async function handleRegionFormSubmit(e) {
                 method: 'PATCH',
                 body: payload,
             });
-            showToast('تم تحديث المنطقة بنجاح', 'success');
+            showToast('تم تحديث المنطقة ونطاقها بنجاح', 'success');
         } else {
             await apiFetch('/api/v1/admin/regions', {
                 method: 'POST',
                 body: payload,
             });
-            showToast('تمت إضافة المنطقة بنجاح', 'success');
+            showToast('تمت إضافة المنطقة ونطاقها بنجاح', 'success');
         }
 
         closeModal('region-modal');
@@ -2598,6 +2984,31 @@ function getAdMarkerIcon() {
     });
 }
 
+let adMapRegionLayers = [];
+
+function drawRegionZonesOnAdMap() {
+    if (!adMapInstance || !Array.isArray(state.regions)) return;
+
+    adMapRegionLayers.forEach(l => adMapInstance.removeLayer(l));
+    adMapRegionLayers = [];
+
+    state.regions.forEach(r => {
+        if (r.active !== false && Array.isArray(r.points) && r.points.length >= 3) {
+            const latLngs = r.points.map(p => [p.latitude, p.longitude]);
+            const poly = L.polygon(latLngs, {
+                color: r.color || '#2D4F2E',
+                weight: 2,
+                dashArray: '4, 4',
+                fillColor: r.color || '#2D4F2E',
+                fillOpacity: 0.18,
+            }).addTo(adMapInstance);
+
+            poly.bindTooltip(`<b>منطقة: ${r.name}</b>`, { sticky: true });
+            adMapRegionLayers.push(poly);
+        }
+    });
+}
+
 function initAdMapPicker() {
     if (typeof L === 'undefined') {
         console.warn('Leaflet is not available yet.');
@@ -2626,6 +3037,7 @@ function initAdMapPicker() {
     setTimeout(() => {
         if (adMapInstance) {
             adMapInstance.invalidateSize();
+            drawRegionZonesOnAdMap();
         }
     }, 200);
 }
@@ -2648,6 +3060,17 @@ function setAdMapCoordinates(lat, lng, panTo = true) {
     if (badge && badgeText) {
         badgeText.textContent = `${numLat}, ${numLng}`;
         badge.classList.remove('hidden');
+    }
+
+    // Auto-detect matching region zone if ad is placed inside a zone!
+    const matchedRegion = findRegionForPointClient(numLat, numLng, state.regions);
+    const regionSelect = document.getElementById('ad-modal-region');
+    if (matchedRegion && regionSelect) {
+        const targetId = matchedRegion.id || matchedRegion._id;
+        if (regionSelect.value !== targetId) {
+            regionSelect.value = targetId;
+            showToast(`📍 تم تحديد منطقة "${matchedRegion.name}" تلقائياً لوقوع الإعلان داخل نطاقها الجغرافي!`, 'info');
+        }
     }
 
     const icon = getAdMarkerIcon();

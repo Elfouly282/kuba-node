@@ -48,7 +48,6 @@ exports.getAll = async (req, res, next) => {
     try {
         const filter = {};
 
-        // Normal users only see their own bookings; admins see all
         if (req.user && req.user.role !== 'admin') {
             filter.user = req.user._id;
         } else if (req.query.user && mongoose.Types.ObjectId.isValid(req.query.user)) {
@@ -92,7 +91,6 @@ exports.getOne = async (req, res, next) => {
             return next(new APIError('errors.bookingNotFound', 404));
         }
 
-        // Check ownership if not admin
         if (req.user && req.user.role !== 'admin' && String(booking.user?._id || booking.user) !== String(req.user._id)) {
             return next(new APIError('errors.forbidden', 403));
         }
@@ -136,7 +134,6 @@ exports.create = async (req, res, next) => {
             }
         }
 
-        // Calculate duration and unit price based on pricing unit
         const pricingUnit = ad.pricing?.pricingUnit || 'per_night';
         const unitPrice = ad.pricing?.finalPrice || ad.price || 0;
 
@@ -200,7 +197,6 @@ exports.update = async (req, res, next) => {
             return next(new APIError('errors.bookingNotFound', 404));
         }
 
-        // Only admin can change status to confirmed/completed, user can only cancel their own
         if (req.user.role !== 'admin') {
             if (String(booking.user) !== String(req.user._id)) {
                 return next(new APIError('errors.forbidden', 403));

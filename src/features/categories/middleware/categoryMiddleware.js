@@ -1,9 +1,6 @@
 const mongoose = require('mongoose');
 const APIError = require('../../../utils/apiError');
 
-/**
- * Validates MongoDB ObjectId in route params.
- */
 const validateCategoryId = (req, _res, next) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next(new APIError('errors.invalidCategoryId', 400));
@@ -11,9 +8,6 @@ const validateCategoryId = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates payload for creating a category.
- */
 const validateCreateCategory = (req, _res, next) => {
     const name = req.body.name ? req.body.name.trim() : '';
     if (!name) {
@@ -29,9 +23,6 @@ const validateCreateCategory = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates payload for updating a category.
- */
 const validateUpdateCategory = (req, _res, next) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next(new APIError('errors.invalidCategoryId', 400));

@@ -62,7 +62,7 @@ const unitTypeAttributeSchema = new mongoose.Schema(
         unit: {
             type: String,
             trim: true,
-            default: '', // e.g. "m²", "شخص", "غرفة"
+            default: '',
         },
         validation: {
             min: { type: Number, default: null },
@@ -95,7 +95,6 @@ const unitTypeAttributeSchema = new mongoose.Schema(
     }
 );
 
-// Compound unique index per unitType
 unitTypeAttributeSchema.index({ unitType: 1, key: 1 }, { unique: true });
 
 module.exports = mongoose.model('UnitTypeAttribute', unitTypeAttributeSchema);

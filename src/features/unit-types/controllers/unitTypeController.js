@@ -14,8 +14,6 @@ const formatAttribute = (doc) => {
     return typeof doc.toJSON === 'function' ? doc.toJSON() : { ...doc };
 };
 
-// ─── UNIT TYPE CONTROLLERS ───────────────────────────────────────────────────
-
 exports.getAll = async (req, res, next) => {
     try {
         if (mongoose.connection.readyState !== 1) {
@@ -84,7 +82,6 @@ exports.getOne = async (req, res, next) => {
             return next(new APIError('errors.unitTypeNotFound', 404));
         }
 
-        // Fetch associated attributes
         const attributes = await UnitTypeAttribute.find({ unitType: unitType._id, active: true }).sort({ order: 1 });
 
         const result = formatUnitType(unitType);
@@ -107,7 +104,6 @@ exports.create = async (req, res, next) => {
             return next(new APIError('validation.nameRequired', 400));
         }
 
-        // Validate categories if provided
         let validCategories = [];
         if (categories && Array.isArray(categories)) {
             for (const catId of categories) {
@@ -200,7 +196,6 @@ exports.remove = async (req, res, next) => {
             return next(new APIError('errors.unitTypeNotFound', 404));
         }
 
-        // Delete associated attributes
         await UnitTypeAttribute.deleteMany({ unitType: unitType._id });
         await unitType.deleteOne();
 
@@ -212,8 +207,6 @@ exports.remove = async (req, res, next) => {
         next(err);
     }
 };
-
-// ─── ATTRIBUTE CONTROLLERS ────────────────────────────────────────────────────
 
 exports.getAttributes = async (req, res, next) => {
     try {

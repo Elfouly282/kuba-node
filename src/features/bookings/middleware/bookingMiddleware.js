@@ -3,9 +3,6 @@ const Booking = require('../models/bookingModel');
 const Advertisement = require('../../advertisements/models/advertisementModel');
 const APIError = require('../../../utils/apiError');
 
-/**
- * Checks if there is an overlapping confirmed/pending booking for the given dates.
- */
 const checkBookingOverlap = async (advertisementId, startDate, endDate, excludeBookingId = null) => {
     const query = {
         advertisement: advertisementId,
@@ -26,9 +23,6 @@ const checkBookingOverlap = async (advertisementId, startDate, endDate, excludeB
     return Boolean(overlap);
 };
 
-/**
- * Validates MongoDB ObjectId in route params.
- */
 const validateBookingId = (req, _res, next) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next(new APIError('errors.invalidBookingId', 400));
@@ -36,9 +30,6 @@ const validateBookingId = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates query parameters for checking availability.
- */
 const validateAvailabilityQuery = (req, _res, next) => {
     const { advertisementId } = req.params;
     const { startDate, endDate } = req.query;
@@ -62,9 +53,6 @@ const validateAvailabilityQuery = (req, _res, next) => {
     next();
 };
 
-/**
- * Validates payload for creating a booking.
- */
 const validateCreateBooking = async (req, res, next) => {
     try {
         const { advertisement: adId, startDate, endDate } = req.body;
@@ -102,9 +90,6 @@ const validateCreateBooking = async (req, res, next) => {
     }
 };
 
-/**
- * Validates booking update authorization and payload.
- */
 const validateUpdateBooking = (req, _res, next) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next(new APIError('errors.invalidBookingId', 400));

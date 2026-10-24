@@ -1,6 +1,3 @@
-/**
- * Validates onboarding query params and normalizes locale.
- */
 const validateOnboardingQuery = (req, _res, next) => {
     if (req.query.lang) {
         const lang = req.query.lang.toLowerCase();

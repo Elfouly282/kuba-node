@@ -33,13 +33,11 @@ const clean = (user) => {
 const deleteUserData = async (userId) => {
     if (!userId) return;
 
-    // 1. Delete user avatar file if stored locally
     const user = await User.findById(userId).setOptions({ includeInactive: true });
     if (user && user.avatar) {
         deleteImageFile(user.avatar);
     }
 
-    // 2. Find and delete all advertisements owned by this user
     const ads = await Advertisement.find({ owner: userId });
     const adIds = ads.map((ad) => ad._id);
 
@@ -51,24 +49,19 @@ const deleteUserData = async (userId) => {
     }
 
     if (adIds.length > 0) {
-        // Delete banners linked to these ads and their images
         const banners = await Banner.find({ advertisementId: { $in: adIds } });
         for (const banner of banners) {
             if (banner.image) deleteImageFile(banner.image);
         }
         await Banner.deleteMany({ advertisementId: { $in: adIds } });
 
-        // Delete bookings for these ads
         await Booking.deleteMany({ advertisement: { $in: adIds } });
 
-        // Delete the ads themselves
         await Advertisement.deleteMany({ owner: userId });
     }
 
-    // 3. Delete any bookings made by this user
     await Booking.deleteMany({ user: userId });
 
-    // 4. Delete the user document permanently
     await User.findByIdAndDelete(userId);
 };
 
@@ -86,7 +79,6 @@ exports.signUp = async (req, res, next) => {
         const existingUser = await User.findOne({ email: normalizedEmail }).setOptions({ includeInactive: true });
         if (existingUser) {
             if (existingUser.active === false) {
-                // If the user was soft-deleted previously, clean up completely so they can create a fresh account
                 await deleteUserData(existingUser._id);
             } else {
                 return next(new APIError('errors.emailAlreadyExists', 400));

@@ -401,17 +401,25 @@ body {
 }
 
 /* ─── Leaflet Map in Modals ─── */
-#ad-map-picker {
+#ad-map-picker,
+#region-zone-map,
+#region-zone-preview-map {
     position: relative;
     z-index: 1;
 }
 
-#ad-map-picker .leaflet-pane {
+#ad-map-picker .leaflet-pane,
+#region-zone-map .leaflet-pane,
+#region-zone-preview-map .leaflet-pane {
     z-index: 1;
 }
 
 #ad-map-picker .leaflet-top,
-#ad-map-picker .leaflet-bottom {
+#ad-map-picker .leaflet-bottom,
+#region-zone-map .leaflet-top,
+#region-zone-map .leaflet-bottom,
+#region-zone-preview-map .leaflet-top,
+#region-zone-preview-map .leaflet-bottom {
     z-index: 2;
 }
 
