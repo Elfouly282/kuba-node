@@ -100,6 +100,10 @@ const I18N = {
         adCategory: 'التصنيف',
         adDescription: 'الوصف',
         adImage: 'صورة الإعلان',
+        latitude: 'خط العرض',
+        longitude: 'خط الطول',
+        coordinates: 'الإحداثيات',
+        viewOnMap: 'عرض على الخريطة',
         confirmDeleteAdvertisement: 'هل أنت متأكد من رغبتك في حذف هذا الإعلان نهائياً؟',
         apiTestSuccess: 'الـ API يعمل بنجاح!',
         apiTestFail: 'فشل الاتصال بالـ API',
@@ -209,6 +213,10 @@ const I18N = {
         adCategory: 'Category',
         adDescription: 'Description',
         adImage: 'Image',
+        latitude: 'Latitude',
+        longitude: 'Longitude',
+        coordinates: 'Coordinates',
+        viewOnMap: 'View on Map',
         confirmDeleteAdvertisement: 'Are you sure you want to delete this advertisement permanently?',
         apiTestSuccess: 'API is running successfully!',
         apiTestFail: 'Failed to connect to API',
@@ -2335,6 +2343,19 @@ function renderAdvertisementsGrid() {
                             </div>
                         ` : ''}
 
+                        ${(ad.latitude !== null && ad.latitude !== undefined && ad.longitude !== null && ad.longitude !== undefined) ? `
+                            <div class="flex items-center justify-between text-[11px] bg-emerald-50 text-emerald-800 px-2 py-1 rounded border border-emerald-200">
+                                <div class="flex items-center gap-1 font-mono text-[10px]" title="خط العرض: ${ad.latitude} | خط الطول: ${ad.longitude}">
+                                    <i class="fas fa-location-dot text-emerald-600"></i>
+                                    <span>${Number(ad.latitude).toFixed(4)}, ${Number(ad.longitude).toFixed(4)}</span>
+                                </div>
+                                <a href="https://www.google.com/maps?q=${ad.latitude},${ad.longitude}" target="_blank" rel="noopener noreferrer" class="text-emerald-700 hover:text-emerald-900 underline text-[10px] font-bold flex items-center gap-1" title="${t('viewOnMap')}">
+                                    <span>${t('viewOnMap')}</span>
+                                    <i class="fas fa-arrow-up-right-from-square text-[9px]"></i>
+                                </a>
+                            </div>
+                        ` : ''}
+
                         ${categoryName ? `
                             <div class="text-[11px] text-slate-400">
                                 القسم: <span class="text-slate-700 font-medium">${categoryName}</span>
@@ -2556,6 +2577,152 @@ function calculateAdFinalPrice() {
     if (summaryBadge) summaryBadge.textContent = `السعر النهائي: ${final.toLocaleString()} ج.م`;
 }
 
+// ─── ADVERTISEMENT MAP PICKER ─────────────────────────────────────────────────
+let adMapInstance = null;
+let adMapMarker = null;
+
+function getAdMarkerIcon() {
+    if (typeof L === 'undefined') return null;
+    return L.divIcon({
+        className: 'kuba-map-marker-icon',
+        html: `
+            <div style="transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; cursor: pointer;">
+                <div style="background-color: #2D4F2E; color: white; width: 34px; height: 34px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.35); border: 2px solid #ffffff;">
+                    <i class="fas fa-location-dot" style="transform: rotate(45deg); font-size: 15px; color: #ffffff;"></i>
+                </div>
+                <div style="width: 10px; height: 4px; background: rgba(0,0,0,0.35); border-radius: 50%; margin-top: 1px; filter: blur(0.5px);"></div>
+            </div>
+        `,
+        iconSize: [0, 0],
+        iconAnchor: [0, 0],
+    });
+}
+
+function initAdMapPicker() {
+    if (typeof L === 'undefined') {
+        console.warn('Leaflet is not available yet.');
+        return;
+    }
+    const container = document.getElementById('ad-map-picker');
+    if (!container) return;
+
+    if (!adMapInstance) {
+        adMapInstance = L.map('ad-map-picker', {
+            center: [30.0444, 31.2357],
+            zoom: 7,
+            scrollWheelZoom: true,
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors',
+        }).addTo(adMapInstance);
+
+        adMapInstance.on('click', (e) => {
+            setAdMapCoordinates(e.latlng.lat, e.latlng.lng, false);
+        });
+    }
+
+    setTimeout(() => {
+        if (adMapInstance) {
+            adMapInstance.invalidateSize();
+        }
+    }, 200);
+}
+
+function setAdMapCoordinates(lat, lng, panTo = true) {
+    if (typeof L === 'undefined') return;
+    initAdMapPicker();
+    if (!adMapInstance) return;
+
+    const numLat = Number(Number(lat).toFixed(6));
+    const numLng = Number(Number(lng).toFixed(6));
+
+    const latInput = document.getElementById('ad-modal-latitude');
+    const lngInput = document.getElementById('ad-modal-longitude');
+    if (latInput) latInput.value = numLat;
+    if (lngInput) lngInput.value = numLng;
+
+    const badge = document.getElementById('ad-map-coords-badge');
+    const badgeText = document.getElementById('ad-map-coords-text');
+    if (badge && badgeText) {
+        badgeText.textContent = `${numLat}, ${numLng}`;
+        badge.classList.remove('hidden');
+    }
+
+    const icon = getAdMarkerIcon();
+
+    if (adMapMarker) {
+        adMapMarker.setLatLng([numLat, numLng]);
+    } else {
+        adMapMarker = L.marker([numLat, numLng], {
+            icon: icon,
+            draggable: true,
+        }).addTo(adMapInstance);
+
+        adMapMarker.on('dragend', () => {
+            const pos = adMapMarker.getLatLng();
+            setAdMapCoordinates(pos.lat, pos.lng, false);
+        });
+    }
+
+    if (panTo) {
+        adMapInstance.setView([numLat, numLng], Math.max(adMapInstance.getZoom(), 14));
+    }
+}
+
+function clearAdCoordinates() {
+    const latInput = document.getElementById('ad-modal-latitude');
+    const lngInput = document.getElementById('ad-modal-longitude');
+    if (latInput) latInput.value = '';
+    if (lngInput) lngInput.value = '';
+
+    const badge = document.getElementById('ad-map-coords-badge');
+    if (badge) badge.classList.add('hidden');
+
+    if (adMapMarker && adMapInstance) {
+        adMapInstance.removeLayer(adMapMarker);
+        adMapMarker = null;
+    }
+}
+
+function onAdCoordinateInput() {
+    const latVal = document.getElementById('ad-modal-latitude')?.value;
+    const lngVal = document.getElementById('ad-modal-longitude')?.value;
+
+    if (!latVal && !lngVal) {
+        clearAdCoordinates();
+        return;
+    }
+
+    const lat = parseFloat(latVal);
+    const lng = parseFloat(lngVal);
+
+    if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        setAdMapCoordinates(lat, lng, true);
+    }
+}
+
+function getCurrentLocationForAd() {
+    if (!navigator.geolocation) {
+        showToast('خاصية تحديد الموقع الجغرافي غير مدعومة في متصفحك', 'error');
+        return;
+    }
+    showToast('جاري تحديد موقعك الجغرافي الحالي...', 'info');
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const { latitude, longitude } = pos.coords;
+            setAdMapCoordinates(latitude, longitude, true);
+            showToast('تم تحديد الموقع بنجاح على الخريطة', 'success');
+        },
+        (err) => {
+            console.error('Geolocation error:', err);
+            showToast('تعذر الحصول على الموقع الجغرافي. تأكد من تفعيل صلاحية الموقع للمتصفح.', 'error');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
 function openAddAdvertisementModal() {
     state.editingAdvertisementId = null;
     document.getElementById('advertisement-modal-title').textContent = t('addAdvertisement');
@@ -2571,6 +2738,16 @@ function openAddAdvertisementModal() {
     document.getElementById('ad-attributes-wrapper')?.classList.add('hidden');
     document.getElementById('ad-dynamic-attributes-container').innerHTML = '';
     calculateAdFinalPrice();
+
+    // Reset coordinates and map picker
+    clearAdCoordinates();
+    setTimeout(() => {
+        initAdMapPicker();
+        if (adMapInstance) {
+            adMapInstance.invalidateSize();
+            adMapInstance.setView([30.0444, 31.2357], 7);
+        }
+    }, 250);
 
     document.getElementById('advertisement-modal').classList.add('active');
 }
@@ -2591,6 +2768,32 @@ async function openEditAdvertisementModal(adId) {
     document.getElementById('ad-modal-address').value = ad.address || '';
     document.getElementById('ad-modal-description').value = ad.description || '';
     document.getElementById('ad-modal-active').checked = ad.active !== false;
+
+    // Populate and sync coordinates with map picker
+    const hasValidCoords = ad.latitude !== null && ad.latitude !== undefined && !isNaN(Number(ad.latitude)) &&
+                           ad.longitude !== null && ad.longitude !== undefined && !isNaN(Number(ad.longitude));
+
+    if (hasValidCoords) {
+        document.getElementById('ad-modal-latitude').value = Number(ad.latitude);
+        document.getElementById('ad-modal-longitude').value = Number(ad.longitude);
+    } else {
+        document.getElementById('ad-modal-latitude').value = '';
+        document.getElementById('ad-modal-longitude').value = '';
+    }
+
+    setTimeout(() => {
+        initAdMapPicker();
+        if (adMapInstance) {
+            adMapInstance.invalidateSize();
+            if (hasValidCoords) {
+                setAdMapCoordinates(Number(ad.latitude), Number(ad.longitude), true);
+                adMapInstance.setView([Number(ad.latitude), Number(ad.longitude)], 14);
+            } else {
+                clearAdCoordinates();
+                adMapInstance.setView([30.0444, 31.2357], 7);
+            }
+        }
+    }, 250);
 
     const regId = ad.region ? (ad.region._id || ad.region.id || ad.region) : '';
     document.getElementById('ad-modal-region').value = regId || '';
@@ -2648,6 +2851,11 @@ async function handleAdvertisementFormSubmit(e) {
 
     const location = document.getElementById('ad-modal-location').value.trim();
     const address = document.getElementById('ad-modal-address').value.trim();
+    const latVal = document.getElementById('ad-modal-latitude')?.value?.trim();
+    const lngVal = document.getElementById('ad-modal-longitude')?.value?.trim();
+    const latitude = (latVal !== '' && latVal !== undefined && !isNaN(Number(latVal))) ? Number(latVal) : null;
+    const longitude = (lngVal !== '' && lngVal !== undefined && !isNaN(Number(lngVal))) ? Number(lngVal) : null;
+
     const description = document.getElementById('ad-modal-description').value.trim();
     const active = document.getElementById('ad-modal-active').checked;
     const imageFile = document.getElementById('ad-modal-image-file').files[0];
@@ -2708,6 +2916,8 @@ async function handleAdvertisementFormSubmit(e) {
         payload.append('pricing[minDuration]', minDuration);
         payload.append('location', location);
         payload.append('address', address);
+        if (latitude !== null) payload.append('latitude', latitude);
+        if (longitude !== null) payload.append('longitude', longitude);
         payload.append('description', description);
         payload.append('active', active);
         payload.append('attributes', JSON.stringify(attributes));
@@ -2721,6 +2931,8 @@ async function handleAdvertisementFormSubmit(e) {
             pricing,
             location,
             address,
+            latitude,
+            longitude,
             description,
             active,
             attributes,

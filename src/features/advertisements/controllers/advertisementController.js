@@ -300,8 +300,8 @@ exports.create = async (req, res, next) => {
             pricing,
             location: location ? location.trim() : '',
             address: address ? address.trim() : '',
-            latitude: latitude ? Number(latitude) : null,
-            longitude: longitude ? Number(longitude) : null,
+            latitude: (latitude !== undefined && latitude !== null && latitude !== '' && !isNaN(Number(latitude))) ? Number(latitude) : null,
+            longitude: (longitude !== undefined && longitude !== null && longitude !== '' && !isNaN(Number(longitude))) ? Number(longitude) : null,
             category: validCategory,
             region: region && mongoose.Types.ObjectId.isValid(region) ? region : null,
             image: mainImage,
@@ -347,8 +347,12 @@ exports.update = async (req, res, next) => {
         });
 
         // Numbers
-        if (req.body.latitude !== undefined) advertisement.latitude = req.body.latitude ? Number(req.body.latitude) : null;
-        if (req.body.longitude !== undefined) advertisement.longitude = req.body.longitude ? Number(req.body.longitude) : null;
+        if (req.body.latitude !== undefined) {
+            advertisement.latitude = (req.body.latitude !== '' && req.body.latitude !== null && !isNaN(Number(req.body.latitude))) ? Number(req.body.latitude) : null;
+        }
+        if (req.body.longitude !== undefined) {
+            advertisement.longitude = (req.body.longitude !== '' && req.body.longitude !== null && !isNaN(Number(req.body.longitude))) ? Number(req.body.longitude) : null;
+        }
         if (req.body.active !== undefined) advertisement.active = String(req.body.active) === 'true' || req.body.active === true;
 
         // References

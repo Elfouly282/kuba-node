@@ -400,6 +400,26 @@ body {
     z-index: 70;
 }
 
+/* ─── Leaflet Map in Modals ─── */
+#ad-map-picker {
+    position: relative;
+    z-index: 1;
+}
+
+#ad-map-picker .leaflet-pane {
+    z-index: 1;
+}
+
+#ad-map-picker .leaflet-top,
+#ad-map-picker .leaflet-bottom {
+    z-index: 2;
+}
+
+.kuba-map-marker-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
 /* Toasts */
 #toast-container {
     position: fixed;
