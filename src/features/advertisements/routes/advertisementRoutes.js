@@ -3,6 +3,7 @@ const router = express.Router();
 
 const {
     getAll,
+    search,
     getOne,
     create,
     update,
@@ -18,6 +19,8 @@ const {
 } = require('../middleware/advertisementMiddleware');
 
 router.get('/', getAll);
+router.get('/search', search);
+router.post('/search', search);
 router.get('/:id', validateAdvertisementId, getOne);
 router.post('/', protect, restrictTo('admin'), ...uploadSingle('image', 'advertisements'), validateCreateAdvertisement, create);
 router.patch('/:id', protect, restrictTo('admin'), validateAdvertisementId, ...uploadSingle('image', 'advertisements'), validateUpdateAdvertisement, update);

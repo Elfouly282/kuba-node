@@ -24,6 +24,10 @@
         "advertisementCreated": "تم إنشاء الإعلان بنجاح.",
         "advertisementUpdated": "تم تحديث الإعلان بنجاح.",
         "advertisementDeleted": "تم حذف الإعلان بنجاح.",
+        "cityCreated": "تم إنشاء المدينة بنجاح.",
+        "cityUpdated": "تم تحديث المدينة بنجاح.",
+        "cityDeleted": "تم حذف المدينة بنجاح.",
+        "citySelected": "تم اختيار المدينة بنجاح.",
         "regionCreated": "تم إنشاء المنطقة بنجاح.",
         "regionUpdated": "تم تحديث المنطقة بنجاح.",
         "regionDeleted": "تم حذف المنطقة بنجاح.",
@@ -68,6 +72,8 @@
         "invalidCategoryId": "معرف التصنيف المحدد غير صالح.",
         "invalidBannerId": "معرف البانر المحدد غير صالح.",
         "invalidPosition": "موضع البانر غير صالح. القيم المسموحة هي: top, center, bottom.",
+        "cityNotFound": "المدينة المطلوبة غير موجودة.",
+        "invalidCityId": "معرف المدينة المحدد غير صالح.",
         "regionNotFound": "المنطقة المطلوبة غير موجودة.",
         "invalidRegionId": "معرف المنطقة المحدد غير صالح.",
         "imageRequired": "الصورة مطلوبة (يرجى رفع ملف صورة أو توفير رابط الصورة)."
@@ -87,7 +93,12 @@
         "advertisementRequired": "معرف الإعلان مطلوب.",
         "positionRequired": "موضع البانر مطلوب.",
         "invalidPosition": "يجب أن يكون موضع البانر: top أو center أو bottom.",
+        "cityRequired": "معرف المدينة مطلوب.",
         "regionRequired": "معرف المنطقة مطلوب.",
-        "imageRequired": "الصورة مطلوبة."
+        "imageRequired": "الصورة مطلوبة.",
+        "datesRequired": "تاريخ البداية وتاريخ النهاية مطلوبان معًا.",
+        "invalidDateRange": "تاريخ النهاية لازم يكون بعد تاريخ البداية.",
+        "invalidDuration": "المدة لازم تكون رقم أكبر من صفر.",
+        "invalidGuests": "عدد الضيوف لازم يكون رقم صحيح أكبر من صفر."
     }
 }

@@ -3,6 +3,7 @@ const User = require('../../../../src/features/auth/models/userModel');
 const OnboardingScreen = require('../../../../src/features/onboarding/models/onboardingScreenModel');
 const Category = require('../../../../src/features/categories/models/categoryModel');
 const Banner = require('../../../../src/features/banners/models/bannerModel');
+const City = require('../../../../src/features/cities/models/cityModel');
 const Region = require('../../../../src/features/regions/models/regionModel');
 const Advertisement = require('../../../../src/features/advertisements/models/advertisementModel');
 const UnitType = require('../../../../src/features/unit-types/models/unitTypeModel');
@@ -89,6 +90,7 @@ exports.getUserStats = async (_req, res, next) => {
                     totalOnboarding: 0,
                     totalCategories: 0,
                     totalBanners: 0,
+                    totalCities: 0,
                     totalRegions: 0,
                     totalAdvertisements: 0,
                     totalUnitTypes: 0,
@@ -111,6 +113,7 @@ exports.getUserStats = async (_req, res, next) => {
             totalOnboarding,
             totalCategories,
             totalBanners,
+            totalCities,
             totalRegions,
             totalAdvertisements,
             totalUnitTypes,
@@ -126,6 +129,7 @@ exports.getUserStats = async (_req, res, next) => {
             OnboardingScreen.countDocuments().setOptions({ includeInactive: true }),
             Category.countDocuments(),
             Banner.countDocuments(),
+            City.countDocuments(),
             Region.countDocuments(),
             Advertisement.countDocuments(),
             UnitType.countDocuments(),
@@ -244,6 +248,7 @@ exports.getUserStats = async (_req, res, next) => {
                 totalOnboarding,
                 totalCategories,
                 totalBanners,
+                totalCities: totalCities || 0,
                 totalRegions,
                 totalAdvertisements,
                 totalUnitTypes: totalUnitTypes || 0,

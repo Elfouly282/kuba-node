@@ -22,6 +22,8 @@ const userRoutes = require('./features/users/routes/userRoutes');
 const categoryRoutes = require('./features/categories/routes/categoryRoutes');
 const bannerRoutes = require('./features/banners/routes/bannerRoutes');
 const advertisementRoutes = require('./features/advertisements/routes/advertisementRoutes');
+const searchRoutes = require('../src/features/search/routes/searchRoutes');
+const cityRoutes = require('./features/cities/routes/cityRoutes');
 const regionRoutes = require('./features/regions/routes/regionRoutes');
 const unitTypeRoutes = require('./features/unit-types/routes/unitTypeRoutes');
 const bookingRoutes = require('./features/bookings/routes/bookingRoutes');
@@ -56,6 +58,7 @@ app.use('/api/v1/admin/users', userRoutes);
 app.use('/api/v1/admin/categories', categoryRoutes);
 app.use('/api/v1/admin/banners', bannerRoutes);
 app.use('/api/v1/admin/advertisements', advertisementRoutes);
+app.use('/api/v1/admin/cities', cityRoutes);
 app.use('/api/v1/admin/regions', regionRoutes);
 app.use('/api/v1/admin/unit-types', unitTypeRoutes);
 app.use('/api/v1/admin/bookings', bookingRoutes);
@@ -63,7 +66,9 @@ app.use('/api/v1/admin/bookings', bookingRoutes);
 // Mirror routes under client-style paths for dashboard convenience
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/banners', bannerRoutes);
+app.use('/api/v1/search', searchRoutes);
 app.use('/api/v1/advertisements', advertisementRoutes);
+app.use('/api/v1/cities', cityRoutes);
 app.use('/api/v1/regions', regionRoutes);
 app.use('/api/v1/unit-types', unitTypeRoutes);
 app.use('/api/v1/bookings', bookingRoutes);
@@ -85,21 +90,27 @@ app.all('*splat', (req, _res, next) => {
 
 app.use(globalErrorHandler);
 
-const PORT = process.env.ADMIN_PORT || 4000;
+const PORT = process.env.ADMIN_PORT || 3001;
+
 const server = app.listen(PORT, () => {
-    console.log(`Admin server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-    console.log(`Admin Dashboard available at: http://localhost:${PORT}/admin`);
+    console.log(`ADMIN SERVER STARTED ON PORT ${PORT}`);
+    console.log(`Admin Server running in ${process.env.NODE_ENV} mode`);
 });
 
-process.on('unhandledRejection', (err) => {
-    console.error('UNHANDLED REJECTION', err.name, err.message);
-    server.close(() => process.exit(1));
+server.on('error', (error) => {
+    console.error('ADMIN SERVER LISTEN ERROR:', error.stack || error);
 });
 
-process.on('uncaughtException', (err) => {
-    console.error('UNCAUGHT EXCEPTION', err.name, err.message);
+process.on('unhandledRejection', (error) => {
+    console.error('ADMIN UNHANDLED REJECTION:', error?.stack || error);
+    server.close(() => {
+        process.exit(1);
+    });
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('ADMIN UNCAUGHT EXCEPTION:', error.stack || error);
     process.exit(1);
 });
 
 module.exports = app;
-

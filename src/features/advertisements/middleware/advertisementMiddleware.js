@@ -174,7 +174,7 @@ const validateAdvertisementId = (req, _res, next) => {
 
 const validateCreateAdvertisement = async (req, res, next) => {
     try {
-        const { title, category, unitType, type, region } = req.body;
+        const { title, category, unitType, type, region, city } = req.body;
 
         if (!title || !title.trim()) {
             return next(new APIError('validation.titleRequired', 400));
@@ -190,6 +190,10 @@ const validateCreateAdvertisement = async (req, res, next) => {
                 return next(new APIError('errors.categoryNotFound', 400));
             }
             validCategory = catExists._id;
+        }
+
+        if (city && !mongoose.Types.ObjectId.isValid(city)) {
+            return next(new APIError('errors.invalidCityId', 400));
         }
 
         if (region && !mongoose.Types.ObjectId.isValid(region)) {
@@ -257,6 +261,10 @@ const validateUpdateAdvertisement = async (req, res, next) => {
 
         if (req.body.category && !mongoose.Types.ObjectId.isValid(req.body.category)) {
             return next(new APIError('errors.invalidCategoryId', 400));
+        }
+
+        if (req.body.city && !mongoose.Types.ObjectId.isValid(req.body.city)) {
+            return next(new APIError('errors.invalidCityId', 400));
         }
 
         if (req.body.region && !mongoose.Types.ObjectId.isValid(req.body.region)) {

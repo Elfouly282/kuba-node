@@ -96,6 +96,12 @@ const advertisementSchema = new mongoose.Schema(
             default: null,
             index: true,
         },
+        city: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'City',
+            default: null,
+            index: true,
+        },
         region: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Region',
@@ -191,6 +197,7 @@ advertisementSchema.pre('validate', function (next) {
 advertisementSchema.index({ category: 1, active: 1, 'pricing.finalPrice': 1 });
 advertisementSchema.index({ unitType: 1, active: 1, 'pricing.finalPrice': 1 });
 advertisementSchema.index({ region: 1, active: 1 });
+advertisementSchema.index({ city: 1, active: 1 });
 advertisementSchema.index({ title: 'text', description: 'text', location: 'text', address: 'text' });
 
 module.exports = mongoose.model('Advertisement', advertisementSchema);

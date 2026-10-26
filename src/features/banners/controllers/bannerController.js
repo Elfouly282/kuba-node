@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const Banner = require('../models/bannerModel');
 const Advertisement = require('../../advertisements/models/advertisementModel');
 const Region = require('../../regions/models/regionModel');
+const City = require('../../cities/models/cityModel');
 const APIError = require('../../../utils/apiError');
 const { getUploadsRoot } = require('../../../config/uploadsPath');
 const { getImageUrl, getRelativeImagePath } = require('../../../utils/imageUrl');
@@ -26,6 +27,15 @@ const formatBanner = (doc) => {
         image: getImageUrl(obj.image),
         position: obj.position || 'top',
         advertisementId: (obj.advertisementId?._id || obj.advertisementId || '').toString(),
+        city: obj.city
+            ? (typeof obj.city === 'object' && obj.city._id
+                ? {
+                    id: obj.city._id.toString(),
+                    name: obj.city.name,
+                    image: obj.city.image ? getImageUrl(obj.city.image) : '',
+                }
+                : obj.city.toString())
+            : null,
         region: obj.region
             ? (typeof obj.region === 'object' && obj.region._id
                 ? {
@@ -50,6 +60,21 @@ exports.getAll = async (req, res, next) => {
         }
 
         const andConditions = [];
+
+        const cityParam = req.query.city || req.query.cityId;
+        if (cityParam && mongoose.Types.ObjectId.isValid(cityParam)) {
+            if (req.query.strict === 'true') {
+                andConditions.push({ city: cityParam });
+            } else {
+                andConditions.push({
+                    $or: [
+                        { city: cityParam },
+                        { city: null },
+                        { city: { $exists: false } },
+                    ],
+                });
+            }
+        }
 
         const regionParam = req.query.region || req.query.regionId;
         if (regionParam && mongoose.Types.ObjectId.isValid(regionParam)) {
@@ -87,6 +112,7 @@ exports.getAll = async (req, res, next) => {
         const filter = andConditions.length > 0 ? { $and: andConditions } : {};
 
         const rawBanners = await Banner.find(filter)
+            .populate('city', 'name image')
             .populate('region', 'name image')
             .sort({ createdAt: -1 });
 
@@ -108,7 +134,9 @@ exports.getOne = async (req, res, next) => {
             return next(new APIError('errors.invalidBannerId', 400));
         }
 
-        const banner = await Banner.findById(req.params.id).populate('region', 'name image');
+        const banner = await Banner.findById(req.params.id)
+            .populate('city', 'name image')
+            .populate('region', 'name image');
         if (!banner) {
             return next(new APIError('errors.bannerNotFound', 404));
         }
@@ -140,6 +168,19 @@ exports.create = async (req, res, next) => {
             return next(new APIError('errors.advertisementNotFound', 404));
         }
 
+        let city = null;
+        if (req.body.city && req.body.city.toString().trim() !== '') {
+            const cId = req.body.city.toString().trim();
+            if (!mongoose.Types.ObjectId.isValid(cId)) {
+                return next(new APIError('errors.invalidCityId', 400));
+            }
+            const cityExists = await City.findById(cId);
+            if (!cityExists) {
+                return next(new APIError('errors.cityNotFound', 404));
+            }
+            city = cId;
+        }
+
         let region = null;
         if (req.body.region && req.body.region.toString().trim() !== '') {
             const regId = req.body.region.toString().trim();
@@ -151,6 +192,9 @@ exports.create = async (req, res, next) => {
                 return next(new APIError('errors.regionNotFound', 404));
             }
             region = regId;
+            if (!city && regExists.city) {
+                city = regExists.city;
+            }
         }
 
         let position = 'top';
@@ -177,10 +221,13 @@ exports.create = async (req, res, next) => {
             image,
             advertisementId,
             position,
+            city,
             region,
         });
 
-        const populated = await Banner.findById(banner._id).populate('region', 'name image');
+        const populated = await Banner.findById(banner._id)
+            .populate('city', 'name image')
+            .populate('region', 'name image');
 
         res.status(201).json({
             status: 'success',
@@ -221,6 +268,22 @@ exports.update = async (req, res, next) => {
             banner.advertisementId = newAdId;
         }
 
+        if (req.body.city !== undefined) {
+            const newCity = req.body.city ? req.body.city.toString().trim() : '';
+            if (newCity && newCity !== 'null' && newCity !== '') {
+                if (!mongoose.Types.ObjectId.isValid(newCity)) {
+                    return next(new APIError('errors.invalidCityId', 400));
+                }
+                const cityExists = await City.findById(newCity);
+                if (!cityExists) {
+                    return next(new APIError('errors.cityNotFound', 404));
+                }
+                banner.city = newCity;
+            } else {
+                banner.city = null;
+            }
+        }
+
         if (req.body.region !== undefined) {
             const newRegion = req.body.region ? req.body.region.toString().trim() : '';
             if (newRegion && newRegion !== 'null' && newRegion !== '') {
@@ -232,6 +295,9 @@ exports.update = async (req, res, next) => {
                     return next(new APIError('errors.regionNotFound', 404));
                 }
                 banner.region = newRegion;
+                if (!banner.city && regExists.city) {
+                    banner.city = regExists.city;
+                }
             } else {
                 banner.region = null;
             }
@@ -258,7 +324,9 @@ exports.update = async (req, res, next) => {
 
         await banner.save();
 
-        const populated = await Banner.findById(banner._id).populate('region', 'name image');
+        const populated = await Banner.findById(banner._id)
+            .populate('city', 'name image')
+            .populate('region', 'name image');
 
         res.status(200).json({
             status: 'success',

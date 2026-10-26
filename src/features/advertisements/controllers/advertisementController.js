@@ -6,10 +6,12 @@ const UnitType = require('../../unit-types/models/unitTypeModel');
 const UnitTypeAttribute = require('../../unit-types/models/unitTypeAttributeModel');
 const Category = require('../../categories/models/categoryModel');
 const Region = require('../../regions/models/regionModel');
+const City = require('../../cities/models/cityModel');
 const APIError = require('../../../utils/apiError');
 const { getUploadsRoot } = require('../../../config/uploadsPath');
 const { getImageUrl, getRelativeImagePath, deleteImageFile } = require('../../../utils/imageUrl');
-const { isPointInPolygon, getPolygonBoundingBox, findRegionForCoordinates } = require('../../../utils/geospatial');
+const { findRegionForCoordinates } = require('../../../utils/geospatial');
+const { searchAdvertisements } = require('../../search/listingSearch');
 
 const formatAdvertisement = (doc) => {
     if (!doc) return null;
@@ -23,6 +25,9 @@ const formatAdvertisement = (doc) => {
 
     if (obj.category && typeof obj.category === 'object' && obj.category.image) {
         obj.category.image = getImageUrl(obj.category.image);
+    }
+    if (obj.city && typeof obj.city === 'object' && obj.city.image) {
+        obj.city.image = getImageUrl(obj.city.image);
     }
     if (obj.region && typeof obj.region === 'object' && obj.region.image) {
         obj.region.image = getImageUrl(obj.region.image);
@@ -45,6 +50,18 @@ const formatAdvertisement = (doc) => {
 
 const { validateAttributes, buildPricingData } = require('../middleware/advertisementMiddleware');
 
+const mergeSearchInput = (req) => {
+    const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
+    return { ...req.query, ...body };
+};
+
+const presentAdvertisements = (advertisements, availability) => advertisements.map((ad) => {
+    const obj = formatAdvertisement(ad);
+    const slot = availability && availability[String(ad._id)];
+    if (slot) obj.availability = slot;
+    return obj;
+});
+
 exports.getAll = async (req, res, next) => {
     try {
         if (mongoose.connection.readyState !== 1) {
@@ -56,123 +73,58 @@ exports.getAll = async (req, res, next) => {
             });
         }
 
-        const filter = {};
-
-        if (req.query.unitType && mongoose.Types.ObjectId.isValid(req.query.unitType)) {
-            filter.unitType = req.query.unitType;
-        } else if (req.query.type) {
-            const matchedUnitType = await UnitType.findOne({ slug: req.query.type });
-            if (matchedUnitType) {
-                filter.$or = [{ unitType: matchedUnitType._id }, { type: req.query.type }];
-            } else {
-                filter.type = req.query.type;
-            }
-        }
-
-        if (req.query.category && mongoose.Types.ObjectId.isValid(req.query.category)) {
-            filter.category = req.query.category;
-        }
-
-        const regionParam = req.query.region || req.query.regionId;
-        if (regionParam && mongoose.Types.ObjectId.isValid(regionParam)) {
-            const targetRegion = await Region.findById(regionParam);
-            if (targetRegion && targetRegion.points && targetRegion.points.length >= 3) {
-                const bbox = getPolygonBoundingBox(targetRegion.points);
-                if (bbox) {
-                    const geoCandidates = await Advertisement.find({
-                        latitude: { $gte: bbox.minLat, $lte: bbox.maxLat },
-                        longitude: { $gte: bbox.minLng, $lte: bbox.maxLng },
-                    }).select('_id latitude longitude');
-
-                    const matchedIds = geoCandidates
-                        .filter((a) => isPointInPolygon({ latitude: a.latitude, longitude: a.longitude }, targetRegion.points))
-                        .map((a) => a._id);
-
-                    if (matchedIds.length > 0) {
-                        filter.$or = [{ region: targetRegion._id }, { _id: { $in: matchedIds } }];
-                    } else {
-                        filter.region = targetRegion._id;
-                    }
-                } else {
-                    filter.region = targetRegion._id;
-                }
-            } else {
-                filter.region = regionParam;
-            }
-        }
-
-        if (req.query.active !== undefined) {
-            filter.active = req.query.active === 'true';
-        }
-
-        if (req.query.status) {
-            filter.status = req.query.status;
-        }
-
-        if (req.query.minPrice !== undefined || req.query.maxPrice !== undefined) {
-            filter['pricing.finalPrice'] = {};
-            if (req.query.minPrice !== undefined && !isNaN(Number(req.query.minPrice))) {
-                filter['pricing.finalPrice'].$gte = Number(req.query.minPrice);
-            }
-            if (req.query.maxPrice !== undefined && !isNaN(Number(req.query.maxPrice))) {
-                filter['pricing.finalPrice'].$lte = Number(req.query.maxPrice);
-            }
-        }
-
-        if (req.query.pricingUnit) {
-            filter['pricing.pricingUnit'] = req.query.pricingUnit;
-        }
-
-        Object.keys(req.query).forEach((qKey) => {
-            if (qKey.startsWith('attr_')) {
-                const attrKey = qKey.replace('attr_', '');
-                const val = req.query[qKey];
-                filter[`attributes.${attrKey}`] = !isNaN(Number(val)) ? Number(val) : val;
-            } else if (qKey.startsWith('attributes.')) {
-                const val = req.query[qKey];
-                filter[qKey] = !isNaN(Number(val)) ? Number(val) : val;
-            }
+        const result = await searchAdvertisements(mergeSearchInput(req), {
+            strict: false,
+            defaultPublic: false,
+            defaultLimit: 100,
         });
-
-        if (req.query.search && req.query.search.trim()) {
-            const regex = new RegExp(req.query.search.trim(), 'i');
-            filter.$or = [
-                { title: regex },
-                { description: regex },
-                { location: regex },
-                { address: regex },
-            ];
-        }
-
-        let sort = { createdAt: -1 };
-        if (req.query.sort) {
-            if (req.query.sort === 'price_asc') sort = { 'pricing.finalPrice': 1 };
-            else if (req.query.sort === 'price_desc') sort = { 'pricing.finalPrice': -1 };
-            else if (req.query.sort === 'oldest') sort = { createdAt: 1 };
-        }
-
-        const page = parseInt(req.query.page, 10) || 1;
-        const limit = parseInt(req.query.limit, 10) || 100;
-        const skip = (page - 1) * limit;
-
-        const [advertisements, totalCount] = await Promise.all([
-            Advertisement.find(filter)
-                .populate('category', 'name image')
-                .populate('region', 'name image')
-                .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
-                .sort(sort)
-                .skip(skip)
-                .limit(limit),
-            Advertisement.countDocuments(filter),
-        ]);
 
         res.status(200).json({
             status: 'success',
-            results: advertisements.length,
-            total: totalCount,
-            page,
-            totalPages: Math.ceil(totalCount / limit) || 1,
-            data: { advertisements: advertisements.map(formatAdvertisement) },
+            results: result.advertisements.length,
+            total: result.total,
+            page: result.page,
+            totalPages: result.totalPages,
+            data: {
+                advertisements: presentAdvertisements(result.advertisements, result.availability),
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.search = async (req, res, next) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(200).json({
+                status: 'success',
+                results: 0,
+                total: 0,
+                page: 1,
+                totalPages: 1,
+                data: { advertisements: [], filters: {} },
+                dbConnected: false,
+            });
+        }
+
+        const result = await searchAdvertisements(mergeSearchInput(req), {
+            strict: true,
+            defaultPublic: true,
+            defaultLimit: 20,
+            maxLimit: 100,
+        });
+
+        res.status(200).json({
+            status: 'success',
+            results: result.advertisements.length,
+            total: result.total,
+            page: result.page,
+            totalPages: result.totalPages,
+            data: {
+                filters: result.applied,
+                advertisements: presentAdvertisements(result.advertisements, result.availability),
+            },
         });
     } catch (err) {
         next(err);
@@ -187,6 +139,7 @@ exports.getOne = async (req, res, next) => {
 
         const advertisement = await Advertisement.findById(req.params.id)
             .populate('category', 'name image')
+            .populate('city', 'name image')
             .populate('region', 'name image')
             .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit');
 
@@ -301,12 +254,35 @@ exports.create = async (req, res, next) => {
         const parsedLat = (latitude !== undefined && latitude !== null && latitude !== '' && !isNaN(Number(latitude))) ? Number(latitude) : null;
         const parsedLng = (longitude !== undefined && longitude !== null && longitude !== '' && !isNaN(Number(longitude))) ? Number(longitude) : null;
 
+        let finalCity = (req.body.city && mongoose.Types.ObjectId.isValid(req.body.city)) ? req.body.city : null;
         let finalRegion = region && mongoose.Types.ObjectId.isValid(region) ? region : null;
-        if (!finalRegion && parsedLat !== null && parsedLng !== null) {
-            const activeRegions = await Region.find({ active: true, 'points.2': { $exists: true } });
-            const matchedRegion = findRegionForCoordinates(parsedLat, parsedLng, activeRegions);
-            if (matchedRegion) {
-                finalRegion = matchedRegion._id;
+
+        if (finalRegion && !finalCity) {
+            const regDoc = await Region.findById(finalRegion);
+            if (regDoc && regDoc.city) {
+                finalCity = regDoc.city;
+            }
+        }
+
+        if (parsedLat !== null && parsedLng !== null) {
+            if (!finalCity) {
+                const activeCities = await City.find({ active: true, 'points.2': { $exists: true } });
+                const matchedCity = findRegionForCoordinates(parsedLat, parsedLng, activeCities);
+                if (matchedCity) {
+                    finalCity = matchedCity._id;
+                }
+            }
+            if (!finalRegion) {
+                const regFilter = { active: true, 'points.2': { $exists: true } };
+                if (finalCity) regFilter.city = finalCity;
+                const activeRegions = await Region.find(regFilter);
+                const matchedRegion = findRegionForCoordinates(parsedLat, parsedLng, activeRegions);
+                if (matchedRegion) {
+                    finalRegion = matchedRegion._id;
+                    if (!finalCity && matchedRegion.city) {
+                        finalCity = matchedRegion.city;
+                    }
+                }
             }
         }
 
@@ -322,6 +298,7 @@ exports.create = async (req, res, next) => {
             latitude: parsedLat,
             longitude: parsedLng,
             category: validCategory,
+            city: finalCity,
             region: finalRegion,
             image: mainImage,
             images: imageList,
@@ -333,6 +310,7 @@ exports.create = async (req, res, next) => {
 
         const populated = await Advertisement.findById(advertisement._id)
             .populate('category', 'name image')
+            .populate('city', 'name image')
             .populate('region', 'name image')
             .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit');
 
@@ -381,16 +359,36 @@ exports.update = async (req, res, next) => {
             }
         }
 
+        if (req.body.city !== undefined) {
+            advertisement.city = mongoose.Types.ObjectId.isValid(req.body.city) ? req.body.city : null;
+        }
+
         if (req.body.region !== undefined) {
             advertisement.region = mongoose.Types.ObjectId.isValid(req.body.region) ? req.body.region : null;
+            if (advertisement.region && !advertisement.city) {
+                const regDoc = await Region.findById(advertisement.region);
+                if (regDoc && regDoc.city) {
+                    advertisement.city = regDoc.city;
+                }
+            }
         } else if (req.body.latitude !== undefined || req.body.longitude !== undefined) {
             const latToCheck = advertisement.latitude;
             const lngToCheck = advertisement.longitude;
             if (latToCheck !== null && lngToCheck !== null) {
-                const activeRegions = await Region.find({ active: true, 'points.2': { $exists: true } });
+                if (!advertisement.city) {
+                    const activeCities = await City.find({ active: true, 'points.2': { $exists: true } });
+                    const matchedCity = findRegionForCoordinates(latToCheck, lngToCheck, activeCities);
+                    if (matchedCity) advertisement.city = matchedCity._id;
+                }
+                const regFilter = { active: true, 'points.2': { $exists: true } };
+                if (advertisement.city) regFilter.city = advertisement.city;
+                const activeRegions = await Region.find(regFilter);
                 const matchedRegion = findRegionForCoordinates(latToCheck, lngToCheck, activeRegions);
                 if (matchedRegion) {
                     advertisement.region = matchedRegion._id;
+                    if (!advertisement.city && matchedRegion.city) {
+                        advertisement.city = matchedRegion.city;
+                    }
                 }
             }
         }
@@ -493,6 +491,7 @@ exports.update = async (req, res, next) => {
 
         const populated = await Advertisement.findById(advertisement._id)
             .populate('category', 'name image')
+            .populate('city', 'name image')
             .populate('region', 'name image')
             .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit');
 

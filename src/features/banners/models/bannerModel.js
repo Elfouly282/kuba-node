@@ -23,10 +23,17 @@ const bannerSchema = new mongoose.Schema(
             lowercase: true,
             index: true,
         },
+        city: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'City',
+            default: null,
+            index: true,
+        },
         region: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Region',
             default: null,
+            index: true,
         },
     },
     {

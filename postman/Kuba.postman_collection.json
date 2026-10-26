@@ -2,14 +2,15 @@
   "info": {
     "name": "Kuba",
     "_postman_id": "kuba-v1",
-    "description": "Kuba API collection. Grouped by screen/feature.",
+    "description": "Kuba user API. Public reads plus the logged-in user account and bookings. No admin endpoints.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "https://kuba-app.com/api/v1",
-      "type": "string"
+      "type": "string",
+      "description": "API base URL (Production: https://kuba-app.com/api/v1 | Local: http://localhost:3000/api/v1)"
     },
     {
       "key": "token",
@@ -22,6 +23,12 @@
       "value": "",
       "type": "string",
       "description": "Reset token — set automatically after verify-reset-otp"
+    },
+    {
+      "key": "cityId",
+      "value": "6ad616031ddbe497b5dd4416",
+      "type": "string",
+      "description": "City ID (Sahl Hasheesh: 6ad616031ddbe497b5dd4416)"
     }
   ],
   "item": [
@@ -52,12 +59,32 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/banners",
+              "raw": "{{baseUrl}}/banners?city={{cityId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "banners"
+              ],
+              "query": [
+                {
+                  "key": "city",
+                  "value": "{{cityId}}",
+                  "description": "Filter banners by City ID (e.g. Sahl Hasheesh)",
+                  "disabled": false
+                },
+                {
+                  "key": "region",
+                  "value": "<REGION_ID>",
+                  "description": "Filter banners by Region ID",
+                  "disabled": true
+                },
+                {
+                  "key": "position",
+                  "value": "top",
+                  "description": "Filter by position (top, center, bottom)",
+                  "disabled": true
+                }
               ]
             },
             "description": "Returns all banners with full image URLs. Supports optional query parameters: position (top, center, bottom) and region (regionId)."
@@ -533,6 +560,42 @@
               ]
             },
             {
+              "name": "Select City (Favorite City)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/select-city",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "select-city"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"cityId\": \"{{cityId}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Saves the user's selected/favorite city. Supports cityId in body or query param."
+              }
+            },
+            {
               "name": "Select Region",
               "request": {
                 "method": "POST",
@@ -628,8 +691,130 @@
       ]
     },
     {
+      "name": "Cities",
+      "description": "Cities the user can browse. Each city can contain sub-regions.",
+      "item": [
+        {
+          "name": "Get All Cities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cities"
+              ],
+              "query": [
+                {
+                  "key": "active",
+                  "value": "true",
+                  "description": "Filter by active status (true/false)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Returns all cities with their images, colors, centers, points, and regions count."
+          }
+        },
+        {
+          "name": "Get One City",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cities/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cities",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{cityId}}",
+                  "description": "City ObjectId (e.g. Sahl Hasheesh: 6ad616031ddbe497b5dd4416)"
+                }
+              ]
+            },
+            "description": "Returns details of a single city including its zone points, center, and regions count."
+          }
+        },
+        {
+          "name": "Get City Regions (Sub-Areas)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cities/:id/regions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cities",
+                ":id",
+                "regions"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{cityId}}",
+                  "description": "City ObjectId"
+                }
+              ],
+              "query": [
+                {
+                  "key": "active",
+                  "value": "true",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Returns all sub-regions/areas belonging to this city (e.g., Jamaran, Azzurra, Old Town, Al Saraya, Al Andalous, Al Qasr, Piazza)."
+          }
+        },
+        {
+          "name": "Get City Screen Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cities/:id/data?position=top",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cities",
+                ":id",
+                "data"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{cityId}}",
+                  "description": "City ObjectId (or pass in query ?cityId=...)"
+                }
+              ],
+              "query": [
+                {
+                  "key": "position",
+                  "value": "top",
+                  "description": "Filter banners by position: top, center, bottom"
+                }
+              ]
+            },
+            "description": "Returns aggregated data for the City screen: city details, list of sub-regions inside the city, city-specific banners, chalets, all advertisements, and categories."
+          }
+        }
+      ]
+    },
+    {
       "name": "Regions",
-      "description": "Public reads. Writes require an admin Bearer token (dashboard uses /admin/regions). A region zone is a polygon in points; saving 3 or more points also stores center and a GeoJSON boundaries polygon, and assigns advertisements whose coordinates fall inside that zone.",
+      "description": "Endpoints for sub-regions and areas (e.g. Jamaran, Azzurra, Old Town) belonging to a parent City (e.g. Sahl Hasheesh).",
       "item": [
         {
           "name": "Get All Regions",
@@ -637,7 +822,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/regions",
+              "raw": "{{baseUrl}}/regions?city={{cityId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -649,6 +834,12 @@
                   "key": "active",
                   "value": "true",
                   "disabled": true
+                },
+                {
+                  "key": "city",
+                  "value": "{{cityId}}",
+                  "description": "Filter regions by parent City ID (e.g. Sahl Hasheesh)",
+                  "disabled": false
                 }
               ]
             },
@@ -727,154 +918,67 @@
             },
             "description": "Same payload as Get Region Data (by query param). Region id is in the path. Advertisements include listings inside the zone, not only listings whose region field matches."
           }
-        },
-        {
-          "name": "Create Region (zone)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "description": "Admin token"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/admin/regions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "admin",
-                "regions"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"North Coast\",\n  \"order\": 1,\n  \"active\": true,\n  \"color\": \"#2D4F2E\",\n  \"points\": [\n    { \"latitude\": 31.35, \"longitude\": 27.2 },\n    { \"latitude\": 31.35, \"longitude\": 28.9 },\n    { \"latitude\": 30.85, \"longitude\": 28.9 },\n    { \"latitude\": 30.85, \"longitude\": 27.2 }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "description": "Admin only. points is an array of {latitude, longitude} (also accepts lat/lng, or a JSON string in multipart). With 3 or more points the server stores center and boundaries and sets region on advertisements inside the polygon. color defaults to #2D4F2E. Optional image: multipart field image, or a URL in image. name is required."
-          }
-        },
-        {
-          "name": "Update Region (zone)",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "description": "Admin token"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/admin/regions/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "admin",
-                "regions",
-                ":id"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "<REGION_ID>"
-                }
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"North Coast\",\n  \"color\": \"#1B4332\",\n  \"points\": [\n    { \"latitude\": 31.40, \"longitude\": 27.1 },\n    { \"latitude\": 31.40, \"longitude\": 29.0 },\n    { \"latitude\": 30.80, \"longitude\": 29.0 },\n    { \"latitude\": 30.80, \"longitude\": 27.1 }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "description": "Admin only. Send only fields to change. Updating points rebuilds center and boundaries and reassigns advertisements that fall inside the new zone. An empty points array clears the zone."
-          }
         }
       ]
     },
     {
       "name": "Advertisements",
-      "description": "Public reads. Filtering by region includes listings assigned to that region and, when the region has a zone of at least 3 points, listings whose coordinates fall inside the zone. On admin create/update, if region is omitted and latitude plus longitude are sent, the server assigns the active region whose zone contains that point.",
+      "description": "Listings for the user: search, list, and open one advertisement. Filters can be used together or one at a time.",
       "item": [
         {
-          "name": "Get All Advertisements",
+          "name": "Search Listings",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/advertisements",
+              "raw": "{{baseUrl}}/search?category=<CATEGORY_ID>&guests=4&city={{cityId}}&regions=<REGION_ID>&startDate=2026-11-01&endDate=2026-11-10&duration=3",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "advertisements"
+                "search"
               ],
               "query": [
                 {
                   "key": "category",
                   "value": "<CATEGORY_ID>",
-                  "disabled": true
+                  "description": "Optional. One category id, or several separated by commas. Matched listings must be in one of them."
                 },
                 {
-                  "key": "region",
+                  "key": "guests",
+                  "value": "4",
+                  "description": "Optional. Whole number. Listing capacity (guests_count, max_passengers, or passengers) must be at least this number."
+                },
+                {
+                  "key": "city",
+                  "value": "{{cityId}}",
+                  "description": "Optional. One city id, or several separated by commas. A listing matches if it belongs to one of the cities or its coordinates fall inside that city zone."
+                },
+                {
+                  "key": "regions",
                   "value": "<REGION_ID>",
-                  "disabled": true,
-                  "description": "Region id. Also accepts regionId. Matches the region field and coordinates inside the zone."
+                  "description": "Optional. One or more region ids, comma-separated. A listing matches if it belongs to one of the regions or its coordinates fall inside that region zone."
                 },
                 {
-                  "key": "unitType",
-                  "value": "<UNIT_TYPE_ID>",
+                  "key": "startDate",
+                  "value": "2026-11-01",
+                  "description": "Optional, together with endDate. Start of the time window."
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-11-10",
+                  "description": "Optional, together with startDate. End of the time window."
+                },
+                {
+                  "key": "duration",
+                  "value": "3",
+                  "description": "Optional. How long the stay must fit inside the window, in the listing pricing unit (hours for per_hour, nights/days otherwise). If dates are sent without duration, the whole window must be free. If duration is sent without dates, listings whose minimum stay is longer than this value are excluded."
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Optional text match on title, description, location, and address.",
                   "disabled": true
-                },
-                {
-                  "key": "type",
-                  "value": "chalet",
-                  "disabled": true
-                },
-                {
-                  "key": "active",
-                  "value": "true",
-                  "disabled": true
-                },
-                {
-                  "key": "minPrice",
-                  "value": "100",
-                  "disabled": true
-                },
-                {
-                  "key": "maxPrice",
-                  "value": "5000",
-                  "disabled": true
-                },
-                {
-                  "key": "pricingUnit",
-                  "value": "per_night",
-                  "disabled": true
-                },
-                {
-                  "key": "sort",
-                  "value": "price_asc",
-                  "disabled": true,
-                  "description": "price_asc | price_desc | oldest"
                 },
                 {
                   "key": "page",
@@ -887,8 +991,64 @@
                   "disabled": true
                 },
                 {
+                  "key": "sort",
+                  "value": "price_asc",
+                  "description": "price_asc, price_desc, oldest, or newest (default).",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "الطلب الوحيد للسيرش داخل كولكشن Kuba. كل الفلاتر اختيارية وبتتجمع مع بعض. سيّب المربعات كلها معلّمة للبحث بكل المعايير، أو امسح العلامة من أي فلتر عشان تبحث بالباقي فقط. النتائج إعلانات منشورة ونشطة. لو فيه تاريخ، كل نتيجة فيها availability بأقرب فترة فاضية. نفس الطلب: GET /api/v1/search و GET /api/v1/advertisements/search."
+          }
+        },
+        {
+          "name": "Get All Advertisements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/advertisements?city={{cityId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "advertisements"
+              ],
+              "query": [
+                {
+                  "key": "city",
+                  "value": "{{cityId}}",
+                  "description": "Filter advertisements by City ID (e.g. Sahl Hasheesh)",
+                  "disabled": false
+                },
+                {
+                  "key": "region",
+                  "value": "<REGION_ID>",
+                  "description": "Filter advertisements by Region ID",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "chalet",
+                  "description": "Filter by advertisement type (chalet, apartment, villa, etc.)",
+                  "disabled": true
+                },
+                {
                   "key": "search",
                   "value": "",
+                  "description": "Search in title, location, and address",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "<CATEGORY_ID>",
+                  "description": "Filter by Category ID",
+                  "disabled": true
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "description": "Filter active status",
                   "disabled": true
                 }
               ]

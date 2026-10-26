@@ -42,6 +42,11 @@ const userSchema = new mongoose.Schema(
             enum: ['user', 'admin'],
             default: 'user',
         },
+        city: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'City',
+            default: null,
+        },
         region: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Region',

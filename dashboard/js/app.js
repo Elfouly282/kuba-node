@@ -285,6 +285,7 @@ const state = {
     categories: [],
     banners: [],
     advertisements: [],
+    cities: [],
     regions: [],
     unitTypes: [],
     selectedUnitTypeId: null,
@@ -294,7 +295,10 @@ const state = {
     editingCategoryId: null,
     editingBannerId: null,
     bannerPositionFilter: 'all',
+    editingCityId: null,
     editingRegionId: null,
+    locationSubTab: 'cities',
+    selectedCityFilter: '',
     editingAdvertisementId: null,
     editingUnitTypeId: null,
     editingAttributeId: null,
@@ -509,7 +513,7 @@ function loadCurrentTab() {
     } else if (state.currentTab === 'users') {
         loadUsers();
     } else if (state.currentTab === 'regions') {
-        loadRegions();
+        loadCitiesAndRegions();
     } else if (state.currentTab === 'unit-types') {
         loadUnitTypes();
     } else if (state.currentTab === 'advertisements') {
@@ -547,8 +551,10 @@ function renderStats() {
     if (statCategories) statCategories.textContent = s.totalCategories || 0;
     const statBanners = document.getElementById('stat-banners');
     if (statBanners) statBanners.textContent = s.totalBanners || 0;
+    const statCities = document.getElementById('stat-cities');
+    if (statCities) statCities.textContent = s.totalCities !== undefined ? s.totalCities : (state.cities?.length || 0);
     const statRegions = document.getElementById('stat-regions');
-    if (statRegions) statRegions.textContent = s.totalRegions || 0;
+    if (statRegions) statRegions.textContent = s.totalRegions !== undefined ? s.totalRegions : (state.regions?.length || 0);
     const statAds = document.getElementById('stat-advertisements');
     if (statAds) statAds.textContent = s.totalAdvertisements || 0;
     const statUnitTypes = document.getElementById('stat-unit-types');
@@ -1222,7 +1228,7 @@ function openAddBannerModal() {
     const posSelect = document.getElementById('banner-modal-position');
     if (posSelect) posSelect.value = 'top';
     populateBannerAdSelect();
-    populateRegionSelects();
+    populateLocationSelects();
     document.getElementById('banner-modal').classList.add('active');
 }
 
@@ -1234,7 +1240,7 @@ function openEditBannerModal(bannerId) {
     document.getElementById('banner-modal-title').textContent = `${t('edit')}: بانر (${bannerId.slice(-6)})`;
     
     populateBannerAdSelect();
-    populateRegionSelects();
+    populateLocationSelects();
     const select = document.getElementById('banner-modal-ad-select');
     const input = document.getElementById('banner-modal-ad-id');
     const adId = banner.advertisementId;
@@ -1243,6 +1249,13 @@ function openEditBannerModal(bannerId) {
 
     const posSelect = document.getElementById('banner-modal-position');
     if (posSelect) posSelect.value = banner.position || 'top';
+
+    const citySelect = document.getElementById('banner-modal-city-select');
+    if (citySelect) {
+        const cityId = typeof banner.city === 'object' && banner.city ? (banner.city.id || banner.city._id) : (banner.city || '');
+        citySelect.value = cityId || '';
+        onBannerModalCityChange();
+    }
 
     const regSelect = document.getElementById('banner-modal-region-select');
     if (regSelect) {
@@ -1267,6 +1280,7 @@ function openEditBannerModal(bannerId) {
 async function handleBannerFormSubmit(e) {
     e.preventDefault();
     const advertisementId = document.getElementById('banner-modal-ad-id').value.trim();
+    const city = document.getElementById('banner-modal-city-select')?.value.trim() || '';
     const region = document.getElementById('banner-modal-region-select')?.value.trim() || '';
     const position = document.getElementById('banner-modal-position')?.value || 'top';
     const imageFile = document.getElementById('banner-modal-image-file').files[0];
@@ -1283,12 +1297,13 @@ async function handleBannerFormSubmit(e) {
         payload = new FormData();
         payload.append('advertisementId', advertisementId);
         payload.append('position', position);
+        if (city) payload.append('city', city);
         if (region) payload.append('region', region);
         payload.append('image', imageFile);
     } else if (imageUrl) {
-        payload = JSON.stringify({ advertisementId, position, image: imageUrl, region: region || null });
+        payload = JSON.stringify({ advertisementId, position, image: imageUrl, city: city || null, region: region || null });
     } else if (state.editingBannerId) {
-        payload = JSON.stringify({ advertisementId, position, region: region || null });
+        payload = JSON.stringify({ advertisementId, position, city: city || null, region: region || null });
     } else {
         showToast('يرجى اختيار ملف صورة للبانر أو إدخال رابط الصورة المباشر', 'error');
         return;
@@ -1324,29 +1339,69 @@ async function deleteBanner(bannerId) {
     } catch (err) {}
 }
 
-// ─── REGIONS MANAGEMENT ───────────────────────────────────────────────────────
+// ─── CITIES & REGIONS MANAGEMENT ───────────────────────────────────────────────
 
-async function loadRegions() {
+async function loadCitiesAndRegions() {
     try {
-        const res = await apiFetch('/api/v1/admin/regions');
-        state.regions = res.data?.regions || [];
+        const [citiesRes, regionsRes] = await Promise.all([
+            apiFetch('/api/v1/admin/cities'),
+            apiFetch('/api/v1/admin/regions')
+        ]);
+        state.cities = citiesRes.data?.cities || [];
+        state.regions = regionsRes.data?.regions || [];
+
+        renderCities();
         renderRegions();
-        populateRegionSelects();
+        populateLocationSelects();
     } catch (err) {
-        console.error('Error loading regions:', err);
+        console.error('Error loading cities and regions:', err);
     }
 }
 
-// ─── REGION ZONE MAP (POLYGONS / GEOFENCES) ────────────────────────────────────
-let regionZoneMap = null;
-let regionZonePoints = []; // [{ latitude, longitude }]
-let regionZoneMarkers = [];
-let regionZonePolygon = null;
-let regionZoneColor = '#2D4F2E';
+async function loadRegions() {
+    return loadCitiesAndRegions();
+}
 
-let regionPreviewMapInstance = null;
-let regionPreviewPolygon = null;
-let regionPreviewMarkers = [];
+function switchLocationSubTab(subTab) {
+    state.locationSubTab = subTab || 'cities';
+    const citiesBtn = document.getElementById('tab-btn-cities');
+    const regionsBtn = document.getElementById('tab-btn-regions');
+    const citiesPanel = document.getElementById('subtab-cities-panel');
+    const regionsPanel = document.getElementById('subtab-regions-panel');
+
+    if (subTab === 'regions') {
+        if (citiesBtn) {
+            citiesBtn.className = 'location-subtab-btn px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer';
+        }
+        if (regionsBtn) {
+            regionsBtn.className = 'location-subtab-btn active px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-[#2D4F2E] text-white shadow-sm cursor-pointer';
+        }
+        if (citiesPanel) citiesPanel.classList.add('hidden');
+        if (regionsPanel) regionsPanel.classList.remove('hidden');
+    } else {
+        if (citiesBtn) {
+            citiesBtn.className = 'location-subtab-btn active px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-[#2D4F2E] text-white shadow-sm cursor-pointer';
+        }
+        if (regionsBtn) {
+            regionsBtn.className = 'location-subtab-btn px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer';
+        }
+        if (citiesPanel) citiesPanel.classList.remove('hidden');
+        if (regionsPanel) regionsPanel.classList.add('hidden');
+    }
+}
+
+function filterRegionsByCity(cityId) {
+    state.selectedCityFilter = cityId || '';
+    const select = document.getElementById('regions-filter-city-select');
+    if (select) select.value = cityId || '';
+    switchLocationSubTab('regions');
+    renderRegions();
+}
+
+function onRegionFilterCityChanged() {
+    state.selectedCityFilter = document.getElementById('regions-filter-city-select')?.value || '';
+    renderRegions();
+}
 
 // Client-side Ray-Casting algorithm for Point-in-Polygon detection
 function isPointInsidePolygon(point, polygonPoints) {
@@ -1385,6 +1440,284 @@ function findRegionForPointClient(lat, lng, regions) {
     return null;
 }
 
+function findCityForPointClient(lat, lng, cities) {
+    if (!cities || !Array.isArray(cities)) return null;
+    for (const c of cities) {
+        if (c.active !== false && Array.isArray(c.points) && c.points.length >= 3) {
+            if (isPointInsidePolygon({ latitude: lat, longitude: lng }, c.points)) {
+                return c;
+            }
+        }
+    }
+    return null;
+}
+
+// ─── CITIES ZONE MAP (POLYGONS / GEOFENCES) ───────────────────────────────────
+let cityZoneMap = null;
+let cityZonePoints = []; // [{ latitude, longitude }]
+let cityZoneMarkers = [];
+let cityZonePolygon = null;
+let cityZoneColor = '#2D4F2E';
+
+function createCityVertexIcon(index) {
+    return L.divIcon({
+        className: 'kuba-vertex-icon',
+        html: `
+            <div style="background-color: ${cityZoneColor}; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 2px solid #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.35); cursor: grab;">
+                ${index}
+            </div>
+        `,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+    });
+}
+
+function initCityZoneMap() {
+    if (typeof L === 'undefined') return;
+    const container = document.getElementById('city-zone-map');
+    if (!container) return;
+
+    if (!cityZoneMap) {
+        cityZoneMap = L.map('city-zone-map', {
+            center: [27.041086, 33.891272],
+            zoom: 11,
+            scrollWheelZoom: true,
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors',
+        }).addTo(cityZoneMap);
+
+        cityZoneMap.on('click', (e) => {
+            addCityZonePoint(e.latlng.lat, e.latlng.lng);
+        });
+    }
+
+    setTimeout(() => {
+        if (cityZoneMap) cityZoneMap.invalidateSize();
+    }, 200);
+}
+
+function addCityZonePoint(lat, lng) {
+    const numLat = Number(Number(lat).toFixed(6));
+    const numLng = Number(Number(lng).toFixed(6));
+
+    cityZonePoints.push({ latitude: numLat, longitude: numLng });
+    const idx = cityZonePoints.length;
+
+    const marker = L.marker([numLat, numLng], {
+        draggable: true,
+        icon: createCityVertexIcon(idx)
+    }).addTo(cityZoneMap);
+
+    const pointIndex = cityZonePoints.length - 1;
+    marker.on('drag', (ev) => {
+        const pos = ev.target.getLatLng();
+        cityZonePoints[pointIndex] = {
+            latitude: Number(pos.lat.toFixed(6)),
+            longitude: Number(pos.lng.toFixed(6))
+        };
+        redrawCityZonePolygon();
+    });
+
+    cityZoneMarkers.push(marker);
+    redrawCityZonePolygon();
+}
+
+function redrawCityZonePolygon() {
+    if (!cityZoneMap) return;
+
+    if (cityZonePolygon) {
+        cityZoneMap.removeLayer(cityZonePolygon);
+        cityZonePolygon = null;
+    }
+
+    cityZoneMarkers.forEach((m, idx) => {
+        m.setIcon(createCityVertexIcon(idx + 1));
+    });
+
+    if (cityZonePoints.length >= 3) {
+        const latLngs = cityZonePoints.map(p => [p.latitude, p.longitude]);
+        cityZonePolygon = L.polygon(latLngs, {
+            color: cityZoneColor,
+            weight: 3,
+            fillColor: cityZoneColor,
+            fillOpacity: 0.35,
+        }).addTo(cityZoneMap);
+    } else if (cityZonePoints.length === 2) {
+        const latLngs = cityZonePoints.map(p => [p.latitude, p.longitude]);
+        cityZonePolygon = L.polyline(latLngs, {
+            color: cityZoneColor,
+            weight: 2,
+            dashArray: '5, 5'
+        }).addTo(cityZoneMap);
+    }
+
+    const input = document.getElementById('city-modal-points');
+    if (input) input.value = JSON.stringify(cityZonePoints);
+
+    const badge = document.getElementById('city-zone-points-count');
+    const text = document.getElementById('city-zone-status-text');
+
+    if (badge) {
+        badge.textContent = `${cityZonePoints.length} نقاط`;
+        if (cityZonePoints.length >= 3) {
+            badge.className = 'badge badge-success text-[10px]';
+        } else {
+            badge.className = 'badge bg-slate-200 text-slate-700 text-[10px]';
+        }
+    }
+
+    if (text) {
+        if (cityZonePoints.length === 0) {
+            text.textContent = 'انقر على الخريطة لإضافة أول نقطة';
+        } else if (cityZonePoints.length < 3) {
+            text.textContent = `تم وضع ${cityZonePoints.length} نقطة (أضف ${3 - cityZonePoints.length} نقطة إضافية لتشكيل نطاق مغلق)`;
+        } else {
+            text.textContent = `تم تشكيل نطاق المدينة بنجاح (${cityZonePoints.length} نقاط) ✅`;
+        }
+    }
+}
+
+function undoLastCityZonePoint() {
+    if (cityZonePoints.length === 0) return;
+    cityZonePoints.pop();
+    const marker = cityZoneMarkers.pop();
+    if (marker && cityZoneMap) {
+        cityZoneMap.removeLayer(marker);
+    }
+    redrawCityZonePolygon();
+}
+
+function clearCityZone() {
+    cityZonePoints = [];
+    if (cityZoneMarkers && cityZoneMap) {
+        cityZoneMarkers.forEach(m => cityZoneMap.removeLayer(m));
+    }
+    cityZoneMarkers = [];
+    if (cityZonePolygon && cityZoneMap) {
+        cityZoneMap.removeLayer(cityZonePolygon);
+        cityZonePolygon = null;
+    }
+    redrawCityZonePolygon();
+}
+
+function updateCityZoneColor() {
+    const colorInput = document.getElementById('city-modal-color');
+    if (colorInput) {
+        cityZoneColor = colorInput.value || '#2D4F2E';
+        redrawCityZonePolygon();
+    }
+}
+
+function locateMeOnCityMap() {
+    if (!navigator.geolocation) {
+        showToast('تحديد الموقع غير مدعوم', 'error');
+        return;
+    }
+    showToast('جاري تحديد موقعك...', 'info');
+    navigator.geolocation.getCurrentPosition((pos) => {
+        if (cityZoneMap) {
+            cityZoneMap.setView([pos.coords.latitude, pos.coords.longitude], 12);
+            showToast('تم التوجه إلى موقعك على الخريطة', 'success');
+        }
+    }, () => {
+        showToast('تعذر الحصول على الموقع الجغرافي', 'error');
+    });
+}
+
+function promptQuickCityCircleZone() {
+    const inputRadius = prompt('أدخل نصف قطر الدائرة بالكيلومتر (مثال: 15):', '15');
+    if (!inputRadius) return;
+    const radiusKm = parseFloat(inputRadius);
+    if (isNaN(radiusKm) || radiusKm <= 0) {
+        showToast('يرجى إدخال نصف قطر صحيح', 'error');
+        return;
+    }
+
+    initCityZoneMap();
+    if (!cityZoneMap) return;
+
+    const center = cityZoneMap.getCenter();
+    const centerLat = center.lat;
+    const centerLng = center.lng;
+
+    clearCityZone();
+
+    const numPoints = 16;
+    const earthRadius = 6371;
+
+    for (let i = 0; i < numPoints; i++) {
+        const angle = (i * 360 / numPoints) * (Math.PI / 180);
+        const dLat = (radiusKm / earthRadius) * (180 / Math.PI);
+        const dLng = (radiusKm / (earthRadius * Math.cos(centerLat * Math.PI / 180))) * (180 / Math.PI);
+        const lat = centerLat + dLat * Math.cos(angle);
+        const lng = centerLng + dLng * Math.sin(angle);
+        addCityZonePoint(lat, lng);
+    }
+
+    if (cityZonePolygon) {
+        cityZoneMap.fitBounds(cityZonePolygon.getBounds());
+    }
+    showToast(`تم رسم دائرة بنصف قطر ${radiusKm} كم بنجاح (${numPoints} نقطة)`, 'success');
+}
+
+function goToCityCoordinates() {
+    const latInput = document.getElementById('city-nav-latitude');
+    const lngInput = document.getElementById('city-nav-longitude');
+    if (!latInput || !lngInput) return;
+
+    let latVal = latInput.value.trim();
+    let lngVal = lngInput.value.trim();
+
+    const parsed = parseCoordsString(`${latVal}, ${lngVal}`) || parseCoordsString(latVal) || parseCoordsString(lngVal);
+    if (parsed) {
+        latInput.value = parsed.lat;
+        lngInput.value = parsed.lng;
+        initCityZoneMap();
+        if (cityZoneMap) {
+            cityZoneMap.setView([parsed.lat, parsed.lng], 14);
+            addMapPulseEffect(cityZoneMap, parsed.lat, parsed.lng);
+        }
+        showToast(`📍 تم الانتقال لموقع الإحداثيات: ${parsed.lat}, ${parsed.lng}`, 'success');
+    } else {
+        showToast('يرجى إدخال خط عرض وطول صحيحين', 'error');
+    }
+}
+
+function addCityPointFromInputs() {
+    const latInput = document.getElementById('city-nav-latitude');
+    const lngInput = document.getElementById('city-nav-longitude');
+    if (!latInput || !lngInput) return;
+
+    let latVal = latInput.value.trim();
+    let lngVal = lngInput.value.trim();
+
+    const parsed = parseCoordsString(`${latVal}, ${lngVal}`) || parseCoordsString(latVal) || parseCoordsString(lngVal);
+    if (parsed) {
+        initCityZoneMap();
+        addCityZonePoint(parsed.lat, parsed.lng);
+        if (cityZoneMap) {
+            cityZoneMap.setView([parsed.lat, parsed.lng], cityZoneMap.getZoom());
+        }
+        showToast(`✅ تمت إضافة النقطة (${parsed.lat}, ${parsed.lng}) إلى نطاق المدينة`, 'success');
+    } else {
+        showToast('يرجى إدخال خط عرض وطول صحيحين لإضافة النقطة', 'error');
+    }
+}
+
+// ─── REGION ZONE MAP (POLYGONS / GEOFENCES) ────────────────────────────────────
+let regionZoneMap = null;
+let regionZonePoints = []; // [{ latitude, longitude }]
+let regionZoneMarkers = [];
+let regionZonePolygon = null;
+let regionZoneColor = '#2D4F2E';
+
+let regionPreviewMapInstance = null;
+let regionPreviewPolygon = null;
+let regionPreviewMarkers = [];
+
 function createVertexIcon(index) {
     return L.divIcon({
         className: 'kuba-vertex-icon',
@@ -1405,8 +1738,8 @@ function initRegionZoneMap() {
 
     if (!regionZoneMap) {
         regionZoneMap = L.map('region-zone-map', {
-            center: [30.0444, 31.2357],
-            zoom: 7,
+            center: [27.041086, 33.891272],
+            zoom: 12,
             scrollWheelZoom: true,
         });
 
@@ -1589,11 +1922,16 @@ function promptQuickCircleZone() {
     showToast(`تم رسم دائرة بنصف قطر ${radiusKm} كم بنجاح (${numPoints} نقطة)`, 'success');
 }
 
-async function openRegionZonePreviewModal(regionId) {
-    const region = state.regions.find(r => (r.id || r._id) === regionId);
-    if (!region) return;
+async function openZonePreviewModal(type, id) {
+    const isCity = type === 'city';
+    const item = isCity
+        ? state.cities.find(c => (c.id || c._id) === id)
+        : state.regions.find(r => (r.id || r._id) === id);
 
-    document.getElementById('region-zone-preview-title').textContent = `نطاق منطقة: ${region.name}`;
+    if (!item) return;
+
+    const titlePrefix = isCity ? 'نطاق مدينة' : 'نطاق منطقة';
+    document.getElementById('region-zone-preview-title').textContent = `${titlePrefix}: ${item.name}`;
     document.getElementById('region-zone-preview-modal').classList.add('active');
 
     setTimeout(async () => {
@@ -1603,8 +1941,8 @@ async function openRegionZonePreviewModal(regionId) {
 
         if (!regionPreviewMapInstance) {
             regionPreviewMapInstance = L.map('region-zone-preview-map', {
-                center: [30.0444, 31.2357],
-                zoom: 8,
+                center: [27.041086, 33.891272],
+                zoom: 12,
                 scrollWheelZoom: true,
             });
 
@@ -1623,23 +1961,45 @@ async function openRegionZonePreviewModal(regionId) {
         regionPreviewMarkers.forEach(m => regionPreviewMapInstance.removeLayer(m));
         regionPreviewMarkers = [];
 
-        const points = region.points || [];
+        const points = item.points || [];
         if (points.length >= 3) {
             const latLngs = points.map(p => [p.latitude, p.longitude]);
             regionPreviewPolygon = L.polygon(latLngs, {
-                color: region.color || '#2D4F2E',
+                color: item.color || '#2D4F2E',
                 weight: 3,
-                fillColor: region.color || '#2D4F2E',
-                fillOpacity: 0.35,
+                fillColor: item.color || '#2D4F2E',
+                fillOpacity: 0.25,
             }).addTo(regionPreviewMapInstance);
 
             regionPreviewMapInstance.fitBounds(regionPreviewPolygon.getBounds(), { padding: [25, 25] });
-        } else if (region.center && region.center.latitude) {
-            regionPreviewMapInstance.setView([region.center.latitude, region.center.longitude], 12);
+        } else if (item.center && item.center.latitude) {
+            regionPreviewMapInstance.setView([item.center.latitude, item.center.longitude], 12);
+        }
+
+        // If previewing a city, also display sub-regions boundaries inside it
+        if (isCity) {
+            const subRegions = state.regions.filter(r => (r.city?._id || r.city?.id || r.city) === id);
+            subRegions.forEach(sr => {
+                if (Array.isArray(sr.points) && sr.points.length >= 3) {
+                    const srLatLngs = sr.points.map(p => [p.latitude, p.longitude]);
+                    const srPoly = L.polygon(srLatLngs, {
+                        color: sr.color || '#C5A880',
+                        weight: 2,
+                        dashArray: '3, 3',
+                        fillColor: sr.color || '#C5A880',
+                        fillOpacity: 0.35,
+                    }).addTo(regionPreviewMapInstance);
+                    srPoly.bindTooltip(`<b>منطقة: ${sr.name}</b>`, { sticky: true });
+                    regionPreviewMarkers.push(srPoly);
+                }
+            });
         }
 
         try {
-            const res = await apiFetch(`/api/v1/admin/advertisements?region=${regionId}`, { silent: true });
+            const endpoint = isCity
+                ? `/api/v1/admin/advertisements?city=${id}`
+                : `/api/v1/admin/advertisements?region=${id}`;
+            const res = await apiFetch(endpoint, { silent: true });
             const ads = res?.data?.advertisements || [];
             document.getElementById('region-zone-preview-ads-count').textContent = `${ads.length} إعلان مرتبط بالنطاق`;
 
@@ -1656,26 +2016,129 @@ async function openRegionZonePreviewModal(regionId) {
     }, 250);
 }
 
-function renderRegions() {
-    const grid = document.getElementById('regions-grid');
-    const badge = document.getElementById('badge-regions-count');
-    if (badge) badge.textContent = `${state.regions.length} ${t('regions')}`;
+function openRegionZonePreviewModal(regionId) {
+    return openZonePreviewModal('region', regionId);
+}
+
+function renderCities() {
+    const grid = document.getElementById('cities-grid');
+    const badge = document.getElementById('badge-cities-count');
+    if (badge) badge.textContent = `${state.cities.length} مدينة`;
 
     if (!grid) return;
 
-    if (state.regions.length === 0) {
-        grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-xs">لا توجد مناطق مضافة حالياً. يمكنك إضافة منطقة جديدة بالضغط على زر "إضافة منطقة جديدة".</div>`;
+    if (state.cities.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-xs">لا توجد مدن مضافة حالياً. يمكنك إضافة مدينة جديدة بالضغط على زر "إضافة مدينة جديدة".</div>`;
         return;
     }
 
-    grid.innerHTML = state.regions.map(region => {
+    grid.innerHTML = state.cities.map(city => {
+        const cityId = city.id || city._id;
+        const imgSrc = city.image?.startsWith('http') ? city.image : (city.image ? `/uploads/${city.image}` : 'https://placehold.co/400x250?text=City+Image');
+        const isActive = city.active !== false;
+        const hasZone = Array.isArray(city.points) && city.points.length >= 3;
+
+        // Sub-regions count
+        const subRegions = state.regions.filter(r => {
+            const rCityId = r.city ? (r.city._id || r.city.id || r.city) : null;
+            return rCityId === cityId;
+        });
+
+        const zoneBadge = hasZone ? `
+            <button type="button" onclick="openZonePreviewModal('city', '${cityId}')" class="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full hover:bg-emerald-100 transition flex items-center gap-1 cursor-pointer" title="عرض نطاق المدينة">
+                <i class="fas fa-draw-polygon text-emerald-600"></i>
+                <span>Zone محددة (${city.points.length} نقاط)</span>
+            </button>
+        ` : `
+            <span class="text-[10px] bg-slate-100 text-slate-400 px-2 py-0.5 rounded-full">بدون نطاق</span>
+        `;
+
+        return `
+            <div class="card p-3 bg-white border border-slate-200 hover:border-[#2D4F2E] transition group relative flex flex-col justify-between">
+                <div>
+                    <div class="h-32 w-full rounded-lg overflow-hidden bg-slate-100 mb-2 relative">
+                        <img src="${imgSrc}" alt="${city.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/400x250?text=City+Image'">
+                        <span class="absolute top-2 start-2 badge ${isActive ? 'badge-success' : 'badge-danger'} text-[10px] shadow">
+                            ${isActive ? 'نشطة' : 'معطلة'}
+                        </span>
+                        <span class="absolute bottom-2 start-2 bg-slate-900/80 backdrop-blur text-white text-[10px] px-2 py-0.5 rounded-md font-bold shadow flex items-center gap-1">
+                            <i class="fas fa-map-location-dot text-amber-400"></i>
+                            <span>${subRegions.length} مناطق تابعة</span>
+                        </span>
+                    </div>
+                    <div class="font-bold text-slate-900 text-sm mb-1 flex items-center justify-between">
+                        <span class="flex items-center gap-1">
+                            <i class="fas fa-city text-[#2D4F2E] text-xs"></i>
+                            <span>${city.name}</span>
+                        </span>
+                        <span class="text-[10px] text-slate-400 font-mono">#${city.order || 0}</span>
+                    </div>
+                    <div class="mt-1 flex items-center justify-between">
+                        ${zoneBadge}
+                        <span class="w-3.5 h-3.5 rounded-full border border-slate-300 inline-block shadow-sm" style="background-color: ${city.color || '#2D4F2E'}" title="لون النطاق"></span>
+                    </div>
+                    <div class="text-[10px] text-slate-400 font-mono truncate mt-1" title="ID: ${cityId}">ID: ${cityId}</div>
+                </div>
+
+                <div class="space-y-2 pt-3 mt-2 border-t border-slate-100">
+                    <button type="button" onclick="filterRegionsByCity('${cityId}')" class="w-full text-xs py-1.5 px-2 bg-[#eaf1ea] hover:bg-[#d8e7d8] text-[#2D4F2E] rounded-lg transition font-medium flex items-center justify-center gap-1.5 cursor-pointer" title="عرض المناطق التابعة لمدينة ${city.name}">
+                        <i class="fas fa-map-location-dot"></i>
+                        <span>عرض مناطق المدينة (${subRegions.length})</span>
+                    </button>
+                    <div class="flex items-center justify-end gap-1.5">
+                        <button type="button" onclick="openAddRegionModal('${cityId}')" class="p-1.5 text-xs text-[#2D4F2E] hover:bg-slate-100 rounded" title="إضافة منطقة داخل هذه المدينة">
+                            <i class="fas fa-plus-circle"></i>
+                        </button>
+                        ${hasZone ? `
+                            <button onclick="openZonePreviewModal('city', '${cityId}')" class="p-1.5 text-xs text-emerald-600 hover:bg-emerald-50 rounded" title="عرض النطاق على الخريطة">
+                                <i class="fas fa-map-marked-alt"></i>
+                            </button>
+                        ` : ''}
+                        <button onclick="openEditCityModal('${cityId}')" class="p-1.5 text-xs text-blue-600 hover:bg-blue-50 rounded" title="${t('edit')}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteCity('${cityId}')" class="p-1.5 text-xs text-red-600 hover:bg-red-50 rounded" title="${t('delete')}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderRegions() {
+    const grid = document.getElementById('regions-grid');
+    const badge = document.getElementById('badge-regions-count');
+
+    const filterCityId = document.getElementById('regions-filter-city-select')?.value || state.selectedCityFilter || '';
+
+    const filteredRegions = filterCityId
+        ? state.regions.filter(r => (r.city?._id || r.city?.id || r.city) === filterCityId)
+        : state.regions;
+
+    if (badge) badge.textContent = `${filteredRegions.length} منطقة`;
+
+    if (!grid) return;
+
+    if (filteredRegions.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-xs">لا توجد مناطق مضافة${filterCityId ? ' لهذه المدينة' : ''}. اضغط على "إضافة منطقة جديدة" لإضافة أول منطقة.</div>`;
+        return;
+    }
+
+    grid.innerHTML = filteredRegions.map(region => {
         const regId = region.id || region._id;
         const imgSrc = region.image?.startsWith('http') ? region.image : (region.image ? `/uploads/${region.image}` : 'https://placehold.co/400x250?text=Region+Image');
         const isActive = region.active !== false;
         const hasZone = Array.isArray(region.points) && region.points.length >= 3;
 
+        // Parent city lookup
+        const parentCityId = region.city ? (region.city._id || region.city.id || region.city) : null;
+        const parentCity = parentCityId ? state.cities.find(c => (c.id || c._id) === parentCityId) : null;
+        const parentCityName = parentCity ? parentCity.name : (region.city?.name || 'بدون مدينة');
+
         const zoneBadge = hasZone ? `
-            <button type="button" onclick="openRegionZonePreviewModal('${regId}')" class="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full hover:bg-emerald-100 transition flex items-center gap-1 cursor-pointer" title="عرض نطاق المنطقة والإعلانات الواقعة داخله">
+            <button type="button" onclick="openZonePreviewModal('region', '${regId}')" class="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full hover:bg-emerald-100 transition flex items-center gap-1 cursor-pointer" title="عرض نطاق المنطقة والإعلانات الواقعة داخله">
                 <i class="fas fa-draw-polygon text-emerald-600"></i>
                 <span>Zone محددة (${region.points.length} نقاط)</span>
             </button>
@@ -1691,6 +2154,10 @@ function renderRegions() {
                         <span class="absolute top-2 start-2 badge ${isActive ? 'badge-success' : 'badge-danger'} text-[10px] shadow">
                             ${isActive ? 'نشطة' : 'معطلة'}
                         </span>
+                        <span class="absolute bottom-2 start-2 bg-[#2D4F2E]/90 backdrop-blur text-white text-[10px] px-2 py-0.5 rounded-md font-semibold shadow flex items-center gap-1">
+                            <i class="fas fa-city text-amber-300"></i>
+                            <span>${parentCityName}</span>
+                        </span>
                     </div>
                     <div class="font-bold text-slate-900 text-sm mb-1 flex items-center justify-between">
                         <span>${region.name}</span>
@@ -1704,7 +2171,7 @@ function renderRegions() {
                 </div>
                 <div class="flex items-center justify-end gap-1.5 pt-3 mt-2 border-t border-slate-100">
                     ${hasZone ? `
-                        <button onclick="openRegionZonePreviewModal('${regId}')" class="p-1.5 text-xs text-emerald-600 hover:bg-emerald-50 rounded" title="عرض النطاق على الخريطة">
+                        <button onclick="openZonePreviewModal('region', '${regId}')" class="p-1.5 text-xs text-emerald-600 hover:bg-emerald-50 rounded" title="عرض النطاق على الخريطة">
                             <i class="fas fa-map-marked-alt"></i>
                         </button>
                     ` : ''}
@@ -1720,7 +2187,162 @@ function renderRegions() {
     }).join('');
 }
 
-function openAddRegionModal() {
+// ─── CITY MODAL (ADD / EDIT) ──────────────────────────────────────────────────
+function openAddCityModal() {
+    exitMapFullscreen();
+    const navLat = document.getElementById('city-nav-latitude');
+    const navLng = document.getElementById('city-nav-longitude');
+    if (navLat) navLat.value = '';
+    if (navLng) navLng.value = '';
+    state.editingCityId = null;
+    document.getElementById('city-modal-title').textContent = 'إضافة مدينة جديدة';
+    document.getElementById('city-form').reset();
+    document.getElementById('city-modal-active').checked = true;
+    document.getElementById('city-modal-order').value = state.cities.length;
+    document.getElementById('city-modal-preview').innerHTML = '';
+    document.getElementById('city-modal-color').value = '#2D4F2E';
+    cityZoneColor = '#2D4F2E';
+
+    clearCityZone();
+    setTimeout(() => {
+        initCityZoneMap();
+        if (cityZoneMap) {
+            cityZoneMap.invalidateSize();
+            cityZoneMap.setView([27.041086, 33.891272], 10);
+        }
+    }, 250);
+
+    document.getElementById('city-modal').classList.add('active');
+}
+
+function openEditCityModal(cityId) {
+    exitMapFullscreen();
+    const navLat = document.getElementById('city-nav-latitude');
+    const navLng = document.getElementById('city-nav-longitude');
+    if (navLat) navLat.value = '';
+    if (navLng) navLng.value = '';
+    const city = state.cities.find(c => (c.id || c._id) === cityId);
+    if (!city) return;
+
+    state.editingCityId = cityId;
+    document.getElementById('city-modal-title').textContent = `تعديل المدينة: ${city.name}`;
+    document.getElementById('city-modal-name').value = city.name || '';
+    document.getElementById('city-modal-order').value = city.order || 0;
+    document.getElementById('city-modal-active').checked = city.active !== false;
+
+    cityZoneColor = city.color || '#2D4F2E';
+    document.getElementById('city-modal-color').value = cityZoneColor;
+
+    clearCityZone();
+
+    const urlInput = document.getElementById('city-modal-image-url');
+    if (city.image?.startsWith('http')) {
+        urlInput.value = city.image;
+    } else {
+        urlInput.value = '';
+    }
+
+    const preview = document.getElementById('city-modal-preview');
+    const imgSrc = city.image?.startsWith('http') ? city.image : (city.image ? `/uploads/${city.image}` : '');
+    preview.innerHTML = imgSrc ? `<img src="${imgSrc}" class="h-20 w-auto rounded border border-slate-300 object-cover mt-2">` : '';
+
+    setTimeout(() => {
+        initCityZoneMap();
+        if (cityZoneMap) {
+            cityZoneMap.invalidateSize();
+            if (Array.isArray(city.points) && city.points.length > 0) {
+                city.points.forEach(p => {
+                    addCityZonePoint(p.latitude, p.longitude);
+                });
+                if (cityZonePolygon) {
+                    cityZoneMap.fitBounds(cityZonePolygon.getBounds(), { padding: [25, 25] });
+                }
+            } else if (city.center && city.center.latitude) {
+                cityZoneMap.setView([city.center.latitude, city.center.longitude], 12);
+            } else {
+                cityZoneMap.setView([27.041086, 33.891272], 10);
+            }
+        }
+    }, 250);
+
+    document.getElementById('city-modal').classList.add('active');
+}
+
+async function handleCityFormSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('city-modal-name').value.trim();
+    const order = document.getElementById('city-modal-order').value || 0;
+    const active = document.getElementById('city-modal-active').checked;
+    const pointsStr = document.getElementById('city-modal-points').value || '[]';
+    const color = document.getElementById('city-modal-color').value || '#2D4F2E';
+    const imageFile = document.getElementById('city-modal-image-file').files[0];
+    const imageUrl = document.getElementById('city-modal-image-url').value.trim();
+
+    if (!name) {
+        showToast('يرجى إدخال اسم المدينة', 'error');
+        return;
+    }
+
+    let payload;
+
+    if (imageFile) {
+        payload = new FormData();
+        payload.append('name', name);
+        payload.append('order', order);
+        payload.append('active', active);
+        payload.append('points', pointsStr);
+        payload.append('color', color);
+        payload.append('image', imageFile);
+    } else {
+        const bodyObj = {
+            name,
+            order,
+            active,
+            points: JSON.parse(pointsStr),
+            color,
+        };
+        if (imageUrl) bodyObj.image = imageUrl;
+        payload = JSON.stringify(bodyObj);
+    }
+
+    try {
+        if (state.editingCityId) {
+            await apiFetch(`/api/v1/admin/cities/${state.editingCityId}`, {
+                method: 'PATCH',
+                body: payload,
+            });
+            showToast('تم تحديث المدينة ونطاقها بنجاح', 'success');
+        } else {
+            await apiFetch('/api/v1/admin/cities', {
+                method: 'POST',
+                body: payload,
+            });
+            showToast('تمت إضافة المدينة ونطاقها بنجاح', 'success');
+        }
+
+        closeModal('city-modal');
+        loadCitiesAndRegions();
+    } catch (err) {}
+}
+
+async function deleteCity(cityId) {
+    const city = state.cities.find(c => (c.id || c._id) === cityId);
+    const childRegions = state.regions.filter(r => (r.city?._id || r.city?.id || r.city) === cityId);
+    let msg = `هل أنت متأكد من حذف مدينة "${city?.name || ''}"؟`;
+    if (childRegions.length > 0) {
+        msg += `\nتنبيه: يوجد ${childRegions.length} منطقة تابعة لهذه المدينة!`;
+    }
+    if (!confirm(msg)) return;
+
+    try {
+        await apiFetch(`/api/v1/admin/cities/${cityId}`, { method: 'DELETE' });
+        showToast('تم حذف المدينة بنجاح', 'success');
+        loadCitiesAndRegions();
+    } catch (err) {}
+}
+
+// ─── REGION (AREA) MODAL (ADD / EDIT) ─────────────────────────────────────────
+function openAddRegionModal(preselectedCityId) {
     exitMapFullscreen();
     const navLat = document.getElementById('region-nav-latitude');
     const navLng = document.getElementById('region-nav-longitude');
@@ -1735,12 +2357,27 @@ function openAddRegionModal() {
     document.getElementById('region-modal-color').value = '#2D4F2E';
     regionZoneColor = '#2D4F2E';
 
+    populateLocationSelects();
+
+    // Preselect city if provided or currently filtered
+    const targetCityId = preselectedCityId || state.selectedCityFilter || (state.cities[0] ? (state.cities[0].id || state.cities[0]._id) : '');
+    const citySelect = document.getElementById('region-modal-city');
+    if (citySelect && targetCityId) {
+        citySelect.value = targetCityId;
+    }
+
     clearRegionZone();
     setTimeout(() => {
         initRegionZoneMap();
         if (regionZoneMap) {
             regionZoneMap.invalidateSize();
-            regionZoneMap.setView([30.0444, 31.2357], 7);
+            // Center on target city if possible
+            const parentCity = state.cities.find(c => (c.id || c._id) === targetCityId);
+            if (parentCity && parentCity.center && parentCity.center.latitude) {
+                regionZoneMap.setView([parentCity.center.latitude, parentCity.center.longitude], 13);
+            } else {
+                regionZoneMap.setView([27.041086, 33.891272], 12);
+            }
         }
     }, 250);
 
@@ -1761,6 +2398,11 @@ function openEditRegionModal(regionId) {
     document.getElementById('region-modal-name').value = region.name || '';
     document.getElementById('region-modal-order').value = region.order || 0;
     document.getElementById('region-modal-active').checked = region.active !== false;
+
+    populateLocationSelects();
+    const parentCityId = region.city ? (region.city._id || region.city.id || region.city) : '';
+    const citySelect = document.getElementById('region-modal-city');
+    if (citySelect) citySelect.value = parentCityId || '';
 
     regionZoneColor = region.color || '#2D4F2E';
     document.getElementById('region-modal-color').value = regionZoneColor;
@@ -1790,7 +2432,12 @@ function openEditRegionModal(regionId) {
                     regionZoneMap.fitBounds(regionZonePolygon.getBounds(), { padding: [25, 25] });
                 }
             } else {
-                regionZoneMap.setView([30.0444, 31.2357], 7);
+                const parentCity = state.cities.find(c => (c.id || c._id) === parentCityId);
+                if (parentCity && parentCity.center && parentCity.center.latitude) {
+                    regionZoneMap.setView([parentCity.center.latitude, parentCity.center.longitude], 13);
+                } else {
+                    regionZoneMap.setView([27.041086, 33.891272], 12);
+                }
             }
         }
     }, 250);
@@ -1800,6 +2447,7 @@ function openEditRegionModal(regionId) {
 
 async function handleRegionFormSubmit(e) {
     e.preventDefault();
+    const city = document.getElementById('region-modal-city').value || null;
     const name = document.getElementById('region-modal-name').value.trim();
     const order = document.getElementById('region-modal-order').value || 0;
     const active = document.getElementById('region-modal-active').checked;
@@ -1807,6 +2455,11 @@ async function handleRegionFormSubmit(e) {
     const color = document.getElementById('region-modal-color').value || '#2D4F2E';
     const imageFile = document.getElementById('region-modal-image-file').files[0];
     const imageUrl = document.getElementById('region-modal-image-url').value.trim();
+
+    if (!city) {
+        showToast('يرجى اختيار المدينة التابعة لها هذه المنطقة', 'error');
+        return;
+    }
 
     if (!name) {
         showToast('يرجى إدخال اسم المنطقة', 'error');
@@ -1817,6 +2470,7 @@ async function handleRegionFormSubmit(e) {
 
     if (imageFile) {
         payload = new FormData();
+        payload.append('city', city);
         payload.append('name', name);
         payload.append('order', order);
         payload.append('active', active);
@@ -1825,6 +2479,7 @@ async function handleRegionFormSubmit(e) {
         payload.append('image', imageFile);
     } else {
         const bodyObj = {
+            city,
             name,
             order,
             active,
@@ -1851,7 +2506,7 @@ async function handleRegionFormSubmit(e) {
         }
 
         closeModal('region-modal');
-        loadRegions();
+        loadCitiesAndRegions();
     } catch (err) {}
 }
 
@@ -1861,36 +2516,182 @@ async function deleteRegion(regionId) {
     try {
         await apiFetch(`/api/v1/admin/regions/${regionId}`, { method: 'DELETE' });
         showToast('تم حذف المنطقة بنجاح', 'success');
-        loadRegions();
+        loadCitiesAndRegions();
     } catch (err) {}
 }
 
+// ─── LOCATION SELECTS POPULATION & CASCADING ──────────────────────────────────
+function populateLocationSelects() {
+    // 1. Regions filter by city
+    const regionFilterCity = document.getElementById('regions-filter-city-select');
+    if (regionFilterCity) {
+        const curVal = regionFilterCity.value || state.selectedCityFilter || '';
+        regionFilterCity.innerHTML = '<option value="">كل المدن</option>' + state.cities.map(c => {
+            const id = c.id || c._id;
+            return `<option value="${id}">${c.name}</option>`;
+        }).join('');
+        if (curVal) regionFilterCity.value = curVal;
+    }
+
+    // 2. Region Modal parent city
+    const regionModalCity = document.getElementById('region-modal-city');
+    if (regionModalCity) {
+        const curVal = regionModalCity.value;
+        regionModalCity.innerHTML = '<option value="">-- اختر المدينة التابعة لها --</option>' + state.cities.map(c => {
+            const id = c.id || c._id;
+            return `<option value="${id}">${c.name}</option>`;
+        }).join('');
+        if (curVal) regionModalCity.value = curVal;
+    }
+
+    // 3. Ad Filter City
+    const adFilterCity = document.getElementById('ad-filter-city');
+    if (adFilterCity) {
+        const curVal = adFilterCity.value;
+        adFilterCity.innerHTML = '<option value="">كل المدن</option>' + state.cities.map(c => {
+            const id = c.id || c._id;
+            return `<option value="${id}">${c.name}</option>`;
+        }).join('');
+        if (curVal) adFilterCity.value = curVal;
+    }
+
+    // 4. Ad Filter Region (cascaded from adFilterCity)
+    const adFilterRegion = document.getElementById('ad-filter-region');
+    if (adFilterRegion) {
+        const curCityId = adFilterCity?.value || '';
+        const curVal = adFilterRegion.value;
+        const filtered = curCityId 
+            ? state.regions.filter(r => (r.city?._id || r.city?.id || r.city) === curCityId)
+            : state.regions;
+        adFilterRegion.innerHTML = '<option value="">كل المناطق</option>' + filtered.map(r => {
+            const id = r.id || r._id;
+            return `<option value="${id}">${r.name}</option>`;
+        }).join('');
+        if (curVal && filtered.some(r => (r.id || r._id) === curVal)) {
+            adFilterRegion.value = curVal;
+        }
+    }
+
+    // 5. Ad Modal City
+    const adModalCity = document.getElementById('ad-modal-city');
+    if (adModalCity) {
+        const curVal = adModalCity.value;
+        adModalCity.innerHTML = '<option value="">-- اختر المدينة --</option>' + state.cities.map(c => {
+            const id = c.id || c._id;
+            return `<option value="${id}">${c.name}</option>`;
+        }).join('');
+        if (curVal) adModalCity.value = curVal;
+    }
+
+    // 6. Ad Modal Region (cascaded)
+    const adModalRegion = document.getElementById('ad-modal-region');
+    if (adModalRegion) {
+        const curCityId = adModalCity?.value || '';
+        const curVal = adModalRegion.value;
+        const filtered = curCityId 
+            ? state.regions.filter(r => (r.city?._id || r.city?.id || r.city) === curCityId)
+            : state.regions;
+        adModalRegion.innerHTML = '<option value="">-- اختر المنطقة --</option>' + filtered.map(r => {
+            const id = r.id || r._id;
+            return `<option value="${id}">${r.name}</option>`;
+        }).join('');
+        if (curVal && filtered.some(r => (r.id || r._id) === curVal)) {
+            adModalRegion.value = curVal;
+        }
+    }
+
+    // 7. Banner Modal City
+    const bannerModalCity = document.getElementById('banner-modal-city-select');
+    if (bannerModalCity) {
+        const curVal = bannerModalCity.value;
+        bannerModalCity.innerHTML = '<option value="">-- عام (يظهر لجميع المدن) --</option>' + state.cities.map(c => {
+            const id = c.id || c._id;
+            return `<option value="${id}">${c.name}</option>`;
+        }).join('');
+        if (curVal) bannerModalCity.value = curVal;
+    }
+
+    // 8. Banner Modal Region (cascaded)
+    const bannerModalRegion = document.getElementById('banner-modal-region-select');
+    if (bannerModalRegion) {
+        const curCityId = bannerModalCity?.value || '';
+        const curVal = bannerModalRegion.value;
+        const filtered = curCityId 
+            ? state.regions.filter(r => (r.city?._id || r.city?.id || r.city) === curCityId)
+            : state.regions;
+        bannerModalRegion.innerHTML = '<option value="">-- عام (يظهر لجميع المناطق) --</option>' + filtered.map(r => {
+            const id = r.id || r._id;
+            return `<option value="${id}">${r.name}</option>`;
+        }).join('');
+        if (curVal && filtered.some(r => (r.id || r._id) === curVal)) {
+            bannerModalRegion.value = curVal;
+        }
+    }
+}
+
 function populateRegionSelects() {
-    const filterSelect = document.getElementById('ad-filter-region');
-    const adModalSelect = document.getElementById('ad-modal-region');
-    const bannerModalSelect = document.getElementById('banner-modal-region-select');
+    return populateLocationSelects();
+}
 
-    const optionsHtml = state.regions.map(r => {
-        const id = r.id || r._id;
-        return `<option value="${id}">${r.name}</option>`;
-    }).join('');
-
-    if (filterSelect) {
-        const currentVal = filterSelect.value;
-        filterSelect.innerHTML = '<option value="">كل المناطق</option>' + optionsHtml;
-        if (currentVal) filterSelect.value = currentVal;
+function onAdFilterCityChange() {
+    const cityId = document.getElementById('ad-filter-city')?.value || '';
+    const regionSelect = document.getElementById('ad-filter-region');
+    if (regionSelect) {
+        const filtered = cityId 
+            ? state.regions.filter(r => (r.city?._id || r.city?.id || r.city) === cityId)
+            : state.regions;
+        regionSelect.innerHTML = '<option value="">كل المناطق</option>' + filtered.map(r => {
+            const id = r.id || r._id;
+            return `<option value="${id}">${r.name}</option>`;
+        }).join('');
+        regionSelect.value = '';
     }
+    loadAdvertisementsTab();
+}
 
-    if (adModalSelect) {
-        const currentVal = adModalSelect.value;
-        adModalSelect.innerHTML = '<option value="">-- اختر المنطقة --</option>' + optionsHtml;
-        if (currentVal) adModalSelect.value = currentVal;
+function onAdModalCityChange() {
+    const cityId = document.getElementById('ad-modal-city')?.value || '';
+    const regionSelect = document.getElementById('ad-modal-region');
+    if (regionSelect) {
+        const currentVal = regionSelect.value;
+        const filtered = cityId 
+            ? state.regions.filter(r => (r.city?._id || r.city?.id || r.city) === cityId)
+            : state.regions;
+        regionSelect.innerHTML = '<option value="">-- اختر المنطقة --</option>' + filtered.map(r => {
+            const id = r.id || r._id;
+            return `<option value="${id}">${r.name}</option>`;
+        }).join('');
+        if (currentVal && filtered.some(r => (r.id || r._id) === currentVal)) {
+            regionSelect.value = currentVal;
+        } else {
+            regionSelect.value = '';
+        }
     }
+    if (cityId && adMapInstance && !adMapMarker) {
+        const city = state.cities.find(c => (c.id || c._id) === cityId);
+        if (city && city.center && city.center.latitude) {
+            adMapInstance.setView([city.center.latitude, city.center.longitude], 12);
+        }
+    }
+}
 
-    if (bannerModalSelect) {
-        const currentVal = bannerModalSelect.value;
-        bannerModalSelect.innerHTML = '<option value="">-- عام (يظهر لجميع المناطق) --</option>' + optionsHtml;
-        if (currentVal) bannerModalSelect.value = currentVal;
+function onBannerModalCityChange() {
+    const cityId = document.getElementById('banner-modal-city-select')?.value || '';
+    const regionSelect = document.getElementById('banner-modal-region-select');
+    if (regionSelect) {
+        const currentVal = regionSelect.value;
+        const filtered = cityId 
+            ? state.regions.filter(r => (r.city?._id || r.city?.id || r.city) === cityId)
+            : state.regions;
+        regionSelect.innerHTML = '<option value="">-- عام (يظهر لجميع المناطق) --</option>' + filtered.map(r => {
+            const id = r.id || r._id;
+            return `<option value="${id}">${r.name}</option>`;
+        }).join('');
+        if (currentVal && filtered.some(r => (r.id || r._id) === currentVal)) {
+            regionSelect.value = currentVal;
+        } else {
+            regionSelect.value = '';
+        }
     }
 }
 
@@ -2665,16 +3466,18 @@ async function deleteAttribute(attrId) {
 // ─── ADVERTISEMENTS MANAGEMENT ───────────────────────────────────────────────
 
 async function loadAdvertisementsTab() {
-    await Promise.all([loadUnitTypes(), loadCategories(), loadRegions()]);
+    await Promise.all([loadUnitTypes(), loadCategories(), loadCitiesAndRegions()]);
 
     try {
         const search = document.getElementById('ad-search-input')?.value.trim() || '';
+        const city = document.getElementById('ad-filter-city')?.value || '';
         const region = document.getElementById('ad-filter-region')?.value || '';
         const type = document.getElementById('ad-filter-type')?.value || '';
         const active = document.getElementById('ad-filter-active')?.value || '';
 
         const params = new URLSearchParams();
         if (search) params.append('search', search);
+        if (city) params.append('city', city);
         if (region) params.append('region', region);
         if (type) params.append('type', type);
         if (active) params.append('active', active);
@@ -2742,7 +3545,8 @@ function renderAdvertisementsGrid() {
             `;
         }
 
-        const regionName = ad.region?.name || '';
+        const cityName = ad.city?.name || (state.cities.find(c => (c.id || c._id) === (ad.city?._id || ad.city))?.name || '');
+        const regionName = ad.region?.name || (state.regions.find(r => (r.id || r._id) === (ad.region?._id || ad.region))?.name || '');
         const categoryName = ad.category?.name || '';
 
         return `
@@ -2777,10 +3581,11 @@ function renderAdvertisementsGrid() {
                             </div>
                         </div>
 
-                        ${regionName ? `
-                            <div class="flex items-center gap-1 text-[11px] text-emerald-700 font-medium">
+                        ${(cityName || regionName) ? `
+                            <div class="flex items-center gap-1.5 text-[11px] text-emerald-700 font-medium flex-wrap">
                                 <i class="fas fa-map-location-dot"></i>
-                                <span>${regionName}</span>
+                                ${cityName ? `<span class="bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-bold"><i class="fas fa-city me-0.5"></i>${cityName}</span>` : ''}
+                                ${regionName ? `<span>${regionName}</span>` : ''}
                             </div>
                         ` : ''}
 
@@ -3049,26 +3854,47 @@ function getAdMarkerIcon() {
 let adMapRegionLayers = [];
 
 function drawRegionZonesOnAdMap() {
-    if (!adMapInstance || !Array.isArray(state.regions)) return;
+    if (!adMapInstance) return;
 
     adMapRegionLayers.forEach(l => adMapInstance.removeLayer(l));
     adMapRegionLayers = [];
 
-    state.regions.forEach(r => {
-        if (r.active !== false && Array.isArray(r.points) && r.points.length >= 3) {
-            const latLngs = r.points.map(p => [p.latitude, p.longitude]);
-            const poly = L.polygon(latLngs, {
-                color: r.color || '#2D4F2E',
-                weight: 2,
-                dashArray: '4, 4',
-                fillColor: r.color || '#2D4F2E',
-                fillOpacity: 0.18,
-            }).addTo(adMapInstance);
+    // Draw City zones
+    if (Array.isArray(state.cities)) {
+        state.cities.forEach(c => {
+            if (c.active !== false && Array.isArray(c.points) && c.points.length >= 3) {
+                const latLngs = c.points.map(p => [p.latitude, p.longitude]);
+                const poly = L.polygon(latLngs, {
+                    color: c.color || '#2D4F2E',
+                    weight: 3,
+                    fillColor: c.color || '#2D4F2E',
+                    fillOpacity: 0.12,
+                }).addTo(adMapInstance);
 
-            poly.bindTooltip(`<b>منطقة: ${r.name}</b>`, { sticky: true });
-            adMapRegionLayers.push(poly);
-        }
-    });
+                poly.bindTooltip(`<b>مدينة: ${c.name}</b>`, { sticky: true });
+                adMapRegionLayers.push(poly);
+            }
+        });
+    }
+
+    // Draw Region zones
+    if (Array.isArray(state.regions)) {
+        state.regions.forEach(r => {
+            if (r.active !== false && Array.isArray(r.points) && r.points.length >= 3) {
+                const latLngs = r.points.map(p => [p.latitude, p.longitude]);
+                const poly = L.polygon(latLngs, {
+                    color: r.color || '#2D4F2E',
+                    weight: 2,
+                    dashArray: '4, 4',
+                    fillColor: r.color || '#2D4F2E',
+                    fillOpacity: 0.20,
+                }).addTo(adMapInstance);
+
+                poly.bindTooltip(`<b>منطقة: ${r.name}</b>`, { sticky: true });
+                adMapRegionLayers.push(poly);
+            }
+        });
+    }
 }
 
 function initAdMapPicker() {
@@ -3081,8 +3907,8 @@ function initAdMapPicker() {
 
     if (!adMapInstance) {
         adMapInstance = L.map('ad-map-picker', {
-            center: [30.0444, 31.2357],
-            zoom: 7,
+            center: [27.041086, 33.891272],
+            zoom: 12,
             scrollWheelZoom: true,
         });
 
@@ -3124,7 +3950,18 @@ function setAdMapCoordinates(lat, lng, panTo = true) {
         badge.classList.remove('hidden');
     }
 
-    // Auto-detect matching region zone if ad is placed inside a zone!
+    // Auto-detect matching city zone if ad is placed inside a city zone!
+    const matchedCity = findCityForPointClient(numLat, numLng, state.cities);
+    const citySelect = document.getElementById('ad-modal-city');
+    if (matchedCity && citySelect) {
+        const cityId = matchedCity.id || matchedCity._id;
+        if (citySelect.value !== cityId) {
+            citySelect.value = cityId;
+            onAdModalCityChange();
+        }
+    }
+
+    // Auto-detect matching region zone if ad is placed inside a region zone!
     const matchedRegion = findRegionForPointClient(numLat, numLng, state.regions);
     const regionSelect = document.getElementById('ad-modal-region');
     if (matchedRegion && regionSelect) {
@@ -3356,9 +4193,9 @@ function addMapPulseEffect(map, lat, lng) {
 }
 
 function toggleMapFullscreen(type) {
-    const boxId = type === 'ad' ? 'ad-map-box' : (type === 'region' ? 'region-map-box' : 'preview-map-box');
-    const btnId = type === 'ad' ? 'ad-map-fullscreen-btn' : (type === 'region' ? 'region-map-fullscreen-btn' : 'preview-map-fullscreen-btn');
-    const textId = type === 'ad' ? 'ad-map-fullscreen-text' : (type === 'region' ? 'region-map-fullscreen-text' : 'preview-map-fullscreen-text');
+    const boxId = type === 'ad' ? 'ad-map-box' : (type === 'city' ? 'city-map-box' : (type === 'region' ? 'region-map-box' : 'preview-map-box'));
+    const btnId = type === 'ad' ? 'ad-map-fullscreen-btn' : (type === 'city' ? 'city-map-fullscreen-btn' : (type === 'region' ? 'region-map-fullscreen-btn' : 'preview-map-fullscreen-btn'));
+    const textId = type === 'ad' ? 'ad-map-fullscreen-text' : (type === 'city' ? 'city-map-fullscreen-text' : (type === 'region' ? 'region-map-fullscreen-text' : 'preview-map-fullscreen-text'));
 
     const box = document.getElementById(boxId);
     const btn = document.getElementById(btnId);
@@ -3369,6 +4206,9 @@ function toggleMapFullscreen(type) {
     if (type === 'ad') {
         initAdMapPicker();
         targetMap = adMapInstance;
+    } else if (type === 'city') {
+        initCityZoneMap();
+        targetMap = cityZoneMap;
     } else if (type === 'region') {
         initRegionZoneMap();
         targetMap = regionZoneMap;
@@ -3412,9 +4252,9 @@ function toggleMapFullscreen(type) {
 function exitMapFullscreen() {
     if (!currentFullscreenMapType) return;
     const type = currentFullscreenMapType;
-    const boxId = type === 'ad' ? 'ad-map-box' : (type === 'region' ? 'region-map-box' : 'preview-map-box');
-    const btnId = type === 'ad' ? 'ad-map-fullscreen-btn' : (type === 'region' ? 'region-map-fullscreen-btn' : 'preview-map-fullscreen-btn');
-    const textId = type === 'ad' ? 'ad-map-fullscreen-text' : (type === 'region' ? 'region-map-fullscreen-text' : 'preview-map-fullscreen-text');
+    const boxId = type === 'ad' ? 'ad-map-box' : (type === 'city' ? 'city-map-box' : (type === 'region' ? 'region-map-box' : 'preview-map-box'));
+    const btnId = type === 'ad' ? 'ad-map-fullscreen-btn' : (type === 'city' ? 'city-map-fullscreen-btn' : (type === 'region' ? 'region-map-fullscreen-btn' : 'preview-map-fullscreen-btn'));
+    const textId = type === 'ad' ? 'ad-map-fullscreen-text' : (type === 'city' ? 'city-map-fullscreen-text' : (type === 'region' ? 'region-map-fullscreen-text' : 'preview-map-fullscreen-text'));
 
     const box = document.getElementById(boxId);
     const btn = document.getElementById(btnId);
@@ -3424,7 +4264,7 @@ function exitMapFullscreen() {
 
     if (btn) {
         btn.classList.remove('bg-slate-800');
-        if (type === 'ad' || type === 'region') {
+        if (type === 'ad' || type === 'city' || type === 'region') {
             btn.classList.add('bg-[#2D4F2E]', 'text-white');
         } else {
             btn.classList.add('bg-white', 'text-slate-700');
@@ -3439,6 +4279,7 @@ function exitMapFullscreen() {
 
     let targetMap = null;
     if (type === 'ad') targetMap = adMapInstance;
+    else if (type === 'city') targetMap = cityZoneMap;
     else if (type === 'region') targetMap = regionZoneMap;
     else if (type === 'preview') targetMap = regionPreviewMapInstance;
 
@@ -3451,13 +4292,13 @@ function exitMapFullscreen() {
 }
 
 function toggleMapHeight(type) {
-    const mapId = type === 'ad' ? 'ad-map-picker' : 'region-zone-map';
-    const textId = type === 'ad' ? 'ad-map-height-text' : 'region-map-height-text';
+    const mapId = type === 'ad' ? 'ad-map-picker' : (type === 'city' ? 'city-zone-map' : 'region-zone-map');
+    const textId = type === 'ad' ? 'ad-map-height-text' : (type === 'city' ? 'city-map-height-text' : 'region-map-height-text');
     const mapEl = document.getElementById(mapId);
     const text = document.getElementById(textId);
     if (!mapEl) return;
 
-    let targetMap = type === 'ad' ? adMapInstance : regionZoneMap;
+    let targetMap = type === 'ad' ? adMapInstance : (type === 'city' ? cityZoneMap : regionZoneMap);
 
     const isTall = mapEl.classList.contains('kuba-map-tall');
     if (isTall) {
@@ -3484,7 +4325,7 @@ function openAddAdvertisementModal() {
     document.getElementById('ad-modal-active').checked = true;
     document.getElementById('ad-modal-preview').innerHTML = '';
 
-    populateRegionSelects();
+    populateLocationSelects();
     populateAdCategorySelect();
     populateAdUnitTypeSelect();
 
@@ -3499,7 +4340,7 @@ function openAddAdvertisementModal() {
         initAdMapPicker();
         if (adMapInstance) {
             adMapInstance.invalidateSize();
-            adMapInstance.setView([30.0444, 31.2357], 7);
+            adMapInstance.setView([27.041086, 33.891272], 11);
         }
     }, 250);
 
@@ -3514,7 +4355,7 @@ async function openEditAdvertisementModal(adId) {
     state.editingAdvertisementId = adId;
     document.getElementById('advertisement-modal-title').textContent = `${t('edit')}: ${ad.title}`;
 
-    populateRegionSelects();
+    populateLocationSelects();
     populateAdCategorySelect();
     populateAdUnitTypeSelect();
 
@@ -3545,13 +4386,21 @@ async function openEditAdvertisementModal(adId) {
                 adMapInstance.setView([Number(ad.latitude), Number(ad.longitude)], 14);
             } else {
                 clearAdCoordinates();
-                adMapInstance.setView([30.0444, 31.2357], 7);
+                adMapInstance.setView([27.041086, 33.891272], 11);
             }
         }
     }, 250);
 
+    const cityId = ad.city ? (ad.city._id || ad.city.id || ad.city) : '';
+    const citySelect = document.getElementById('ad-modal-city');
+    if (citySelect) {
+        citySelect.value = cityId || '';
+        onAdModalCityChange();
+    }
+
     const regId = ad.region ? (ad.region._id || ad.region.id || ad.region) : '';
-    document.getElementById('ad-modal-region').value = regId || '';
+    const regSelect = document.getElementById('ad-modal-region');
+    if (regSelect) regSelect.value = regId || '';
 
     const catId = ad.category ? (ad.category._id || ad.category.id || ad.category) : '';
     document.getElementById('ad-modal-category').value = catId || '';
@@ -3596,7 +4445,8 @@ async function handleAdvertisementFormSubmit(e) {
     const title = document.getElementById('ad-modal-title').value.trim();
     const category = document.getElementById('ad-modal-category').value || null;
     const unitType = document.getElementById('ad-modal-unit-type').value || null;
-    const region = document.getElementById('ad-modal-region').value || null;
+    const city = document.getElementById('ad-modal-city')?.value || null;
+    const region = document.getElementById('ad-modal-region')?.value || null;
 
     const basePrice = document.getElementById('ad-modal-base-price').value || 0;
     const discountType = document.getElementById('ad-modal-discount-type').value || 'none';
@@ -3663,6 +4513,7 @@ async function handleAdvertisementFormSubmit(e) {
         payload.append('title', title);
         if (category) payload.append('category', category);
         if (unitType) payload.append('unitType', unitType);
+        if (city) payload.append('city', city);
         if (region) payload.append('region', region);
         payload.append('pricing[basePrice]', basePrice);
         payload.append('pricing[discountType]', discountType);
@@ -3682,6 +4533,8 @@ async function handleAdvertisementFormSubmit(e) {
             title,
             category: category || null,
             unitType: unitType || null,
+            city: city || null,
+            region: region || null,
             region: region || null,
             pricing,
             location,

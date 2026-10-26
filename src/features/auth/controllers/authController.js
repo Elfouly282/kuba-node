@@ -127,6 +127,33 @@ exports.login = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
+exports.selectCity = async (req, res, next) => {
+    try {
+        const mongoose = require('mongoose');
+        const cityId = req.body.cityId || req.body.city;
+        if (!cityId) return next(new APIError('validation.cityRequired', 400));
+        if (!mongoose.Types.ObjectId.isValid(cityId)) return next(new APIError('errors.invalidCityId', 400));
+
+        const City = require('../../cities/models/cityModel');
+        const city = await City.findById(cityId);
+        if (!city) return next(new APIError('errors.cityNotFound', 404));
+
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            { city: city._id },
+            { new: true }
+        ).populate('city', 'name image').populate('region', 'name image');
+
+        if (!user) return next(new APIError('errors.userNotFound', 404));
+
+        res.status(200).json({
+            status: 'success',
+            message: req.t('messages.citySelected'),
+            data: { user: clean(user) },
+        });
+    } catch (err) { next(err); }
+};
+
 exports.selectRegion = async (req, res, next) => {
     try {
         const mongoose = require('mongoose');
@@ -135,14 +162,27 @@ exports.selectRegion = async (req, res, next) => {
         if (!mongoose.Types.ObjectId.isValid(regionId)) return next(new APIError('errors.invalidRegionId', 400));
 
         const Region = require('../../regions/models/regionModel');
+        const City = require('../../cities/models/cityModel');
         const region = await Region.findById(regionId);
-        if (!region) return next(new APIError('errors.regionNotFound', 404));
+        let updateObj = {};
+
+        if (region) {
+            updateObj.region = region._id;
+            if (region.city) updateObj.city = region.city;
+        } else {
+            const city = await City.findById(regionId);
+            if (city) {
+                updateObj.city = city._id;
+            } else {
+                return next(new APIError('errors.regionNotFound', 404));
+            }
+        }
 
         const user = await User.findByIdAndUpdate(
             req.user._id,
-            { region: region._id },
+            updateObj,
             { new: true }
-        ).populate('region', 'name image');
+        ).populate('city', 'name image').populate('region', 'name image');
 
         if (!user) return next(new APIError('errors.userNotFound', 404));
 
