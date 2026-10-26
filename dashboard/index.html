@@ -94,60 +94,94 @@
                 </div>
 
                 <nav class="sidebar-nav">
-                    <div class="nav-group">
-                        <span class="nav-group-label" data-i18n="navGroupGeneral">عام</span>
-                        <a href="#" class="nav-link active" data-tab="overview">
-                            <i class="fas fa-chart-pie w-5 text-center"></i>
-                            <span data-i18n="overview">نظرة عامة</span>
-                        </a>
+                    <!-- Super Admin Navigation Links -->
+                    <div id="sidebar-admin-nav" class="space-y-3">
+                        <div class="nav-group">
+                            <span class="nav-group-label" data-i18n="navGroupGeneral">عام</span>
+                            <a href="#" class="nav-link active" data-tab="overview">
+                                <i class="fas fa-chart-pie w-5 text-center"></i>
+                                <span data-i18n="overview">نظرة عامة</span>
+                            </a>
+                        </div>
+
+                        <div class="nav-group">
+                            <span class="nav-group-label" data-i18n="navGroupPeople">المستخدمون والحجوزات</span>
+                            <a href="#" class="nav-link" data-tab="users">
+                                <i class="fas fa-users w-5 text-center"></i>
+                                <span data-i18n="users">إدارة المستخدمين</span>
+                            </a>
+                            <a href="#" class="nav-link" data-tab="bookings">
+                                <i class="fas fa-calendar-check w-5 text-center"></i>
+                                <span data-i18n="bookings">كافة الحجوزات</span>
+                            </a>
+                        </div>
+
+                        <div class="nav-group">
+                            <span class="nav-group-label" data-i18n="navGroupContent">المحتوى</span>
+                            <a href="#" class="nav-link" data-tab="regions">
+                                <i class="fas fa-city w-5 text-center"></i>
+                                <span data-i18n="citiesAndRegions">المدن والمناطق</span>
+                            </a>
+                            <a href="#" class="nav-link" data-tab="advertisements">
+                                <i class="fas fa-hotel w-5 text-center"></i>
+                                <span data-i18n="advertisements">الإعلانات والشاليهات</span>
+                            </a>
+                            <a href="#" class="nav-link" data-tab="unit-types">
+                                <i class="fas fa-cubes w-5 text-center"></i>
+                                <span data-i18n="unitTypes">أنواع الوحدات</span>
+                            </a>
+                        </div>
+
+                        <div class="nav-group">
+                            <span class="nav-group-label" data-i18n="navGroupApp">واجهة التطبيق</span>
+                            <a href="#" class="nav-link" data-tab="categories">
+                                <i class="fas fa-layer-group w-5 text-center"></i>
+                                <span data-i18n="categoriesTitle">التصنيفات</span>
+                            </a>
+                            <a href="#" class="nav-link" data-tab="banners">
+                                <i class="fas fa-images w-5 text-center"></i>
+                                <span data-i18n="bannersTitle">البانرات الإعلانية</span>
+                            </a>
+                            <a href="#" class="nav-link" data-tab="onboarding">
+                                <i class="fas fa-mobile-screen w-5 text-center"></i>
+                                <span data-i18n="onboarding">شاشات الترحيب</span>
+                            </a>
+                        </div>
+
+                        <div class="nav-group">
+                            <span class="nav-group-label" data-i18n="navGroupSystem">النظام</span>
+                            <a href="#" class="nav-link" data-tab="system">
+                                <i class="fas fa-terminal w-5 text-center"></i>
+                                <span data-i18n="systemStatus">فحص النظام والـ APIs</span>
+                            </a>
+                        </div>
                     </div>
 
-                    <div class="nav-group">
-                        <span class="nav-group-label" data-i18n="navGroupPeople">المستخدمون</span>
-                        <a href="#" class="nav-link" data-tab="users">
-                            <i class="fas fa-users w-5 text-center"></i>
-                            <span data-i18n="users">إدارة المستخدمين</span>
-                        </a>
-                    </div>
-
-                    <div class="nav-group">
-                        <span class="nav-group-label" data-i18n="navGroupContent">المحتوى</span>
-                        <a href="#" class="nav-link" data-tab="regions">
-                            <i class="fas fa-city w-5 text-center"></i>
-                            <span data-i18n="citiesAndRegions">المدن والمناطق</span>
-                        </a>
-                        <a href="#" class="nav-link" data-tab="advertisements">
-                            <i class="fas fa-hotel w-5 text-center"></i>
-                            <span data-i18n="advertisements">الإعلانات والشاليهات</span>
-                        </a>
-                        <a href="#" class="nav-link" data-tab="unit-types">
-                            <i class="fas fa-cubes w-5 text-center"></i>
-                            <span data-i18n="unitTypes">أنواع الوحدات</span>
-                        </a>
-                    </div>
-
-                    <div class="nav-group">
-                        <span class="nav-group-label" data-i18n="navGroupApp">واجهة التطبيق</span>
-                        <a href="#" class="nav-link" data-tab="categories">
-                            <i class="fas fa-layer-group w-5 text-center"></i>
-                            <span data-i18n="categoriesTitle">التصنيفات</span>
-                        </a>
-                        <a href="#" class="nav-link" data-tab="banners">
-                            <i class="fas fa-images w-5 text-center"></i>
-                            <span data-i18n="bannersTitle">البانرات الإعلانية</span>
-                        </a>
-                        <a href="#" class="nav-link" data-tab="onboarding">
-                            <i class="fas fa-mobile-screen w-5 text-center"></i>
-                            <span data-i18n="onboarding">شاشات الترحيب</span>
-                        </a>
-                    </div>
-
-                    <div class="nav-group">
-                        <span class="nav-group-label" data-i18n="navGroupSystem">النظام</span>
-                        <a href="#" class="nav-link" data-tab="system">
-                            <i class="fas fa-terminal w-5 text-center"></i>
-                            <span data-i18n="systemStatus">فحص النظام والـ APIs</span>
-                        </a>
+                    <!-- Listing Owner Navigation Links (Shown only for owners) -->
+                    <div id="sidebar-owner-nav" class="space-y-3 hidden">
+                        <div class="nav-group">
+                            <span class="nav-group-label">إدارة إعلاني</span>
+                            <a href="#" class="nav-link" data-tab="owner-overview">
+                                <i class="fas fa-chart-pie w-5 text-center"></i>
+                                <span>لوحة الإعلان</span>
+                            </a>
+                            <a href="#" class="nav-link" data-tab="owner-listing">
+                                <i class="fas fa-hotel w-5 text-center"></i>
+                                <span>بيانات الإعلان</span>
+                            </a>
+                            <a href="#" class="nav-link" data-tab="owner-gallery">
+                                <i class="fas fa-images w-5 text-center"></i>
+                                <span>معرض الصور</span>
+                            </a>
+                            <a href="#" class="nav-link" data-tab="owner-bookings">
+                                <i class="fas fa-calendar-check w-5 text-center"></i>
+                                <span>الحجوزات والطلبات</span>
+                            </a>
+                            <a href="#" class="nav-link" data-tab="owner-profile">
+                                <i class="fas fa-user-gear w-5 text-center"></i>
+                                <span>بيانات حسابي</span>
+                            </a>
+                        </div>
                     </div>
                 </nav>
 
@@ -173,12 +207,19 @@
                             <i class="fas fa-bars text-lg"></i>
                         </button>
                         <div class="min-w-0">
-                            <div class="text-[11px] text-slate-400 font-semibold leading-none mb-0.5" data-i18n="appName">لوحة تحكم كوبا</div>
+                            <div class="text-[11px] text-slate-400 font-semibold leading-none mb-0.5" id="header-portal-label" data-i18n="appName">لوحة تحكم كوبا</div>
                             <h1 id="page-title" class="text-sm font-extrabold text-slate-900 truncate" data-i18n="overview">نظرة عامة</h1>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-3">
+                        <!-- Owner Active Ad Selector (Shown only when logged in as Owner) -->
+                        <div id="header-owner-ad-container" class="hidden flex items-center gap-1.5 bg-[#f4f6f4] border border-[#c2d6c3] rounded-lg px-2.5 py-1">
+                            <span class="text-[11px] font-bold text-slate-600 whitespace-nowrap"><i class="fas fa-hotel text-[#2D4F2E] me-1"></i>الإعلان:</span>
+                            <select id="header-owner-ad-select" onchange="switchOwnerActiveAd(this.value)" class="form-select text-xs py-0.5 px-2 font-bold text-[#2D4F2E] bg-white border border-slate-200 rounded max-w-[200px]">
+                            </select>
+                        </div>
+
                         <!-- Language Switcher -->
                         <button onclick="toggleLanguage()" class="btn-secondary text-xs py-1.5 px-3">
                             <i class="fas fa-globe text-[#2D4F2E]"></i>
@@ -192,11 +233,12 @@
 
                         <!-- User Profile Pill -->
                         <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-full px-3 py-1">
-                            <div class="w-6 h-6 rounded-full bg-[#2D4F2E] text-white flex items-center justify-center font-bold text-xs">
+                            <div id="header-user-avatar-icon" class="w-6 h-6 rounded-full bg-[#2D4F2E] text-white flex items-center justify-center font-bold text-xs">
                                 <i class="fas fa-user-shield text-[10px]"></i>
                             </div>
                             <div class="text-xs">
                                 <span id="header-admin-name" class="font-bold text-slate-800">Admin</span>
+                                <span id="header-role-badge" class="badge badge-brand text-[9px] ms-1 py-0 px-1.5">مدير</span>
                             </div>
                         </div>
                     </div>
@@ -822,6 +864,536 @@
                                     <span class="text-slate-500">Brand Color:</span>
                                     <span class="text-[#2D4F2E] font-mono font-bold">#2D4F2E</span>
                                 </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 6. BOOKINGS MANAGEMENT VIEW (SUPER ADMIN) -->
+                    <section id="view-bookings" class="tab-view hidden space-y-4">
+                        <div class="page-head flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900" data-i18n="bookings">إدارة الحجوزات والطلبات</h2>
+                                <p class="text-xs text-slate-500">متابعة كافة طلبات الحجز عبر جميع الشاليهات والإعلانات وإدارتها</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="loadBookingsTab()" class="btn-secondary text-xs" title="تحديث">
+                                    <i class="fas fa-sync-alt"></i>
+                                    <span>تحديث</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Filter bar for bookings -->
+                        <div class="card p-4 bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <div class="relative">
+                                <input type="text" id="admin-booking-search" oninput="filterAdminBookings()" class="form-input text-xs ps-9" placeholder="ابحث باسم العميل أو الإعلان أو الهاتف...">
+                                <i class="fas fa-search absolute top-3 start-3 text-slate-400 text-xs"></i>
+                            </div>
+                            <div>
+                                <select id="admin-booking-filter-status" onchange="filterAdminBookings()" class="form-select text-xs">
+                                    <option value="">كل حالات الحجز</option>
+                                    <option value="pending">قيد الانتظار (Pending)</option>
+                                    <option value="confirmed">مؤكد (Confirmed)</option>
+                                    <option value="completed">مكتمل (Completed)</option>
+                                    <option value="cancelled">ملغي (Cancelled)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <select id="admin-booking-filter-payment" onchange="filterAdminBookings()" class="form-select text-xs">
+                                    <option value="">كل حالات الدفع</option>
+                                    <option value="paid">مدفوع (Paid)</option>
+                                    <option value="unpaid">غير مدفوع (Unpaid)</option>
+                                    <option value="refunded">مسترجع (Refunded)</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center justify-end text-xs text-slate-500 font-semibold">
+                                إجمالي الحجوزات: <span id="admin-bookings-count" class="ms-1 font-bold text-[#2D4F2E]">0</span>
+                            </div>
+                        </div>
+
+                        <!-- Bookings Table Container -->
+                        <div class="card overflow-hidden bg-white">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-start border-collapse text-xs">
+                                    <thead>
+                                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                                            <th class="p-3 text-start">معرف الحجز</th>
+                                            <th class="p-3 text-start">الإعلان / العقار</th>
+                                            <th class="p-3 text-start">العميل</th>
+                                            <th class="p-3 text-start">فترة الحجز</th>
+                                            <th class="p-3 text-start">المدة والتكلفة</th>
+                                            <th class="p-3 text-start">حالة الحجز</th>
+                                            <th class="p-3 text-start">الدفع</th>
+                                            <th class="p-3 text-center">إجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-bookings-table-body" class="divide-y divide-slate-100">
+                                        <tr>
+                                            <td colspan="8" class="text-center py-8 text-slate-400">جاري تحميل الحجوزات...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ──────────────── OWNER PORTAL VIEWS ──────────────── -->
+
+                    <!-- OWNER 1: OVERVIEW -->
+                    <section id="view-owner-overview" class="tab-view hidden space-y-6">
+                        <!-- Welcome Banner -->
+                        <div class="card p-6 bg-gradient-to-r from-[#2D4F2E] to-[#1a331b] text-white rounded-2xl relative overflow-hidden shadow-lg border-0">
+                            <div class="absolute -end-12 -bottom-12 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+                            <div class="relative z-10 flex flex-wrap items-center justify-between gap-4">
+                                <div class="space-y-1">
+                                    <div class="inline-flex items-center gap-1.5 bg-white/15 px-3 py-1 rounded-full text-[11px] font-semibold text-emerald-100 backdrop-blur">
+                                        <i class="fas fa-crown text-amber-300"></i>
+                                        <span>بوابة إدارة صاحب الإعلان</span>
+                                    </div>
+                                    <h2 class="text-xl font-extrabold text-white" id="owner-welcome-title">مرحباً بك في لوحة تحكم إعلانك</h2>
+                                    <p class="text-xs text-emerald-100" id="owner-welcome-subtitle">يمكنك إدارة بيانات إعلانك، الصور، والحجوزات ومتابعة أرباحك من هنا</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span id="owner-ad-status-badge" class="badge bg-white/20 text-white font-bold text-xs px-3 py-1.5 rounded-lg border border-white/20">جاري التحميل...</span>
+                                    <button type="button" onclick="toggleOwnerAdStatus()" id="owner-toggle-status-btn" class="bg-white text-[#2D4F2E] hover:bg-emerald-50 font-bold text-xs px-3 py-2 rounded-lg transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                                        <i class="fas fa-power-off"></i>
+                                        <span id="owner-toggle-status-text">إيقاف / تفعيل</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KPIs Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="card p-4 bg-white border border-slate-200">
+                                <div class="flex items-center justify-between text-slate-500 mb-2">
+                                    <span class="text-xs font-semibold">إجمالي الحجوزات</span>
+                                    <div class="w-8 h-8 rounded-lg bg-[#2D4F2E]/10 text-[#2D4F2E] flex items-center justify-center text-sm font-bold">
+                                        <i class="fas fa-calendar-check"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-black text-slate-900" id="owner-kpi-total-bookings">0</div>
+                                <div class="text-[11px] text-slate-400 mt-1">كافة الطلبات المسجلة</div>
+                            </div>
+
+                            <div class="card p-4 bg-white border border-slate-200">
+                                <div class="flex items-center justify-between text-slate-500 mb-2">
+                                    <span class="text-xs font-semibold">حجوزات مؤكدة</span>
+                                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-black text-emerald-600" id="owner-kpi-confirmed-bookings">0</div>
+                                <div class="text-[11px] text-slate-400 mt-1">حجوزات مقبولة وجاهزة</div>
+                            </div>
+
+                            <div class="card p-4 bg-white border border-slate-200">
+                                <div class="flex items-center justify-between text-slate-500 mb-2">
+                                    <span class="text-xs font-semibold">قيد الانتظار</span>
+                                    <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-black text-amber-600" id="owner-kpi-pending-bookings">0</div>
+                                <div class="text-[11px] text-slate-400 mt-1">تنتظر مراجعتك وتأكيدك</div>
+                            </div>
+
+                            <div class="card p-4 bg-white border border-slate-200">
+                                <div class="flex items-center justify-between text-slate-500 mb-2">
+                                    <span class="text-xs font-semibold">إجمالي الإيرادات المقدرة</span>
+                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-black text-slate-900" id="owner-kpi-revenue">0 ج.م</div>
+                                <div class="text-[11px] text-slate-400 mt-1">من الحجوزات المؤكدة والمكتملة</div>
+                            </div>
+                        </div>
+
+                        <!-- Listing Quick Info & Action Shortcuts -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- Listing Mini Preview Card -->
+                            <div class="card p-5 bg-white space-y-4">
+                                <h3 class="font-bold text-sm text-slate-900 pb-2 border-b border-slate-100 flex items-center justify-between">
+                                    <span>بطاقة الإعلان الحالية</span>
+                                    <button type="button" onclick="switchTab('owner-listing')" class="text-xs text-[#2D4F2E] font-bold hover:underline cursor-pointer">تعديل</button>
+                                </h3>
+                                <div class="space-y-3">
+                                    <div class="relative h-44 rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
+                                        <img id="owner-preview-image" src="images/kuba-logo.jpeg" alt="Cover" class="w-full h-full object-cover">
+                                        <span id="owner-preview-price-tag" class="absolute bottom-2 start-2 bg-black/70 backdrop-blur text-white text-xs font-bold px-2.5 py-1 rounded-lg">--</span>
+                                    </div>
+                                    <div>
+                                        <h4 id="owner-preview-title" class="font-bold text-slate-900 text-sm line-clamp-1">عنوان الإعلان</h4>
+                                        <p id="owner-preview-location" class="text-xs text-slate-500 mt-0.5"><i class="fas fa-location-dot text-[#2D4F2E] me-1"></i>--</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 pt-1 border-t border-slate-100 text-[11px] text-slate-500">
+                                        <span><i class="fas fa-images text-[#2D4F2E] me-1"></i><span id="owner-preview-photos-count">0</span> صور</span>
+                                        <span>•</span>
+                                        <span id="owner-preview-type">وحدة سكنية</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fast Navigation Shortcuts -->
+                            <div class="lg:col-span-2 space-y-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <button type="button" onclick="switchTab('owner-listing')" class="card p-4 bg-white hover:border-[#2D4F2E] transition text-start group cursor-pointer">
+                                        <div class="w-10 h-10 rounded-xl bg-[#2D4F2E]/10 text-[#2D4F2E] flex items-center justify-center text-lg mb-3 group-hover:bg-[#2D4F2E] group-hover:text-white transition">
+                                            <i class="fas fa-pen-to-square"></i>
+                                        </div>
+                                        <div class="font-bold text-slate-900 text-xs mb-1">تعديل بيانات الإعلان</div>
+                                        <div class="text-[11px] text-slate-500">العنوان، الأسعار، العروض، الموقع، والمواصفات</div>
+                                    </button>
+
+                                    <button type="button" onclick="switchTab('owner-gallery')" class="card p-4 bg-white hover:border-[#2D4F2E] transition text-start group cursor-pointer">
+                                        <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg mb-3 group-hover:bg-purple-600 group-hover:text-white transition">
+                                            <i class="fas fa-camera"></i>
+                                        </div>
+                                        <div class="font-bold text-slate-900 text-xs mb-1">إدارة معرض الصور</div>
+                                        <div class="text-[11px] text-slate-500">رفع وحذف الصور وتحديد الغلاف الرئيسي</div>
+                                    </button>
+
+                                    <button type="button" onclick="switchTab('owner-bookings')" class="card p-4 bg-white hover:border-[#2D4F2E] transition text-start group cursor-pointer">
+                                        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg mb-3 group-hover:bg-amber-600 group-hover:text-white transition">
+                                            <i class="fas fa-calendar-check"></i>
+                                        </div>
+                                        <div class="font-bold text-slate-900 text-xs mb-1">الحجوزات والطلبات</div>
+                                        <div class="text-[11px] text-slate-500">متابعة طلبات العملاء وتأكيد الحجز فوراً</div>
+                                    </button>
+                                </div>
+
+                                <!-- Latest Pending Bookings Box -->
+                                <div class="card p-5 bg-white space-y-3">
+                                    <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                                        <h3 class="font-bold text-xs text-slate-900 flex items-center gap-2">
+                                            <i class="fas fa-bell text-amber-500"></i>
+                                            <span>أحدث طلبات الحجز التي بانتظار التأكيد</span>
+                                        </h3>
+                                        <button type="button" onclick="switchTab('owner-bookings')" class="text-xs text-[#2D4F2E] font-bold hover:underline cursor-pointer">عرض الكل</button>
+                                    </div>
+                                    <div id="owner-overview-recent-bookings" class="space-y-2">
+                                        <div class="text-center py-4 text-xs text-slate-400">لا توجد طلبات جديدة بانتظار التأكيد حالياً</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- OWNER 2: LISTING DETAILS EDITOR -->
+                    <section id="view-owner-listing" class="tab-view hidden space-y-6">
+                        <div class="page-head flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900">تعديل بيانات وتفاصيل الإعلان</h2>
+                                <p class="text-xs text-slate-500">تحكم بالكامل في مواصفات وحدتك وأسعارها وعروضها الترويجية</p>
+                            </div>
+                            <button type="button" onclick="saveOwnerListingForm()" class="gold-btn text-xs py-2 px-4 shadow-md cursor-pointer">
+                                <i class="fas fa-floppy-disk me-1.5"></i>
+                                <span>حفظ التعديلات</span>
+                            </button>
+                        </div>
+
+                        <form id="owner-listing-form" onsubmit="handleOwnerListingSubmit(event)" class="space-y-6">
+                            <!-- Card 1: Main Info -->
+                            <div class="card p-5 bg-white space-y-4">
+                                <h3 class="font-bold text-sm text-slate-900 pb-2 border-b border-slate-100 flex items-center gap-2">
+                                    <i class="fas fa-circle-info text-[#2D4F2E]"></i>
+                                    <span>المعلومات الأساسية</span>
+                                </h3>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">عنوان الإعلان *</label>
+                                    <input type="text" id="owner-form-title" required class="form-input text-xs" placeholder="مثال: شاليه فاخر بفيو بحري مفتوح">
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">القسم (Category)</label>
+                                        <select id="owner-form-category" class="form-select text-xs">
+                                            <option value="">-- اختر القسم --</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">نوع الوحدة (Unit Type)</label>
+                                        <select id="owner-form-unit-type" onchange="onOwnerUnitTypeChanged()" class="form-select text-xs">
+                                            <option value="">-- اختر نوع الوحدة --</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">المدينة (City)</label>
+                                        <select id="owner-form-city" onchange="onOwnerCityChange()" class="form-select text-xs">
+                                            <option value="">-- اختر المدينة --</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">المنطقة (Area)</label>
+                                        <select id="owner-form-region" class="form-select text-xs">
+                                            <option value="">-- اختر المنطقة --</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">الوصف والتفاصيل</label>
+                                    <textarea id="owner-form-description" rows="3" class="form-textarea text-xs" placeholder="اكتب وصفاً مفصلاً يبرز مميزات الوحدة والخدمات المتوفرة..."></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Card 2: Pricing & Discounts -->
+                            <div class="card p-5 bg-white space-y-4">
+                                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                                    <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                                        <i class="fas fa-tag text-[#2D4F2E]"></i>
+                                        <span>التسعير، العروض والخصومات</span>
+                                    </h3>
+                                    <span id="owner-form-final-badge" class="badge badge-brand text-xs font-bold">السعر النهائي: 0 ج.م</span>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">السعر الأساسي (ج.م) *</label>
+                                        <input type="number" id="owner-form-base-price" oninput="calcOwnerFinalPrice()" min="0" step="any" required class="form-input text-xs" placeholder="مثال: 3500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">وحدة التسعير *</label>
+                                        <select id="owner-form-pricing-unit" class="form-select text-xs">
+                                            <option value="per_night">بالليلة (Per Night)</option>
+                                            <option value="per_hour">بالساعة (Per Hour)</option>
+                                            <option value="per_day">باليوم (Per Day)</option>
+                                            <option value="per_trip">بالرحلة (Per Trip)</option>
+                                            <option value="fixed">سعر ثابت (Fixed)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">الحد الأدنى للحجز</label>
+                                        <input type="number" id="owner-form-min-duration" value="1" min="1" class="form-input text-xs">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">نوع الخصم الترويجي</label>
+                                        <select id="owner-form-discount-type" onchange="calcOwnerFinalPrice()" class="form-select text-xs">
+                                            <option value="none">بدون خصم</option>
+                                            <option value="percentage">نسبة مئوية (%)</option>
+                                            <option value="fixed">مبلغ ثابت (ج.م)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">قيمة الخصم</label>
+                                        <input type="number" id="owner-form-discount-value" oninput="calcOwnerFinalPrice()" value="0" min="0" step="any" class="form-input text-xs" placeholder="مثال: 10 أو 500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">السعر النهائي للعميل</label>
+                                        <input type="number" id="owner-form-final-price" readonly class="form-input text-xs bg-slate-100 font-bold text-[#2D4F2E]">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 3: Dynamic Unit Attributes -->
+                            <div class="card p-5 bg-white space-y-4" id="owner-attributes-card">
+                                <h3 class="font-bold text-sm text-slate-900 pb-2 border-b border-slate-100 flex items-center gap-2">
+                                    <i class="fas fa-sliders text-[#2D4F2E]"></i>
+                                    <span>مواصفات وخصائص الوحدة</span>
+                                </h3>
+                                <div id="owner-dynamic-attributes-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                                    <!-- Dynamic attributes injected via JS -->
+                                </div>
+                            </div>
+
+                            <!-- Card 4: Location & Interactive Map -->
+                            <div class="card p-5 bg-white space-y-4">
+                                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                                    <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                                        <i class="fas fa-map-location-dot text-[#2D4F2E]"></i>
+                                        <span>الموقع الجغرافي والعنوان على الخريطة</span>
+                                    </h3>
+                                    <button type="button" onclick="getOwnerCurrentLocation()" class="btn-secondary text-xs py-1 px-2.5 cursor-pointer">
+                                        <i class="fas fa-crosshairs text-[#2D4F2E]"></i>
+                                        <span>تحديد موقعي الحالي</span>
+                                    </button>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">الموقع / الحي</label>
+                                        <input type="text" id="owner-form-location" class="form-input text-xs" placeholder="مثال: الساحل الشمالي - الكيلو 120">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">العنوان التفصيلي</label>
+                                        <input type="text" id="owner-form-address" class="form-input text-xs" placeholder="مثال: قرية مراسي، منطقة فيردي، فيلا 15">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">خط العرض (Latitude)</label>
+                                        <input type="text" id="owner-form-latitude" class="form-input text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">خط الطول (Longitude)</label>
+                                        <input type="text" id="owner-form-longitude" class="form-input text-xs">
+                                    </div>
+                                </div>
+
+                                <div class="rounded-xl overflow-hidden border border-slate-200">
+                                    <div id="owner-map-picker" class="w-full h-56 bg-slate-100"></div>
+                                </div>
+                            </div>
+
+                            <!-- Card 5: Listing Status & Submit -->
+                            <div class="card p-5 bg-white flex flex-wrap items-center justify-between gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-800">
+                                    <input type="checkbox" id="owner-form-active" checked class="rounded border-slate-300 text-[#2D4F2E] focus:ring-[#2D4F2E]">
+                                    <span>الإعلان نشط ومعروض للعملاء في نتائج البحث</span>
+                                </label>
+                                <button type="submit" class="gold-btn text-xs py-2.5 px-6 shadow-md cursor-pointer">
+                                    <i class="fas fa-check-circle me-1.5"></i>
+                                    <span>حفظ وتطبيق التعديلات</span>
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <!-- OWNER 3: IMAGE GALLERY MANAGER -->
+                    <section id="view-owner-gallery" class="tab-view hidden space-y-6">
+                        <div class="page-head flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900">معرض صور الإعلان</h2>
+                                <p class="text-xs text-slate-500">أضف صوراً عالية الجودة تجذب العملاء، واختر صورة الغلاف الرئيسية التي تظهر أولاً</p>
+                            </div>
+                        </div>
+
+                        <!-- Upload Zone Card -->
+                        <div class="card p-6 bg-white space-y-4 border-2 border-dashed border-[#c2d6c3] hover:border-[#2D4F2E] transition rounded-2xl">
+                            <div class="text-center space-y-2">
+                                <div class="w-12 h-12 rounded-full bg-[#2D4F2E]/10 text-[#2D4F2E] flex items-center justify-center mx-auto text-xl">
+                                    <i class="fas fa-cloud-arrow-up"></i>
+                                </div>
+                                <h3 class="font-bold text-sm text-slate-900">رفع صور جديدة للإعلان</h3>
+                                <p class="text-xs text-slate-500">اختر صورة أو عدة صور من جهازك (PNG, JPG, WEBP) بحد أقصى 5 ميجابايت لكل صورة</p>
+                            </div>
+
+                            <form id="owner-gallery-upload-form" onsubmit="handleOwnerImagesUpload(event)" class="space-y-4">
+                                <div class="flex flex-col sm:flex-row items-center gap-3">
+                                    <input type="file" id="owner-gallery-files-input" multiple accept="image/*" class="form-input text-xs p-2 flex-1">
+                                    <span class="text-xs text-slate-400 font-bold">أو</span>
+                                    <input type="url" id="owner-gallery-url-input" placeholder="رابط صورة مباشر https://..." class="form-input text-xs flex-1">
+                                    <button type="submit" id="owner-gallery-upload-btn" class="gold-btn text-xs py-2 px-5 whitespace-nowrap w-full sm:w-auto cursor-pointer">
+                                        <i class="fas fa-upload me-1.5"></i>
+                                        <span>رفع الصور</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Current Photos Grid -->
+                        <div class="card p-5 bg-white space-y-4">
+                            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                                <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                                    <i class="fas fa-images text-[#2D4F2E]"></i>
+                                    <span>الصور المعروضة حالياً (<span id="owner-gallery-count">0</span> صور)</span>
+                                </h3>
+                                <span class="text-xs text-slate-500">الصورة التي عليها نجمة ذهبية هي صورة الغلاف الرئيسية</span>
+                            </div>
+
+                            <div id="owner-gallery-images-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                <div class="col-span-full text-center py-10 text-xs text-slate-400">جاري تحميل الصور...</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- OWNER 4: BOOKINGS & RESERVATIONS -->
+                    <section id="view-owner-bookings" class="tab-view hidden space-y-4">
+                        <div class="page-head flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900">الحجوزات والطلبات لإعلاني</h2>
+                                <p class="text-xs text-slate-500">متابعة كافة طلبات حجز الشاليه، وتأكيد الحجز أو إلغائه فورياً</p>
+                            </div>
+                            <button type="button" onclick="loadOwnerBookingsTab()" class="btn-secondary text-xs cursor-pointer" title="تحديث">
+                                <i class="fas fa-sync-alt"></i>
+                                <span>تحديث الحجوزات</span>
+                            </button>
+                        </div>
+
+                        <!-- Filter Tabs -->
+                        <div class="card p-3 bg-white flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <button type="button" onclick="filterOwnerBookings('all')" class="owner-booking-tab-btn active px-3 py-1.5 rounded-lg text-xs font-bold transition bg-[#2D4F2E] text-white cursor-pointer">الكل</button>
+                                <button type="button" onclick="filterOwnerBookings('pending')" class="owner-booking-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">
+                                    <span>قيد الانتظار</span>
+                                    <span id="owner-pending-badge-count" class="ms-1 px-1.5 py-0.2 rounded-full bg-amber-500 text-white text-[10px] hidden">0</span>
+                                </button>
+                                <button type="button" onclick="filterOwnerBookings('confirmed')" class="owner-booking-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">مؤكدة</button>
+                                <button type="button" onclick="filterOwnerBookings('completed')" class="owner-booking-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">مكتملة</button>
+                                <button type="button" onclick="filterOwnerBookings('cancelled')" class="owner-booking-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">ملغية</button>
+                            </div>
+                            <div class="relative min-w-[200px]">
+                                <input type="text" id="owner-booking-search-input" oninput="filterOwnerBookingsText(this.value)" class="form-input text-xs ps-8 py-1.5" placeholder="ابحث باسم العميل أو الهاتف...">
+                                <i class="fas fa-search absolute top-2.5 start-2.5 text-slate-400 text-xs"></i>
+                            </div>
+                        </div>
+
+                        <!-- Bookings Container -->
+                        <div id="owner-bookings-cards-container" class="space-y-3">
+                            <div class="card p-8 text-center text-xs text-slate-400">جاري تحميل طلبات الحجز...</div>
+                        </div>
+                    </section>
+
+                    <!-- OWNER 5: PROFILE & SECURITY -->
+                    <section id="view-owner-profile" class="tab-view hidden space-y-6">
+                        <div class="page-head">
+                            <h2 class="text-lg font-bold text-slate-900">بيانات الحساب والأمان</h2>
+                            <p class="text-xs text-slate-500">إدارة معلوماتك الشخصية وتغيير كلمة مرور حساب تسجيل الدخول</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Basic Profile Form -->
+                            <div class="card p-6 bg-white space-y-4">
+                                <h3 class="font-bold text-sm text-slate-900 pb-2 border-b border-slate-100 flex items-center gap-2">
+                                    <i class="fas fa-user-circle text-[#2D4F2E]"></i>
+                                    <span>البيانات الشخصية</span>
+                                </h3>
+                                <form id="owner-profile-form" onsubmit="handleOwnerProfileUpdate(event)" class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">الاسم الكريم</label>
+                                        <input type="text" id="owner-profile-name" required class="form-input text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">البريد الإلكتروني (لتسجيل الدخول)</label>
+                                        <input type="email" id="owner-profile-email" readonly class="form-input text-xs bg-slate-100 cursor-not-allowed">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">رقم الهاتف للتواصل</label>
+                                        <input type="text" id="owner-profile-phone" class="form-input text-xs" placeholder="010xxxxxxxx">
+                                    </div>
+                                    <button type="submit" class="gold-btn text-xs py-2 px-5 cursor-pointer">
+                                        <i class="fas fa-save me-1"></i>
+                                        <span>حفظ البيانات</span>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Change Password Form -->
+                            <div class="card p-6 bg-white space-y-4">
+                                <h3 class="font-bold text-sm text-slate-900 pb-2 border-b border-slate-100 flex items-center gap-2">
+                                    <i class="fas fa-lock text-[#2D4F2E]"></i>
+                                    <span>تغيير كلمة المرور</span>
+                                </h3>
+                                <form id="owner-password-form" onsubmit="handleOwnerPasswordUpdate(event)" class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">كلمة المرور الجديدة</label>
+                                        <input type="password" id="owner-new-password" required minlength="8" class="form-input text-xs" placeholder="•••••••• (8 أحرف على الأقل)">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">تأكيد كلمة المرور الجديدة</label>
+                                        <input type="password" id="owner-confirm-password" required minlength="8" class="form-input text-xs" placeholder="••••••••">
+                                    </div>
+                                    <button type="submit" class="btn-secondary text-xs py-2 px-5 border-[#2D4F2E] text-[#2D4F2E] hover:bg-[#2D4F2E] hover:text-white transition cursor-pointer">
+                                        <i class="fas fa-key me-1"></i>
+                                        <span>تحديث كلمة المرور</span>
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </section>
@@ -1646,9 +2218,22 @@
 
             <form id="advertisement-form" class="space-y-4">
                 <!-- 1. Basic Info -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adTitle">عنوان الإعلان *</label>
-                    <input type="text" id="ad-modal-title" required class="form-input text-xs" placeholder="مثال: شاليه فاخر بفيو بحري في هاسيندا باي">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adTitle">عنوان الإعلان *</label>
+                        <input type="text" id="ad-modal-title" required class="form-input text-xs" placeholder="مثال: شاليه فاخر بفيو بحري في هاسيندا باي">
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="text-xs font-semibold text-slate-700">صاحب الإعلان (Owner)</label>
+                            <button type="button" onclick="openAdOwnerModalFromAdEdit()" class="text-[11px] text-[#2D4F2E] font-bold hover:underline cursor-pointer">
+                                <i class="fas fa-plus-circle me-1"></i>حساب مالك جديد
+                            </button>
+                        </div>
+                        <select id="ad-modal-owner" class="form-select text-xs">
+                            <option value="">-- بدون مالك / تابع للإدارة --</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1864,6 +2449,101 @@
                 <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
                     <button type="button" onclick="closeModal('advertisement-modal')" class="btn-secondary text-xs" data-i18n="cancel">إلغاء</button>
                     <button type="submit" class="gold-btn text-xs" data-i18n="save">حفظ الإعلان</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- AD OWNER MANAGEMENT MODAL (SUPER ADMIN ONLY) -->
+    <div id="ad-owner-modal" class="modal-overlay">
+        <div class="modal-content p-6 bg-white max-w-lg">
+            <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                        <i class="fas fa-user-shield text-[#2D4F2E]"></i>
+                        <span>إدارة وتعيين حساب صاحب الإعلان</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5 line-clamp-1" id="ad-owner-modal-ad-title">--</p>
+                </div>
+                <button onclick="closeModal('ad-owner-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold cursor-pointer">&times;</button>
+            </div>
+
+            <!-- Current Owner Info Box -->
+            <div id="ad-owner-current-box" class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2 mb-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-slate-500 font-semibold">حساب صاحب الإعلان الحالي:</span>
+                    <button type="button" onclick="unlinkCurrentOwner()" id="ad-owner-unlink-btn" class="text-xs text-red-600 hover:text-red-700 font-bold hover:underline cursor-pointer">
+                        <i class="fas fa-unlink me-1"></i>إلغاء الربط
+                    </button>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-[#2D4F2E]/10 text-[#2D4F2E] flex items-center justify-center font-bold text-sm">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="text-xs">
+                        <div class="font-bold text-slate-900" id="ad-owner-current-name">بدون مالك</div>
+                        <div class="text-slate-500 font-mono" id="ad-owner-current-email">--</div>
+                        <div class="text-slate-400" id="ad-owner-current-phone">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Switcher between Create New Owner vs Select Existing -->
+            <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-lg mb-4 text-xs font-bold">
+                <button type="button" id="tab-btn-create-owner" onclick="switchAdOwnerSubTab('create')" class="flex-1 py-1.5 rounded-md text-center transition bg-white text-[#2D4F2E] shadow-sm cursor-pointer">
+                    <i class="fas fa-user-plus me-1"></i>إنشاء حساب جديد
+                </button>
+                <button type="button" id="tab-btn-select-owner" onclick="switchAdOwnerSubTab('select')" class="flex-1 py-1.5 rounded-md text-center transition text-slate-600 hover:text-slate-900 cursor-pointer">
+                    <i class="fas fa-users me-1"></i>اختيار مستخدم مسجل
+                </button>
+            </div>
+
+            <!-- Option 1: Create New Owner Account -->
+            <form id="ad-owner-create-form" onsubmit="handleAdOwnerCreateSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">اسم صاحب الإعلان *</label>
+                    <input type="text" id="owner-new-name" required class="form-input text-xs" placeholder="مثال: أحمد عبد الرحمن">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">البريد الإلكتروني (لتسجيل الدخول) *</label>
+                    <input type="email" id="owner-new-email" required class="form-input text-xs" placeholder="owner@kuba-app.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">رقم الهاتف</label>
+                    <input type="text" id="owner-new-phone" class="form-input text-xs" placeholder="010xxxxxxxx">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">كلمة المرور للحساب *</label>
+                    <input type="text" id="owner-new-password-input" required minlength="8" class="form-input text-xs font-mono" placeholder="كلمة مرور قوية (8 أحرف على الأقل)">
+                    <div class="flex items-center justify-between mt-1">
+                        <span class="text-[10px] text-slate-400">احفظ هذه البيانات لتسليمها لصاحب الإعلان</span>
+                        <button type="button" onclick="generateRandomOwnerPassword()" class="text-[11px] text-[#2D4F2E] font-bold hover:underline cursor-pointer">توليد كلمة سر عشوائية</button>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('ad-owner-modal')" class="btn-secondary text-xs cursor-pointer">إلغاء</button>
+                    <button type="submit" class="gold-btn text-xs py-2 px-5 cursor-pointer">
+                        <i class="fas fa-check-circle me-1"></i>
+                        <span>إنشاء الحساب وتعيينه مالكاً</span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Option 2: Select Existing User -->
+            <form id="ad-owner-select-form" onsubmit="handleAdOwnerSelectSubmit(event)" class="space-y-3 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">اختر مستخدماً من النظام</label>
+                    <select id="owner-existing-user-select" class="form-select text-xs">
+                        <option value="">-- اختر مستخدماً لتعيينه كصاحب إعلان --</option>
+                    </select>
+                </div>
+                <p class="text-[11px] text-slate-500">سيتم ترقية رتبة المستخدم إلى صاحب إعلان (Owner) وربطه بهذا الإعلان مباشرة.</p>
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('ad-owner-modal')" class="btn-secondary text-xs cursor-pointer">إلغاء</button>
+                    <button type="submit" class="gold-btn text-xs py-2 px-5 cursor-pointer">
+                        <i class="fas fa-link me-1"></i>
+                        <span>ربط المستخدم المختار</span>
+                    </button>
                 </div>
             </form>
         </div>

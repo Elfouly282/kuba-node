@@ -7,6 +7,7 @@ const UnitTypeAttribute = require('../../unit-types/models/unitTypeAttributeMode
 const Category = require('../../categories/models/categoryModel');
 const Region = require('../../regions/models/regionModel');
 const City = require('../../cities/models/cityModel');
+const User = require('../../auth/models/userModel');
 const APIError = require('../../../utils/apiError');
 const { getUploadsRoot } = require('../../../config/uploadsPath');
 const { getImageUrl, getRelativeImagePath, deleteImageFile } = require('../../../utils/imageUrl');
@@ -31,6 +32,15 @@ const formatAdvertisement = (doc) => {
     }
     if (obj.region && typeof obj.region === 'object' && obj.region.image) {
         obj.region.image = getImageUrl(obj.region.image);
+    }
+
+    if (obj.owner && typeof obj.owner === 'object') {
+        obj.owner = {
+            id: obj.owner._id || obj.owner.id,
+            name: obj.owner.name,
+            email: obj.owner.email,
+            phone: obj.owner.phone,
+        };
     }
 
     if (!obj.pricing || typeof obj.pricing !== 'object') {
@@ -73,7 +83,12 @@ exports.getAll = async (req, res, next) => {
             });
         }
 
-        const result = await searchAdvertisements(mergeSearchInput(req), {
+        const input = mergeSearchInput(req);
+        if (req.user && (req.user.role === 'owner' || req.user.role === 'advertiser')) {
+            input.owner = String(req.user._id);
+        }
+
+        const result = await searchAdvertisements(input, {
             strict: false,
             defaultPublic: false,
             defaultLimit: 100,
@@ -141,10 +156,18 @@ exports.getOne = async (req, res, next) => {
             .populate('category', 'name image')
             .populate('city', 'name image')
             .populate('region', 'name image')
-            .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit');
+            .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+            .populate('owner', 'name email phone avatar');
 
         if (!advertisement) {
             return next(new APIError('errors.advertisementNotFound', 404));
+        }
+
+        if (req.user && (req.user.role === 'owner' || req.user.role === 'advertiser')) {
+            const ownerId = advertisement.owner?._id || advertisement.owner;
+            if (String(ownerId) !== String(req.user._id)) {
+                return next(new APIError('errors.adNotOwned', 403));
+            }
         }
 
         res.status(200).json({
@@ -304,7 +327,7 @@ exports.create = async (req, res, next) => {
             images: imageList,
             attributes: attributes || {},
             status: status || 'published',
-            owner: req.user?._id || null,
+            owner: (req.user?.role === 'admin' && req.body.owner && mongoose.Types.ObjectId.isValid(req.body.owner)) ? req.body.owner : (req.user?._id || null),
             active: active !== undefined ? (String(active) === 'true' || active === true) : true,
         });
 
@@ -312,7 +335,8 @@ exports.create = async (req, res, next) => {
             .populate('category', 'name image')
             .populate('city', 'name image')
             .populate('region', 'name image')
-            .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit');
+            .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+            .populate('owner', 'name email phone avatar');
 
         res.status(201).json({
             status: 'success',
@@ -333,6 +357,17 @@ exports.update = async (req, res, next) => {
         const advertisement = await Advertisement.findById(req.params.id);
         if (!advertisement) {
             return next(new APIError('errors.advertisementNotFound', 404));
+        }
+
+        if (req.user && (req.user.role === 'owner' || req.user.role === 'advertiser')) {
+            const ownerId = advertisement.owner?._id || advertisement.owner;
+            if (String(ownerId) !== String(req.user._id)) {
+                return next(new APIError('errors.adNotOwned', 403));
+            }
+        }
+
+        if (req.user && req.user.role === 'admin' && req.body.owner !== undefined) {
+            advertisement.owner = (req.body.owner && mongoose.Types.ObjectId.isValid(req.body.owner)) ? req.body.owner : null;
         }
 
         const stringFields = ['title', 'description', 'type', 'location', 'address', 'status'];
@@ -493,7 +528,8 @@ exports.update = async (req, res, next) => {
             .populate('category', 'name image')
             .populate('city', 'name image')
             .populate('region', 'name image')
-            .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit');
+            .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+            .populate('owner', 'name email phone avatar');
 
         res.status(200).json({
             status: 'success',
@@ -516,6 +552,13 @@ exports.remove = async (req, res, next) => {
             return next(new APIError('errors.advertisementNotFound', 404));
         }
 
+        if (req.user && (req.user.role === 'owner' || req.user.role === 'advertiser')) {
+            const ownerId = advertisement.owner?._id || advertisement.owner;
+            if (String(ownerId) !== String(req.user._id)) {
+                return next(new APIError('errors.adNotOwned', 403));
+            }
+        }
+
         deleteImageFile(advertisement.image);
         if (Array.isArray(advertisement.images)) {
             advertisement.images.forEach((img) => deleteImageFile(img));
@@ -526,6 +569,278 @@ exports.remove = async (req, res, next) => {
         res.status(200).json({
             status: 'success',
             message: req.t ? req.t('messages.advertisementDeleted') : 'Listing deleted successfully.',
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.assignOwner = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return next(new APIError('errors.invalidAdvertisementId', 400));
+        }
+
+        const advertisement = await Advertisement.findById(id);
+        if (!advertisement) {
+            return next(new APIError('errors.advertisementNotFound', 404));
+        }
+
+        let ownerUser = null;
+
+        if (req.body.userId && mongoose.Types.ObjectId.isValid(req.body.userId)) {
+            ownerUser = await User.findById(req.body.userId).setOptions({ includeInactive: true });
+            if (!ownerUser) {
+                return next(new APIError('errors.ownerNotFound', 404));
+            }
+            if (ownerUser.role !== 'admin' && ownerUser.role !== 'owner') {
+                ownerUser.role = 'owner';
+                await ownerUser.save();
+            }
+        } else if (req.body.email && req.body.password) {
+            const email = req.body.email.toLowerCase().trim();
+            ownerUser = await User.findOne({ email }).setOptions({ includeInactive: true });
+            if (ownerUser) {
+                ownerUser.role = 'owner';
+                if (req.body.name) ownerUser.name = req.body.name.trim();
+                if (req.body.phone) ownerUser.phone = req.body.phone.trim();
+                if (req.body.password && req.body.password.length >= 8) {
+                    ownerUser.password = req.body.password;
+                }
+                ownerUser.active = true;
+                await ownerUser.save();
+            } else {
+                ownerUser = await User.create({
+                    name: req.body.name?.trim() || 'صاحب الإعلان',
+                    email,
+                    password: req.body.password,
+                    phone: req.body.phone?.trim() || null,
+                    role: 'owner',
+                    isEmailVerified: true,
+                    active: true,
+                });
+            }
+        } else {
+            return next(new APIError('errors.missingFields', 400));
+        }
+
+        advertisement.owner = ownerUser._id;
+        await advertisement.save();
+
+        const populated = await Advertisement.findById(advertisement._id)
+            .populate('category', 'name image')
+            .populate('city', 'name image')
+            .populate('region', 'name image')
+            .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+            .populate('owner', 'name email phone avatar');
+
+        res.status(200).json({
+            status: 'success',
+            message: 'تم تعيين وربط حساب صاحب الإعلان بنجاح.',
+            data: {
+                advertisement: formatAdvertisement(populated),
+                owner: {
+                    id: ownerUser._id,
+                    name: ownerUser.name,
+                    email: ownerUser.email,
+                    phone: ownerUser.phone,
+                    role: ownerUser.role,
+                },
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.removeOwner = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return next(new APIError('errors.invalidAdvertisementId', 400));
+        }
+
+        const advertisement = await Advertisement.findById(id);
+        if (!advertisement) {
+            return next(new APIError('errors.advertisementNotFound', 404));
+        }
+
+        advertisement.owner = null;
+        await advertisement.save();
+
+        res.status(200).json({
+            status: 'success',
+            message: 'تم إلغاء ربط صاحب الإعلان بنجاح.',
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.addImages = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return next(new APIError('errors.invalidAdvertisementId', 400));
+        }
+
+        const advertisement = await Advertisement.findById(id);
+        if (!advertisement) {
+            return next(new APIError('errors.advertisementNotFound', 404));
+        }
+
+        if (req.user && req.user.role !== 'admin') {
+            const ownerId = advertisement.owner?._id || advertisement.owner;
+            if (String(ownerId) !== String(req.user._id)) {
+                return next(new APIError('errors.adNotOwned', 403));
+            }
+        }
+
+        let newImages = [];
+        if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+            newImages = req.files.map((f) => `advertisements/${f.filename}`);
+        } else if (req.file) {
+            newImages = [`advertisements/${req.file.filename}`];
+        }
+
+        if (req.body.imageUrl && typeof req.body.imageUrl === 'string') {
+            newImages.push(getRelativeImagePath(req.body.imageUrl.trim()));
+        } else if (Array.isArray(req.body.imageUrls)) {
+            req.body.imageUrls.forEach((url) => {
+                if (url && typeof url === 'string') newImages.push(getRelativeImagePath(url.trim()));
+            });
+        }
+
+        if (newImages.length === 0) {
+            return next(new APIError('validation.imageRequired', 400));
+        }
+
+        if (!Array.isArray(advertisement.images)) {
+            advertisement.images = advertisement.image ? [advertisement.image] : [];
+        }
+
+        newImages.forEach((img) => {
+            if (img && !advertisement.images.includes(img)) {
+                advertisement.images.push(img);
+            }
+        });
+
+        if (!advertisement.image && advertisement.images.length > 0) {
+            advertisement.image = advertisement.images[0];
+        }
+
+        await advertisement.save();
+
+        const populated = await Advertisement.findById(advertisement._id)
+            .populate('category', 'name image')
+            .populate('city', 'name image')
+            .populate('region', 'name image')
+            .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+            .populate('owner', 'name email phone avatar');
+
+        res.status(200).json({
+            status: 'success',
+            message: 'تم إضافة الصور بنجاح.',
+            data: { advertisement: formatAdvertisement(populated) },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.deleteImage = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { image } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return next(new APIError('errors.invalidAdvertisementId', 400));
+        }
+
+        const advertisement = await Advertisement.findById(id);
+        if (!advertisement) {
+            return next(new APIError('errors.advertisementNotFound', 404));
+        }
+
+        if (req.user && req.user.role !== 'admin') {
+            const ownerId = advertisement.owner?._id || advertisement.owner;
+            if (String(ownerId) !== String(req.user._id)) {
+                return next(new APIError('errors.adNotOwned', 403));
+            }
+        }
+
+        const relPath = getRelativeImagePath(image);
+        deleteImageFile(relPath);
+
+        if (Array.isArray(advertisement.images)) {
+            advertisement.images = advertisement.images.filter((img) => img !== relPath && img !== image);
+        }
+
+        if (advertisement.image === relPath || advertisement.image === image) {
+            advertisement.image = advertisement.images && advertisement.images.length > 0 ? advertisement.images[0] : '';
+        }
+
+        await advertisement.save();
+
+        const populated = await Advertisement.findById(advertisement._id)
+            .populate('category', 'name image')
+            .populate('city', 'name image')
+            .populate('region', 'name image')
+            .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+            .populate('owner', 'name email phone avatar');
+
+        res.status(200).json({
+            status: 'success',
+            message: 'تم حذف الصورة بنجاح.',
+            data: { advertisement: formatAdvertisement(populated) },
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.setMainImage = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { image } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return next(new APIError('errors.invalidAdvertisementId', 400));
+        }
+
+        const advertisement = await Advertisement.findById(id);
+        if (!advertisement) {
+            return next(new APIError('errors.advertisementNotFound', 404));
+        }
+
+        if (req.user && req.user.role !== 'admin') {
+            const ownerId = advertisement.owner?._id || advertisement.owner;
+            if (String(ownerId) !== String(req.user._id)) {
+                return next(new APIError('errors.adNotOwned', 403));
+            }
+        }
+
+        const relPath = getRelativeImagePath(image);
+        advertisement.image = relPath;
+
+        if (Array.isArray(advertisement.images) && !advertisement.images.includes(relPath)) {
+            advertisement.images.unshift(relPath);
+        }
+
+        await advertisement.save();
+
+        const populated = await Advertisement.findById(advertisement._id)
+            .populate('category', 'name image')
+            .populate('city', 'name image')
+            .populate('region', 'name image')
+            .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+            .populate('owner', 'name email phone avatar');
+
+        res.status(200).json({
+            status: 'success',
+            message: 'تم تعيين الصورة الرئيسية بنجاح.',
+            data: { advertisement: formatAdvertisement(populated) },
         });
     } catch (err) {
         next(err);

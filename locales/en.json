@@ -76,7 +76,10 @@
         "invalidCityId": "Invalid city ID provided.",
         "regionNotFound": "The requested region was not found.",
         "invalidRegionId": "Invalid region ID provided.",
-        "imageRequired": "Image is required (please upload an image file or provide an image URL)."
+        "imageRequired": "Image is required (please upload an image file or provide an image URL).",
+        "dashboardAccessDenied": "Sorry, this account is not authorized to access the dashboard. Access is restricted to Administrators and Listing Owners only.",
+        "ownerNotFound": "The specified owner account was not found.",
+        "adNotOwned": "You do not have permission to manage this listing."
     },
     "validation": {
         "nameRequired": "Name is required.",

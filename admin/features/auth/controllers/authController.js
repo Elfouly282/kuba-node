@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const admin = require('../../../config/firebase');
 const User = require('../../../../src/features/auth/models/userModel');
+const Advertisement = require('../../../../src/features/advertisements/models/advertisementModel');
 const APIError = require('../../../utils/apiError');
 const { generateToken } = require('../../../utils/generateToken');
 
@@ -83,11 +84,22 @@ exports.login = async (req, res, next) => {
             return next(new APIError('errors.userDisabled', 403));
         }
 
+        if (user.role !== 'admin' && user.role !== 'owner' && user.role !== 'advertiser') {
+            return next(new APIError('errors.dashboardAccessDenied', 403));
+        }
+
         const token = generateToken({
             id: user._id,
             email: user.email,
             role: user.role,
         });
+
+        let ownedAds = [];
+        if (user.role === 'owner' || user.role === 'advertiser') {
+            ownedAds = await Advertisement.find({ owner: user._id })
+                .select('_id title image images price pricing active location address city region unitType')
+                .lean();
+        }
 
         res.status(200).json({
             status: 'success',
@@ -98,7 +110,10 @@ exports.login = async (req, res, next) => {
                     name: user.name,
                     email: user.email,
                     role: user.role,
+                    phone: user.phone,
                     provider: user.provider,
+                    ownedAdsCount: ownedAds.length,
+                    ownedAds,
                 },
             },
         });
@@ -109,10 +124,25 @@ exports.login = async (req, res, next) => {
 
 exports.getMe = async (req, res, next) => {
     try {
+        let ownedAds = [];
+        if (req.user && (req.user.role === 'owner' || req.user.role === 'advertiser')) {
+            ownedAds = await Advertisement.find({ owner: req.user._id })
+                .select('_id title image images price pricing active location address city region unitType')
+                .lean();
+        }
+
+        const userObj = req.user.toObject ? req.user.toObject() : { ...req.user };
+        delete userObj.password;
+
         res.status(200).json({
             status: 'success',
             data: {
-                user: req.user,
+                user: {
+                    ...userObj,
+                    id: userObj._id || userObj.id,
+                    ownedAdsCount: ownedAds.length,
+                    ownedAds,
+                },
             },
         });
     } catch (err) {

@@ -9,9 +9,9 @@ const {
     toggleUserStatus,
     deleteUser,
 } = require('../controllers/userController');
-const { protectAdmin } = require('../../../middleware/authMiddleware');
+const { protectAdmin, requireAdmin } = require('../../../middleware/authMiddleware');
 
-router.use(protectAdmin);
+router.use(protectAdmin, requireAdmin);
 
 router.get('/stats', getUserStats);
 router.get('/', getAllUsers);

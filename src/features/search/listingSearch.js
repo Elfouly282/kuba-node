@@ -359,6 +359,10 @@ const buildMongoFilter = async (query, params, options) => {
         filter['pricing.pricingUnit'] = query.pricingUnit;
     }
 
+    if (query.owner && mongoose.Types.ObjectId.isValid(query.owner)) {
+        filter.owner = new mongoose.Types.ObjectId(query.owner);
+    }
+
     if (params.duration != null && !params.startDate) {
         andClauses.push({
             $or: [
@@ -423,7 +427,8 @@ const populateListing = (query) => query
     .populate('category', 'name image')
     .populate('city', 'name image')
     .populate('region', 'name image')
-    .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit');
+    .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+    .populate('owner', 'name email phone avatar');
 
 const readPaging = (query, options) => {
     const defaultLimit = options.defaultLimit || 100;

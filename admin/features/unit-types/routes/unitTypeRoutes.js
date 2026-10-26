@@ -13,20 +13,20 @@ const {
     removeAttribute,
 } = require('../controllers/unitTypeController');
 
-const { protectAdmin } = require('../../../middleware/authMiddleware');
+const { protectAdmin, requireAdmin } = require('../../../middleware/authMiddleware');
 
 router.get('/', getAll);
 router.get('/:id', getOne);
-router.post('/', protectAdmin, create);
-router.patch('/:id', protectAdmin, update);
-router.put('/:id', protectAdmin, update);
-router.delete('/:id', protectAdmin, remove);
+router.post('/', protectAdmin, requireAdmin, create);
+router.patch('/:id', protectAdmin, requireAdmin, update);
+router.put('/:id', protectAdmin, requireAdmin, update);
+router.delete('/:id', protectAdmin, requireAdmin, remove);
 
 // Dynamic attributes sub-routes
 router.get('/:id/attributes', getAttributes);
-router.post('/:id/attributes', protectAdmin, createAttribute);
-router.patch('/:id/attributes/:attrId', protectAdmin, updateAttribute);
-router.put('/:id/attributes/:attrId', protectAdmin, updateAttribute);
-router.delete('/:id/attributes/:attrId', protectAdmin, removeAttribute);
+router.post('/:id/attributes', protectAdmin, requireAdmin, createAttribute);
+router.patch('/:id/attributes/:attrId', protectAdmin, requireAdmin, updateAttribute);
+router.put('/:id/attributes/:attrId', protectAdmin, requireAdmin, updateAttribute);
+router.delete('/:id/attributes/:attrId', protectAdmin, requireAdmin, removeAttribute);
 
 module.exports = router;

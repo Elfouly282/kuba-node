@@ -12,7 +12,7 @@ const {
 } = require('../controllers/cityController');
 
 const { uploadSingle } = require('../../../middleware/uploadMiddleware');
-const { protectAdmin } = require('../../../middleware/authMiddleware');
+const { protectAdmin, requireAdmin } = require('../../../middleware/authMiddleware');
 
 router.get('/', getAll);
 router.get('/data', getCityData);
@@ -20,9 +20,9 @@ router.get('/:id/data', getCityData);
 router.get('/:id/regions', getCityRegions);
 router.get('/:id', getOne);
 
-router.post('/', protectAdmin, ...uploadSingle('image', 'regions'), create);
-router.patch('/:id', protectAdmin, ...uploadSingle('image', 'regions'), update);
-router.put('/:id', protectAdmin, ...uploadSingle('image', 'regions'), update);
-router.delete('/:id', protectAdmin, remove);
+router.post('/', protectAdmin, requireAdmin, ...uploadSingle('image', 'regions'), create);
+router.patch('/:id', protectAdmin, requireAdmin, ...uploadSingle('image', 'regions'), update);
+router.put('/:id', protectAdmin, requireAdmin, ...uploadSingle('image', 'regions'), update);
+router.delete('/:id', protectAdmin, requireAdmin, remove);
 
 module.exports = router;

@@ -49,12 +49,24 @@ exports.getAll = async (req, res, next) => {
         const filter = {};
 
         if (req.user && req.user.role !== 'admin') {
-            filter.user = req.user._id;
+            if (req.user.role === 'owner' || req.user.role === 'advertiser') {
+                const ownedAds = await Advertisement.find({ owner: req.user._id }).select('_id');
+                const ownedAdIds = ownedAds.map((a) => a._id);
+                filter.advertisement = { $in: ownedAdIds };
+            } else {
+                filter.user = req.user._id;
+            }
         } else if (req.query.user && mongoose.Types.ObjectId.isValid(req.query.user)) {
             filter.user = req.query.user;
         }
 
         if (req.query.advertisement && mongoose.Types.ObjectId.isValid(req.query.advertisement)) {
+            if (req.user && (req.user.role === 'owner' || req.user.role === 'advertiser')) {
+                const isOwned = await Advertisement.exists({ _id: req.query.advertisement, owner: req.user._id });
+                if (!isOwned) {
+                    return res.status(200).json({ status: 'success', results: 0, data: { bookings: [] } });
+                }
+            }
             filter.advertisement = req.query.advertisement;
         }
 
@@ -63,7 +75,7 @@ exports.getAll = async (req, res, next) => {
         }
 
         const bookings = await Booking.find(filter)
-            .populate('advertisement', 'title price pricing image location category region unitType')
+            .populate('advertisement', 'title price pricing image images location category region unitType')
             .populate('user', 'name email phone')
             .sort({ createdAt: -1 });
 
@@ -84,15 +96,25 @@ exports.getOne = async (req, res, next) => {
         }
 
         const booking = await Booking.findById(req.params.id)
-            .populate('advertisement', 'title price pricing image location category region unitType')
+            .populate('advertisement', 'title price pricing image images location category region unitType')
             .populate('user', 'name email phone');
 
         if (!booking) {
             return next(new APIError('errors.bookingNotFound', 404));
         }
 
-        if (req.user && req.user.role !== 'admin' && String(booking.user?._id || booking.user) !== String(req.user._id)) {
-            return next(new APIError('errors.forbidden', 403));
+        if (req.user && req.user.role !== 'admin') {
+            if (req.user.role === 'owner' || req.user.role === 'advertiser') {
+                const isOwned = await Advertisement.exists({
+                    _id: booking.advertisement?._id || booking.advertisement,
+                    owner: req.user._id,
+                });
+                if (!isOwned) {
+                    return next(new APIError('errors.forbidden', 403));
+                }
+            } else if (String(booking.user?._id || booking.user) !== String(req.user._id)) {
+                return next(new APIError('errors.forbidden', 403));
+            }
         }
 
         res.status(200).json({
@@ -197,23 +219,47 @@ exports.update = async (req, res, next) => {
             return next(new APIError('errors.bookingNotFound', 404));
         }
 
-        if (req.user.role !== 'admin') {
-            if (String(booking.user) !== String(req.user._id)) {
-                return next(new APIError('errors.forbidden', 403));
+        if (req.user && req.user.role !== 'admin') {
+            if (req.user.role === 'owner' || req.user.role === 'advertiser') {
+                const isOwned = await Advertisement.exists({
+                    _id: booking.advertisement?._id || booking.advertisement,
+                    owner: req.user._id,
+                });
+                if (!isOwned) {
+                    return next(new APIError('errors.forbidden', 403));
+                }
+                if (req.body.status) {
+                    const allowedStatuses = ['pending', 'confirmed', 'cancelled', 'completed'];
+                    if (!allowedStatuses.includes(req.body.status)) {
+                        return next(new APIError('validation.invalidBookingStatus', 400));
+                    }
+                    booking.status = req.body.status;
+                }
+                if (req.body.paymentStatus) {
+                    booking.paymentStatus = req.body.paymentStatus;
+                }
+                if (req.body.notes !== undefined) {
+                    booking.notes = req.body.notes;
+                }
+            } else {
+                if (String(booking.user) !== String(req.user._id)) {
+                    return next(new APIError('errors.forbidden', 403));
+                }
+                if (req.body.status && req.body.status !== 'cancelled') {
+                    return next(new APIError('errors.forbidden', 403));
+                }
+                if (req.body.status) booking.status = req.body.status;
             }
-            if (req.body.status && req.body.status !== 'cancelled') {
-                return next(new APIError('errors.forbidden', 403));
-            }
+        } else {
+            if (req.body.status) booking.status = req.body.status;
+            if (req.body.paymentStatus) booking.paymentStatus = req.body.paymentStatus;
+            if (req.body.notes !== undefined) booking.notes = req.body.notes;
         }
-
-        if (req.body.status) booking.status = req.body.status;
-        if (req.body.paymentStatus && req.user.role === 'admin') booking.paymentStatus = req.body.paymentStatus;
-        if (req.body.notes !== undefined) booking.notes = req.body.notes;
 
         await booking.save();
 
         const populated = await Booking.findById(booking._id)
-            .populate('advertisement', 'title price pricing image location')
+            .populate('advertisement', 'title price pricing image images location')
             .populate('user', 'name email phone');
 
         res.status(200).json({
@@ -237,8 +283,18 @@ exports.remove = async (req, res, next) => {
             return next(new APIError('errors.bookingNotFound', 404));
         }
 
-        if (req.user.role !== 'admin' && String(booking.user) !== String(req.user._id)) {
-            return next(new APIError('errors.forbidden', 403));
+        if (req.user && req.user.role !== 'admin') {
+            if (req.user.role === 'owner' || req.user.role === 'advertiser') {
+                const isOwned = await Advertisement.exists({
+                    _id: booking.advertisement?._id || booking.advertisement,
+                    owner: req.user._id,
+                });
+                if (!isOwned) {
+                    return next(new APIError('errors.forbidden', 403));
+                }
+            } else if (String(booking.user) !== String(req.user._id)) {
+                return next(new APIError('errors.forbidden', 403));
+            }
         }
 
         await booking.deleteOne();

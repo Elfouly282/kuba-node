@@ -134,6 +134,15 @@ const I18N = {
         next: 'التالي',
         page: 'صفحة',
         of: 'من',
+        bookings: 'الحجوزات والطلبات',
+        ownerOverview: 'لوحة الإعلان',
+        ownerListing: 'بيانات وتفاصيل الإعلان',
+        ownerGallery: 'معرض صور الإعلان',
+        ownerBookings: 'الحجوزات والطلبات',
+        ownerProfile: 'بيانات حسابي والأمان',
+        manageOwner: 'إدارة حساب المالك',
+        createOwner: 'تعيين مالك للإعلان',
+        noOwner: 'بدون مالك',
     },
     en: {
         appName: 'Kuba Admin Dashboard',
@@ -268,6 +277,15 @@ const I18N = {
         next: 'Next',
         page: 'Page',
         of: 'of',
+        bookings: 'Bookings & Orders',
+        ownerOverview: 'Listing Dashboard',
+        ownerListing: 'Listing Details',
+        ownerGallery: 'Photo Gallery',
+        ownerBookings: 'Bookings & Orders',
+        ownerProfile: 'My Profile & Security',
+        manageOwner: 'Manage Owner',
+        createOwner: 'Assign Owner',
+        noOwner: 'No Owner',
     }
 };
 
@@ -302,6 +320,15 @@ const state = {
     editingAdvertisementId: null,
     editingUnitTypeId: null,
     editingAttributeId: null,
+    bookings: [],
+    bookingsTotal: 0,
+    ownerAds: [],
+    activeOwnerAdId: null,
+    ownerBookings: [],
+    ownerCurrentBookingFilter: 'all',
+    selectedAdForOwnerModal: null,
+    ownerMapInstance: null,
+    ownerMapMarker: null,
 };
 
 // ─── HELPERS & API ────────────────────────────────────────────────────────────
@@ -448,6 +475,10 @@ function logout() {
     checkAuth();
 }
 
+function isOwnerUser() {
+    return state.user && (state.user.role === 'owner' || state.user.role === 'advertiser');
+}
+
 function checkAuth() {
     const authScreen = document.getElementById('auth-screen');
     const appScreen = document.getElementById('app-screen');
@@ -458,15 +489,67 @@ function checkAuth() {
     } else {
         authScreen.classList.add('hidden');
         appScreen.classList.remove('hidden');
-        updateAdminProfileUI();
+        setupRoleUI();
         loadCurrentTab();
     }
+}
+
+function setupRoleUI() {
+    const adminNav = document.getElementById('sidebar-admin-nav');
+    const ownerNav = document.getElementById('sidebar-owner-nav');
+    const roleBadge = document.getElementById('header-role-badge');
+    const portalLabel = document.getElementById('header-portal-label');
+    const avatarIcon = document.getElementById('header-user-avatar-icon');
+    const ownerAdContainer = document.getElementById('header-owner-ad-container');
+
+    updateAdminProfileUI();
+
+    if (isOwnerUser()) {
+        if (adminNav) adminNav.classList.add('hidden');
+        if (ownerNav) ownerNav.classList.remove('hidden');
+        if (roleBadge) {
+            roleBadge.textContent = 'صاحب إعلان';
+            roleBadge.className = 'badge bg-amber-500 text-white text-[9px] ms-1 py-0 px-1.5';
+        }
+        if (portalLabel) portalLabel.textContent = 'بوابة صاحب الإعلان';
+        if (avatarIcon) avatarIcon.innerHTML = '<i class="fas fa-crown text-[10px] text-amber-300"></i>';
+
+        // If currently on an admin tab, switch to owner-overview
+        if (!state.currentTab || !state.currentTab.startsWith('owner-')) {
+            state.currentTab = 'owner-overview';
+        }
+
+        // Initialize Owner Portal Data
+        initOwnerPortal();
+    } else {
+        if (adminNav) adminNav.classList.remove('hidden');
+        if (ownerNav) ownerNav.classList.add('hidden');
+        if (ownerAdContainer) ownerAdContainer.classList.add('hidden');
+        if (roleBadge) {
+            roleBadge.textContent = 'مدير عام';
+            roleBadge.className = 'badge badge-brand text-[9px] ms-1 py-0 px-1.5';
+        }
+        if (portalLabel) portalLabel.textContent = 'لوحة تحكم كوبا الإدارية';
+        if (avatarIcon) avatarIcon.innerHTML = '<i class="fas fa-user-shield text-[10px]"></i>';
+
+        if (state.currentTab && state.currentTab.startsWith('owner-')) {
+            state.currentTab = 'overview';
+        }
+    }
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.toggle('active', link.dataset.tab === state.currentTab);
+    });
+    document.querySelectorAll('.tab-view').forEach(view => {
+        view.classList.toggle('hidden', view.id !== `view-${state.currentTab}`);
+    });
+    updatePageTitle();
 }
 
 function updateAdminProfileUI() {
     const nameEl = document.getElementById('header-admin-name');
     const emailEl = document.getElementById('header-admin-email');
-    if (nameEl) nameEl.textContent = state.user?.name || 'Administrator';
+    if (nameEl) nameEl.textContent = state.user?.name || (isOwnerUser() ? 'صاحب الإعلان' : 'Administrator');
     if (emailEl) emailEl.textContent = state.user?.email || '';
 }
 
@@ -475,6 +558,7 @@ function updateAdminProfileUI() {
 const PAGE_TITLES = {
     overview: 'overview',
     users: 'users',
+    bookings: 'bookings',
     regions: 'regions',
     advertisements: 'advertisements',
     'unit-types': 'unitTypes',
@@ -482,6 +566,11 @@ const PAGE_TITLES = {
     categories: 'categoriesTitle',
     banners: 'bannersTitle',
     system: 'systemStatus',
+    'owner-overview': 'ownerOverview',
+    'owner-listing': 'ownerListing',
+    'owner-gallery': 'ownerGallery',
+    'owner-bookings': 'ownerBookings',
+    'owner-profile': 'ownerProfile',
 };
 
 function updatePageTitle() {
@@ -512,6 +601,8 @@ function loadCurrentTab() {
         loadStats();
     } else if (state.currentTab === 'users') {
         loadUsers();
+    } else if (state.currentTab === 'bookings') {
+        loadBookingsTab();
     } else if (state.currentTab === 'regions') {
         loadCitiesAndRegions();
     } else if (state.currentTab === 'unit-types') {
@@ -524,6 +615,16 @@ function loadCurrentTab() {
         loadCategories();
     } else if (state.currentTab === 'banners') {
         loadBannersTab();
+    } else if (state.currentTab === 'owner-overview') {
+        loadOwnerOverviewTab();
+    } else if (state.currentTab === 'owner-listing') {
+        loadOwnerListingTab();
+    } else if (state.currentTab === 'owner-gallery') {
+        loadOwnerGalleryTab();
+    } else if (state.currentTab === 'owner-bookings') {
+        loadOwnerBookingsTab();
+    } else if (state.currentTab === 'owner-profile') {
+        loadOwnerProfileTab();
     }
 }
 
@@ -3619,11 +3720,27 @@ function renderAdvertisementsGrid() {
                     </div>
                 </div>
 
-                <div class="flex items-center justify-end gap-1.5 pt-3 mt-3 border-t border-slate-100">
-                    <button onclick="openEditAdvertisementModal('${adId}')" class="btn-secondary text-xs py-1 px-2.5">
+                <!-- Owner Info & Action -->
+                <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                    <div class="flex items-center gap-1.5 truncate max-w-[65%]">
+                        <i class="fas fa-user-shield text-[#2D4F2E]"></i>
+                        ${ad.owner ? `
+                            <span class="font-bold text-slate-800 truncate" title="${ad.owner.email || ''}">${ad.owner.name || ad.owner.email || 'صاحب الإعلان'}</span>
+                        ` : `
+                            <span class="text-amber-600 font-semibold text-[10px]">⚠️ بدون مالك</span>
+                        `}
+                    </div>
+                    <button onclick="openAdOwnerModal('${adId}')" class="text-[10px] text-[#2D4F2E] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded font-bold transition flex items-center gap-1 cursor-pointer">
+                        <i class="fas fa-user-gear"></i>
+                        <span>${ad.owner ? 'إدارة المالك' : 'تعيين مالك'}</span>
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-end gap-1.5 pt-2 mt-2 border-t border-slate-100">
+                    <button onclick="openEditAdvertisementModal('${adId}')" class="btn-secondary text-xs py-1 px-2.5 cursor-pointer">
                         <i class="fas fa-edit text-blue-600 me-1"></i> ${t('edit')}
                     </button>
-                    <button onclick="deleteAdvertisement('${adId}')" class="btn-secondary text-xs py-1 px-2.5 hover:text-red-600">
+                    <button onclick="deleteAdvertisement('${adId}')" class="btn-secondary text-xs py-1 px-2.5 hover:text-red-600 cursor-pointer">
                         <i class="fas fa-trash-alt text-red-600 me-1"></i> ${t('delete')}
                     </button>
                 </div>
@@ -4328,6 +4445,7 @@ function openAddAdvertisementModal() {
     populateLocationSelects();
     populateAdCategorySelect();
     populateAdUnitTypeSelect();
+    populateAdOwnerSelect('');
 
     // Reset dynamic attributes
     document.getElementById('ad-attributes-wrapper')?.classList.add('hidden');
@@ -4358,6 +4476,7 @@ async function openEditAdvertisementModal(adId) {
     populateLocationSelects();
     populateAdCategorySelect();
     populateAdUnitTypeSelect();
+    populateAdOwnerSelect(ad.owner?._id || ad.owner?.id || ad.owner || '');
 
     document.getElementById('ad-modal-title').value = ad.title || '';
     document.getElementById('ad-modal-location').value = ad.location || '';
@@ -4463,6 +4582,7 @@ async function handleAdvertisementFormSubmit(e) {
 
     const description = document.getElementById('ad-modal-description').value.trim();
     const active = document.getElementById('ad-modal-active').checked;
+    const owner = document.getElementById('ad-modal-owner')?.value || null;
     const imageFile = document.getElementById('ad-modal-image-file').files[0];
     const imageUrl = document.getElementById('ad-modal-image-url').value.trim();
 
@@ -4526,11 +4646,13 @@ async function handleAdvertisementFormSubmit(e) {
         if (longitude !== null) payload.append('longitude', longitude);
         payload.append('description', description);
         payload.append('active', active);
+        if (owner) payload.append('owner', owner);
         payload.append('attributes', JSON.stringify(attributes));
         payload.append('image', imageFile);
     } else {
         const bodyObj = {
             title,
+            owner: owner || null,
             category: category || null,
             unitType: unitType || null,
             city: city || null,
@@ -4640,6 +4762,1501 @@ function closeModal(modalId) {
     document.getElementById(modalId)?.classList.remove('active');
 }
 
+// ─── SUPER ADMIN: AD OWNER MANAGEMENT ──────────────────────────────────────────
+
+async function populateAdOwnerSelect(selectedOwnerId = '') {
+    const select = document.getElementById('ad-modal-owner');
+    if (!select) return;
+
+    try {
+        let users = state.users;
+        if (!users || users.length === 0) {
+            const res = await apiFetch('/api/v1/admin/users?limit=200', { silent: true });
+            users = res.data?.users || res.data || [];
+        }
+
+        const ownerCandidates = users.filter(u => ['owner', 'advertiser', 'user', 'admin'].includes(u.role));
+
+        let html = '<option value="">-- بدون مالك / تابع للإدارة مباشرة --</option>';
+        ownerCandidates.forEach(u => {
+            const uId = u.id || u._id;
+            const isSelected = String(uId) === String(selectedOwnerId);
+            const roleBadge = u.role === 'owner' ? '[صاحب إعلان]' : (u.role === 'admin' ? '[إدارة]' : '[مستخدم]');
+            html += `<option value="${uId}" ${isSelected ? 'selected' : ''}>${u.name || u.email} (${u.email}) ${roleBadge}</option>`;
+        });
+
+        select.innerHTML = html;
+        if (selectedOwnerId) select.value = selectedOwnerId;
+    } catch (err) {
+        console.warn('Failed to populate owner select:', err);
+    }
+}
+
+function openAdOwnerModalFromAdEdit() {
+    if (!state.editingAdvertisementId) {
+        showToast('يرجى حفظ الإعلان أولاً قبل تخصيص حساب المالك له', 'warning');
+        return;
+    }
+    openAdOwnerModal(state.editingAdvertisementId);
+}
+
+async function openAdOwnerModal(adId) {
+    state.selectedAdForOwnerModal = adId;
+    const ad = state.advertisements.find(a => (a.id || a._id) === adId);
+    if (!ad) {
+        showToast('الإعلان غير موجود', 'error');
+        return;
+    }
+
+    const adTitleEl = document.getElementById('ad-owner-modal-ad-title');
+    if (adTitleEl) adTitleEl.textContent = `${ad.title} (ID: ${adId})`;
+
+    const unlinkBtn = document.getElementById('ad-owner-unlink-btn');
+    const curNameEl = document.getElementById('ad-owner-current-name');
+    const curEmailEl = document.getElementById('ad-owner-current-email');
+    const curPhoneEl = document.getElementById('ad-owner-current-phone');
+
+    if (ad.owner) {
+        if (unlinkBtn) unlinkBtn.classList.remove('hidden');
+        if (curNameEl) curNameEl.textContent = ad.owner.name || 'بدون اسم';
+        if (curEmailEl) curEmailEl.textContent = ad.owner.email || '--';
+        if (curPhoneEl) curPhoneEl.textContent = ad.owner.phone || 'لا يوجد هاتف مسجل';
+    } else {
+        if (unlinkBtn) unlinkBtn.classList.add('hidden');
+        if (curNameEl) curNameEl.textContent = 'بدون مالك حالياً (تابع للإدارة)';
+        if (curEmailEl) curEmailEl.textContent = '--';
+        if (curPhoneEl) curPhoneEl.textContent = '--';
+    }
+
+    document.getElementById('ad-owner-create-form')?.reset();
+    generateRandomOwnerPassword();
+
+    const selectEl = document.getElementById('owner-existing-user-select');
+    if (selectEl) {
+        try {
+            const res = await apiFetch('/api/v1/admin/users?limit=200', { silent: true });
+            const allUsers = res.data?.users || res.data || [];
+            selectEl.innerHTML = '<option value="">-- اختر مستخدماً لتعيينه كصاحب إعلان --</option>' +
+                allUsers.map(u => {
+                    const uId = u.id || u._id;
+                    const rLabel = u.role === 'owner' ? '[صاحب إعلان]' : `[${u.role}]`;
+                    return `<option value="${uId}">${u.name || u.email} (${u.email}) ${rLabel}</option>`;
+                }).join('');
+        } catch (err) {
+            console.warn('Error loading users for owner select:', err);
+        }
+    }
+
+    switchAdOwnerSubTab('create');
+    document.getElementById('ad-owner-modal')?.classList.add('active');
+}
+
+function switchAdOwnerSubTab(tab) {
+    const createBtn = document.getElementById('tab-btn-create-owner');
+    const selectBtn = document.getElementById('tab-btn-select-owner');
+    const createForm = document.getElementById('ad-owner-create-form');
+    const selectForm = document.getElementById('ad-owner-select-form');
+
+    if (tab === 'create') {
+        createBtn?.classList.add('bg-white', 'text-[#2D4F2E]', 'shadow-sm');
+        createBtn?.classList.remove('text-slate-600');
+        selectBtn?.classList.remove('bg-white', 'text-[#2D4F2E]', 'shadow-sm');
+        selectBtn?.classList.add('text-slate-600');
+        createForm?.classList.remove('hidden');
+        selectForm?.classList.add('hidden');
+    } else {
+        selectBtn?.classList.add('bg-white', 'text-[#2D4F2E]', 'shadow-sm');
+        selectBtn?.classList.remove('text-slate-600');
+        createBtn?.classList.remove('bg-white', 'text-[#2D4F2E]', 'shadow-sm');
+        createBtn?.classList.add('text-slate-600');
+        selectForm?.classList.remove('hidden');
+        createForm?.classList.add('hidden');
+    }
+}
+
+function generateRandomOwnerPassword() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
+    let pwd = '';
+    for (let i = 0; i < 10; i++) {
+        pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const input = document.getElementById('owner-new-password-input');
+    if (input) input.value = pwd;
+}
+
+async function handleAdOwnerCreateSubmit(e) {
+    if (e) e.preventDefault();
+    const adId = state.selectedAdForOwnerModal;
+    if (!adId) return;
+
+    const name = document.getElementById('owner-new-name').value.trim();
+    const email = document.getElementById('owner-new-email').value.trim();
+    const phone = document.getElementById('owner-new-phone').value.trim();
+    const password = document.getElementById('owner-new-password-input').value.trim();
+
+    if (!name || !email || !password) {
+        showToast('يرجى ملء جميع الحقول المطلوبة (الاسم، البريد، كلمة السر)', 'error');
+        return;
+    }
+
+    try {
+        const res = await apiFetch(`/api/v1/admin/advertisements/${adId}/owner`, {
+            method: 'POST',
+            body: JSON.stringify({ name, email, phone, password }),
+        });
+
+        showToast(res.message || 'تم إنشاء حساب المالك وربطه بالإعلان بنجاح!', 'success');
+        closeModal('ad-owner-modal');
+        await loadAdvertisements();
+
+        if (state.editingAdvertisementId === adId && res.data?.owner?.id) {
+            populateAdOwnerSelect(res.data.owner.id);
+        }
+    } catch (err) {
+        // apiFetch shows error toast
+    }
+}
+
+async function handleAdOwnerSelectSubmit(e) {
+    if (e) e.preventDefault();
+    const adId = state.selectedAdForOwnerModal;
+    if (!adId) return;
+
+    const userId = document.getElementById('owner-existing-user-select').value;
+    if (!userId) {
+        showToast('يرجى اختيار مستخدم من القائمة', 'warning');
+        return;
+    }
+
+    try {
+        const res = await apiFetch(`/api/v1/admin/advertisements/${adId}/owner`, {
+            method: 'POST',
+            body: JSON.stringify({ userId }),
+        });
+
+        showToast(res.message || 'تم تعيين المستخدم كمالك للإعلان بنجاح!', 'success');
+        closeModal('ad-owner-modal');
+        await loadAdvertisements();
+
+        if (state.editingAdvertisementId === adId) {
+            populateAdOwnerSelect(userId);
+        }
+    } catch (err) {
+        // apiFetch shows error toast
+    }
+}
+
+async function unlinkCurrentOwner() {
+    const adId = state.selectedAdForOwnerModal;
+    if (!adId) return;
+
+    if (!confirm('هل أنت متأكد من رغبتك في إلغاء ربط حساب المالك بهذا الإعلان؟')) {
+        return;
+    }
+
+    try {
+        const res = await apiFetch(`/api/v1/admin/advertisements/${adId}/owner`, {
+            method: 'DELETE',
+        });
+
+        showToast(res.message || 'تم إلغاء ربط صاحب الإعلان بنجاح', 'success');
+        closeModal('ad-owner-modal');
+        await loadAdvertisements();
+
+        if (state.editingAdvertisementId === adId) {
+            populateAdOwnerSelect('');
+        }
+    } catch (err) {
+        // apiFetch shows error toast
+    }
+}
+
+// ─── SUPER ADMIN: BOOKINGS MANAGEMENT ──────────────────────────────────────────
+
+async function loadBookingsTab() {
+    const tbody = document.getElementById('admin-bookings-table-body');
+    if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400">جاري تحميل الحجوزات...</td></tr>';
+    }
+
+    try {
+        const res = await apiFetch('/api/v1/admin/bookings?limit=150');
+        state.bookings = res.data?.bookings || res.data || [];
+        state.bookingsTotal = state.bookings.length;
+        renderAdminBookingsTable(state.bookings);
+    } catch (err) {
+        console.error('Error loading bookings:', err);
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-red-500">فشل في تحميل الحجوزات: ${err.message}</td></tr>`;
+        }
+    }
+}
+
+function filterAdminBookings() {
+    const search = document.getElementById('admin-booking-search')?.value.trim().toLowerCase() || '';
+    const status = document.getElementById('admin-booking-filter-status')?.value || '';
+    const payment = document.getElementById('admin-booking-filter-payment')?.value || '';
+
+    let filtered = state.bookings;
+
+    if (search) {
+        filtered = filtered.filter(b => {
+            const userName = b.user?.name?.toLowerCase() || '';
+            const userEmail = b.user?.email?.toLowerCase() || '';
+            const userPhone = b.user?.phone?.toLowerCase() || '';
+            const adTitle = b.advertisement?.title?.toLowerCase() || '';
+            const bookingId = (b.id || b._id || '').toLowerCase();
+            return userName.includes(search) || userEmail.includes(search) || userPhone.includes(search) || adTitle.includes(search) || bookingId.includes(search);
+        });
+    }
+
+    if (status) {
+        filtered = filtered.filter(b => b.status === status);
+    }
+
+    if (payment) {
+        filtered = filtered.filter(b => (b.paymentStatus || 'unpaid') === payment);
+    }
+
+    renderAdminBookingsTable(filtered);
+}
+
+function renderAdminBookingsTable(list) {
+    const tbody = document.getElementById('admin-bookings-table-body');
+    const countEl = document.getElementById('admin-bookings-count');
+    if (countEl) countEl.textContent = list.length;
+    if (!tbody) return;
+
+    if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400">لا توجد حجوزات مطابقة للبحث أو الفلتر</td></tr>';
+        return;
+    }
+
+    const statusBadge = {
+        pending: '<span class="badge bg-amber-100 text-amber-700 border border-amber-300 font-bold">قيد الانتظار</span>',
+        confirmed: '<span class="badge bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold">مؤكد</span>',
+        completed: '<span class="badge bg-blue-100 text-blue-800 border border-blue-300 font-bold">مكتمل</span>',
+        cancelled: '<span class="badge bg-red-100 text-red-800 border border-red-300 font-bold">ملغي</span>',
+    };
+
+    const paymentBadge = {
+        paid: '<span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200">مدفوع</span>',
+        unpaid: '<span class="badge bg-amber-50 text-amber-700 border border-amber-200">غير مدفوع</span>',
+        refunded: '<span class="badge bg-slate-100 text-slate-600 border border-slate-300">مسترجع</span>',
+    };
+
+    tbody.innerHTML = list.map(b => {
+        const bId = b.id || b._id;
+        const shortId = bId ? bId.substring(bId.length - 6) : '--';
+        const ad = b.advertisement || {};
+        const customer = b.user || {};
+        const adImg = ad.image?.startsWith('http') ? ad.image : (ad.image ? `/uploads/${ad.image}` : 'images/kuba-logo.jpeg');
+
+        const startStr = b.startDate ? new Date(b.startDate).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', year: 'numeric' }) : '--';
+        const endStr = b.endDate ? new Date(b.endDate).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', year: 'numeric' }) : '--';
+
+        return `
+            <tr class="hover:bg-slate-50 transition border-b border-slate-100 text-xs">
+                <td class="p-3 font-mono font-bold text-slate-600">
+                    <span title="${bId}">#${shortId}</span>
+                    <div class="text-[10px] text-slate-400 font-sans">${b.createdAt ? new Date(b.createdAt).toLocaleDateString('ar-EG') : ''}</div>
+                </td>
+                <td class="p-3">
+                    <div class="flex items-center gap-2">
+                        <img src="${adImg}" class="w-10 h-10 rounded-lg object-cover border border-slate-200" onerror="this.src='images/kuba-logo.jpeg'">
+                        <div class="max-w-[180px]">
+                            <div class="font-bold text-slate-900 truncate" title="${ad.title || '--'}">${ad.title || 'إعلان محذوف'}</div>
+                            <div class="text-[11px] text-slate-400 truncate">${ad.location || ''}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="p-3">
+                    <div class="font-bold text-slate-900">${customer.name || 'عميل بدون اسم'}</div>
+                    <div class="text-[11px] text-slate-500 font-mono">${customer.phone || customer.email || '--'}</div>
+                </td>
+                <td class="p-3">
+                    <div class="font-medium text-slate-700">من: <span class="font-bold">${startStr}</span></div>
+                    <div class="text-[11px] text-slate-500">إلى: <span class="font-bold">${endStr}</span></div>
+                </td>
+                <td class="p-3">
+                    <div class="font-bold text-[#2D4F2E] text-sm">${Number(b.totalPrice || 0).toLocaleString()} ج.م</div>
+                    <div class="text-[10px] text-slate-400">${b.duration || 1} ${b.pricingUnit === 'per_hour' ? 'ساعات' : 'أيام / ليال'}</div>
+                </td>
+                <td class="p-3">
+                    ${statusBadge[b.status] || b.status}
+                </td>
+                <td class="p-3">
+                    ${paymentBadge[b.paymentStatus] || b.paymentStatus || '--'}
+                </td>
+                <td class="p-3 text-center">
+                    <div class="inline-flex items-center gap-1">
+                        <select onchange="changeBookingStatus('${bId}', this.value)" class="form-select text-[11px] py-1 px-2 border-slate-300">
+                            <option value="">تغيير الحالة</option>
+                            <option value="confirmed" ${b.status === 'confirmed' ? 'disabled' : ''}>تأكيد (Confirmed)</option>
+                            <option value="completed" ${b.status === 'completed' ? 'disabled' : ''}>اكتمال (Completed)</option>
+                            <option value="cancelled" ${b.status === 'cancelled' ? 'disabled' : ''}>إلغاء (Cancelled)</option>
+                            <option value="pending" ${b.status === 'pending' ? 'disabled' : ''}>قيد الانتظار (Pending)</option>
+                        </select>
+                        <button onclick="deleteBookingAdmin('${bId}')" class="text-slate-400 hover:text-red-600 p-1.5 transition" title="حذف الحجز">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function changeBookingStatus(bookingId, newStatus) {
+    if (!newStatus) return;
+
+    try {
+        await apiFetch(`/api/v1/admin/bookings/${bookingId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: newStatus }),
+        });
+
+        showToast('تم تحديث حالة الحجز بنجاح', 'success');
+        const item = state.bookings.find(b => (b.id || b._id) === bookingId);
+        if (item) item.status = newStatus;
+        filterAdminBookings();
+    } catch (err) {
+        filterAdminBookings();
+    }
+}
+
+async function deleteBookingAdmin(bookingId) {
+    if (!confirm('هل أنت متأكد من حذف هذا الحجز نهائياً من النظام؟')) return;
+
+    try {
+        await apiFetch(`/api/v1/admin/bookings/${bookingId}`, {
+            method: 'DELETE',
+        });
+
+        showToast('تم حذف الحجز بنجاح', 'success');
+        state.bookings = state.bookings.filter(b => (b.id || b._id) !== bookingId);
+        filterAdminBookings();
+    } catch (err) {
+        // apiFetch shows error toast
+    }
+}
+
+// ─── OWNER PORTAL: CONTROLLER & VIEWS ─────────────────────────────────────────
+
+async function initOwnerPortal() {
+    try {
+        const promises = [];
+        if (!state.categories || state.categories.length === 0) promises.push(loadCategories());
+        if (!state.cities || state.cities.length === 0) promises.push(loadCitiesAndRegions());
+        if (!state.unitTypes || state.unitTypes.length === 0) promises.push(loadUnitTypes());
+        if (promises.length > 0) await Promise.allSettled(promises);
+
+        const res = await apiFetch('/api/v1/admin/advertisements?limit=50');
+        state.ownerAds = res.data?.advertisements || (Array.isArray(res.data) ? res.data : []);
+
+        const adSelect = document.getElementById('header-owner-ad-select');
+        const adContainer = document.getElementById('header-owner-ad-container');
+
+        if (state.ownerAds.length === 0) {
+            state.activeOwnerAdId = null;
+            if (adContainer) adContainer.classList.add('hidden');
+            showToast('لا يوجد إعلانات مسندة لحسابك حالياً. يرجى التواصل مع إدارة كوبا لتفعيل إعلانك.', 'warning');
+            renderOwnerEmptyState();
+            return;
+        }
+
+        if (!state.activeOwnerAdId || !state.ownerAds.some(a => (a.id || a._id) === state.activeOwnerAdId)) {
+            state.activeOwnerAdId = state.ownerAds[0].id || state.ownerAds[0]._id;
+        }
+
+        if (adContainer) adContainer.classList.remove('hidden');
+        if (adSelect) {
+            adSelect.innerHTML = state.ownerAds.map(a => {
+                const id = a.id || a._id;
+                return `<option value="${id}">${a.title || 'إعلان بدون عنوان'}</option>`;
+            }).join('');
+            adSelect.value = state.activeOwnerAdId;
+        }
+
+        loadCurrentTab();
+    } catch (err) {
+        console.error('Owner portal init error:', err);
+    }
+}
+
+function renderOwnerEmptyState() {
+    const welcomeTitle = document.getElementById('owner-welcome-title');
+    const welcomeSub = document.getElementById('owner-welcome-subtitle');
+    if (welcomeTitle) welcomeTitle.textContent = 'مرحباً بك في بوابة صاحب الإعلان';
+    if (welcomeSub) welcomeSub.textContent = 'لا توجد إعلانات مرتبطة بحسابك بعد. يرجى مراجعة إدارة النظام لربط إعلانك.';
+}
+
+function switchOwnerActiveAd(adId) {
+    if (!adId || adId === state.activeOwnerAdId) return;
+    state.activeOwnerAdId = adId;
+
+    const adSelect = document.getElementById('header-owner-ad-select');
+    if (adSelect && adSelect.value !== adId) {
+        adSelect.value = adId;
+    }
+
+    loadCurrentTab();
+}
+
+function getActiveOwnerAd() {
+    if (!state.ownerAds || state.ownerAds.length === 0) return null;
+    return state.ownerAds.find(a => (a.id || a._id) === state.activeOwnerAdId) || state.ownerAds[0];
+}
+
+// ── OWNER TAB 1: OVERVIEW ──
+
+async function loadOwnerOverviewTab() {
+    const ad = getActiveOwnerAd();
+    if (!ad) {
+        renderOwnerEmptyState();
+        return;
+    }
+
+    const welcomeTitle = document.getElementById('owner-welcome-title');
+    const welcomeSub = document.getElementById('owner-welcome-subtitle');
+    if (welcomeTitle) welcomeTitle.textContent = `مرحباً بك: ${ad.title}`;
+    if (welcomeSub) welcomeSub.textContent = `متابعة أداء وحجوزات إعلانك في ${ad.location || ad.city?.name || 'كوبا'}`;
+
+    updateOwnerAdStatusUI(ad.active !== false);
+
+    const previewImg = document.getElementById('owner-preview-image');
+    const previewPrice = document.getElementById('owner-preview-price-tag');
+    const previewTitle = document.getElementById('owner-preview-title');
+    const previewLoc = document.getElementById('owner-preview-location');
+    const previewCount = document.getElementById('owner-preview-photos-count');
+    const previewType = document.getElementById('owner-preview-type');
+
+    const imgSrc = ad.image?.startsWith('http') ? ad.image : (ad.image ? `/uploads/${ad.image}` : 'images/kuba-logo.jpeg');
+    if (previewImg) previewImg.src = imgSrc;
+
+    const finalP = ad.pricing?.finalPrice || ad.price || 0;
+    const pUnit = ad.pricing?.pricingUnit === 'per_hour' ? 'ساعة' : 'ليلة';
+    if (previewPrice) previewPrice.textContent = `${Number(finalP).toLocaleString()} ج.م / ${pUnit}`;
+    if (previewTitle) previewTitle.textContent = ad.title || '--';
+    if (previewLoc) previewLoc.innerHTML = `<i class="fas fa-location-dot text-[#2D4F2E] me-1"></i>${ad.location || ad.city?.name || 'غير محدد'}`;
+    const photosCount = Array.isArray(ad.images) ? ad.images.length : (ad.image ? 1 : 0);
+    if (previewCount) previewCount.textContent = photosCount;
+    if (previewType) previewType.textContent = ad.unitType?.nameAr || ad.unitType?.name || 'وحدة سكنية';
+
+    try {
+        const adId = ad.id || ad._id;
+        const res = await apiFetch(`/api/v1/admin/bookings?advertisement=${adId}`);
+        state.ownerBookings = res.data?.bookings || res.data || [];
+    } catch (err) {
+        console.warn('Failed to load owner bookings for overview:', err);
+    }
+
+    renderOwnerOverviewKPIs();
+}
+
+function updateOwnerAdStatusUI(isActive) {
+    const badge = document.getElementById('owner-ad-status-badge');
+    const btn = document.getElementById('owner-toggle-status-btn');
+    const btnText = document.getElementById('owner-toggle-status-text');
+
+    if (isActive) {
+        if (badge) {
+            badge.textContent = 'نشط ومعروض للعملاء';
+            badge.className = 'badge bg-emerald-500/90 text-white font-bold text-xs px-3 py-1.5 rounded-lg border border-emerald-400';
+        }
+        if (btn) btn.className = 'bg-white text-red-600 hover:bg-red-50 font-bold text-xs px-3 py-2 rounded-lg transition shadow-sm flex items-center gap-1.5 cursor-pointer';
+        if (btnText) btnText.textContent = 'إيقاف الإعلان مؤقتاً';
+    } else {
+        if (badge) {
+            badge.textContent = 'متوقف ومخفي عن البحث';
+            badge.className = 'badge bg-amber-500/90 text-white font-bold text-xs px-3 py-1.5 rounded-lg border border-amber-400';
+        }
+        if (btn) btn.className = 'bg-white text-emerald-700 hover:bg-emerald-50 font-bold text-xs px-3 py-2 rounded-lg transition shadow-sm flex items-center gap-1.5 cursor-pointer';
+        if (btnText) btnText.textContent = 'تفعيل الإعلان الآن';
+    }
+}
+
+async function toggleOwnerAdStatus() {
+    const ad = getActiveOwnerAd();
+    if (!ad) return;
+
+    const newActive = !(ad.active !== false);
+    const adId = ad.id || ad._id;
+
+    try {
+        await apiFetch(`/api/v1/admin/advertisements/${adId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ active: newActive }),
+        });
+
+        ad.active = newActive;
+        updateOwnerAdStatusUI(newActive);
+        showToast(newActive ? 'تم تفعيل الإعلان بنجاح، أصبح معروضاً للعملاء' : 'تم إيقاف الإعلان مؤقتاً، لن يظهر في نتائج البحث', 'success');
+    } catch (err) {
+        // apiFetch shows error
+    }
+}
+
+function renderOwnerOverviewKPIs() {
+    const list = state.ownerBookings || [];
+
+    const total = list.length;
+    const confirmed = list.filter(b => b.status === 'confirmed').length;
+    const pending = list.filter(b => b.status === 'pending').length;
+    const revenue = list
+        .filter(b => b.status === 'confirmed' || b.status === 'completed')
+        .reduce((sum, b) => sum + (Number(b.totalPrice) || 0), 0);
+
+    const totalEl = document.getElementById('owner-kpi-total-bookings');
+    const confEl = document.getElementById('owner-kpi-confirmed-bookings');
+    const pendEl = document.getElementById('owner-kpi-pending-bookings');
+    const revEl = document.getElementById('owner-kpi-revenue');
+
+    if (totalEl) totalEl.textContent = total;
+    if (confEl) confEl.textContent = confirmed;
+    if (pendEl) pendEl.textContent = pending;
+    if (revEl) revEl.textContent = `${Number(revenue).toLocaleString()} ج.م`;
+
+    const recentContainer = document.getElementById('owner-overview-recent-bookings');
+    if (!recentContainer) return;
+
+    const pendingList = list.filter(b => b.status === 'pending').slice(0, 4);
+
+    if (pendingList.length === 0) {
+        recentContainer.innerHTML = '<div class="text-center py-6 text-xs text-slate-400">لا توجد طلبات حجز بانتظار التأكيد حالياً 👍</div>';
+        return;
+    }
+
+    recentContainer.innerHTML = pendingList.map(b => {
+        const bId = b.id || b._id;
+        const customer = b.user || {};
+        const startStr = b.startDate ? new Date(b.startDate).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }) : '';
+        const endStr = b.endDate ? new Date(b.endDate).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }) : '';
+
+        return `
+            <div class="flex items-center justify-between p-3 bg-amber-50/60 border border-amber-200/70 rounded-xl text-xs gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-900">${customer.name || 'عميل'}</div>
+                        <div class="text-[11px] text-slate-500">الفترة: ${startStr} إلى ${endStr} • <span class="font-bold text-[#2D4F2E]">${Number(b.totalPrice || 0).toLocaleString()} ج.م</span></div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="updateOwnerBookingStatus('${bId}', 'confirmed')" class="gold-btn text-[11px] py-1 px-3 shadow-none cursor-pointer">
+                        <i class="fas fa-check me-1"></i>تأكيد
+                    </button>
+                    <button type="button" onclick="updateOwnerBookingStatus('${bId}', 'cancelled')" class="btn-secondary text-[11px] py-1 px-2.5 text-red-600 hover:bg-red-50 cursor-pointer">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ── OWNER TAB 2: LISTING EDITOR ──
+
+async function loadOwnerListingTab() {
+    const ad = getActiveOwnerAd();
+    if (!ad) return;
+
+    populateOwnerCategories(ad.category?._id || ad.category?.id || ad.category);
+    populateOwnerUnitTypes(ad.unitType?._id || ad.unitType?.id || ad.unitType);
+    populateOwnerCities(ad.city?._id || ad.city?.id || ad.city);
+    populateOwnerRegions(ad.city?._id || ad.city?.id || ad.city, ad.region?._id || ad.region?.id || ad.region);
+
+    const titleInput = document.getElementById('owner-form-title');
+    const descInput = document.getElementById('owner-form-description');
+    if (titleInput) titleInput.value = ad.title || '';
+    if (descInput) descInput.value = ad.description || '';
+
+    const p = ad.pricing || {};
+    const basePrice = document.getElementById('owner-form-base-price');
+    const pricingUnit = document.getElementById('owner-form-pricing-unit');
+    const minDuration = document.getElementById('owner-form-min-duration');
+    const discountType = document.getElementById('owner-form-discount-type');
+    const discountValue = document.getElementById('owner-form-discount-value');
+
+    if (basePrice) basePrice.value = p.basePrice || ad.price || '';
+    if (pricingUnit) pricingUnit.value = p.pricingUnit || 'per_night';
+    if (minDuration) minDuration.value = p.minDuration || 1;
+    if (discountType) discountType.value = p.discountType || 'none';
+    if (discountValue) discountValue.value = p.discountValue || 0;
+
+    calcOwnerFinalPrice();
+
+    const utId = ad.unitType?._id || ad.unitType?.id || ad.unitType;
+    if (utId) {
+        await onOwnerUnitTypeChanged(ad.attributes || {});
+    }
+
+    const locInput = document.getElementById('owner-form-location');
+    const addrInput = document.getElementById('owner-form-address');
+    const latInput = document.getElementById('owner-form-latitude');
+    const lngInput = document.getElementById('owner-form-longitude');
+
+    if (locInput) locInput.value = ad.location || '';
+    if (addrInput) addrInput.value = ad.address || '';
+
+    const hasCoords = ad.latitude !== null && ad.latitude !== undefined && !isNaN(Number(ad.latitude)) &&
+                      ad.longitude !== null && ad.longitude !== undefined && !isNaN(Number(ad.longitude));
+
+    if (hasCoords) {
+        if (latInput) latInput.value = Number(ad.latitude);
+        if (lngInput) lngInput.value = Number(ad.longitude);
+    } else {
+        if (latInput) latInput.value = '';
+        if (lngInput) lngInput.value = '';
+    }
+
+    const activeCheck = document.getElementById('owner-form-active');
+    if (activeCheck) activeCheck.checked = ad.active !== false;
+
+    setTimeout(() => {
+        initOwnerMapPicker();
+        if (state.ownerMapInstance) {
+            state.ownerMapInstance.invalidateSize();
+            if (hasCoords) {
+                setOwnerMapCoordinates(Number(ad.latitude), Number(ad.longitude), true);
+            } else {
+                state.ownerMapInstance.setView([27.041086, 33.891272], 11);
+                if (state.ownerMapMarker) {
+                    state.ownerMapInstance.removeLayer(state.ownerMapMarker);
+                    state.ownerMapMarker = null;
+                }
+            }
+        }
+    }, 200);
+}
+
+function populateOwnerCategories(selectedId) {
+    const select = document.getElementById('owner-form-category');
+    if (!select) return;
+    select.innerHTML = '<option value="">-- اختر القسم --</option>' +
+        state.categories.map(c => {
+            const id = c.id || c._id;
+            return `<option value="${id}" ${String(id) === String(selectedId) ? 'selected' : ''}>${c.name}</option>`;
+        }).join('');
+}
+
+function populateOwnerUnitTypes(selectedId) {
+    const select = document.getElementById('owner-form-unit-type');
+    if (!select) return;
+    select.innerHTML = '<option value="">-- اختر نوع الوحدة --</option>' +
+        state.unitTypes.map(ut => {
+            const id = ut.id || ut._id;
+            return `<option value="${id}" ${String(id) === String(selectedId) ? 'selected' : ''}>${ut.nameAr || ut.name} (${ut.slug})</option>`;
+        }).join('');
+}
+
+function populateOwnerCities(selectedId) {
+    const select = document.getElementById('owner-form-city');
+    if (!select) return;
+    select.innerHTML = '<option value="">-- اختر المدينة --</option>' +
+        state.cities.map(c => {
+            const id = c.id || c._id;
+            return `<option value="${id}" ${String(id) === String(selectedId) ? 'selected' : ''}>${c.name}</option>`;
+        }).join('');
+}
+
+function populateOwnerRegions(cityId, selectedRegionId) {
+    const select = document.getElementById('owner-form-region');
+    if (!select) return;
+
+    let regions = state.regions;
+    if (cityId) {
+        regions = regions.filter(r => {
+            const rCity = r.city?._id || r.city?.id || r.city;
+            return String(rCity) === String(cityId);
+        });
+    }
+
+    select.innerHTML = '<option value="">-- اختر المنطقة --</option>' +
+        regions.map(r => {
+            const id = r.id || r._id;
+            return `<option value="${id}" ${String(id) === String(selectedRegionId) ? 'selected' : ''}>${r.name}</option>`;
+        }).join('');
+}
+
+function onOwnerCityChange() {
+    const cityId = document.getElementById('owner-form-city')?.value;
+    populateOwnerRegions(cityId, '');
+}
+
+async function onOwnerUnitTypeChanged(existingAttributes = null) {
+    const select = document.getElementById('owner-form-unit-type');
+    const container = document.getElementById('owner-dynamic-attributes-container');
+    const pricingUnitSelect = document.getElementById('owner-form-pricing-unit');
+
+    if (!select || !select.value) {
+        if (container) container.innerHTML = '';
+        return;
+    }
+
+    const unitTypeId = select.value;
+    const ut = state.unitTypes.find(u => (u.id || u._id) === unitTypeId);
+
+    if (ut && pricingUnitSelect) {
+        const allowedUnits = ut.pricingUnits || ['per_night'];
+        const unitLabels = {
+            per_night: 'بالليلة (Per Night)',
+            per_hour: 'بالساعة (Per Hour)',
+            per_day: 'باليوم (Per Day)',
+            per_trip: 'بالرحلة (Per Trip)',
+            fixed: 'سعر ثابت (Fixed)',
+        };
+        const curPricingUnit = pricingUnitSelect.value;
+        pricingUnitSelect.innerHTML = allowedUnits.map(u => `<option value="${u}">${unitLabels[u] || u}</option>`).join('');
+        if (allowedUnits.includes(curPricingUnit)) pricingUnitSelect.value = curPricingUnit;
+    }
+
+    if (!container) return;
+
+    try {
+        const res = await apiFetch(`/api/v1/admin/unit-types/${unitTypeId}/attributes`, { silent: true });
+        const attributes = res.data || [];
+
+        if (attributes.length === 0) {
+            container.innerHTML = '<div class="col-span-full text-slate-400 text-xs py-2">لا توجد خصائص إضافية مخصصة لنوع الوحدة هذا.</div>';
+            return;
+        }
+
+        const ad = getActiveOwnerAd();
+        const currentVals = existingAttributes || ad?.attributes || {};
+
+        container.innerHTML = attributes.map(attr => {
+            const key = attr.name;
+            const label = attr.labelAr || attr.label || attr.name;
+            const val = currentVals[key] !== undefined ? currentVals[key] : (attr.defaultValue ?? '');
+
+            if (attr.type === 'boolean') {
+                const isChecked = val === true || val === 'true';
+                return `
+                    <div class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 bg-slate-50">
+                        <input type="checkbox" id="owner-attr-${key}" name="owner_attr_${key}" data-attr-key="${key}" data-attr-type="boolean" ${isChecked ? 'checked' : ''} class="rounded border-slate-300 text-[#2D4F2E] focus:ring-[#2D4F2E]">
+                        <label for="owner-attr-${key}" class="text-xs font-semibold text-slate-700 cursor-pointer">${label}</label>
+                    </div>
+                `;
+            } else if (attr.type === 'number') {
+                return `
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">${label} ${attr.required ? '*' : ''}</label>
+                        <input type="number" id="owner-attr-${key}" name="owner_attr_${key}" data-attr-key="${key}" data-attr-type="number" value="${val}" ${attr.required ? 'required' : ''} class="form-input text-xs" placeholder="${label}">
+                    </div>
+                `;
+            } else if (attr.type === 'select' && Array.isArray(attr.options)) {
+                return `
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">${label} ${attr.required ? '*' : ''}</label>
+                        <select id="owner-attr-${key}" name="owner_attr_${key}" data-attr-key="${key}" data-attr-type="select" ${attr.required ? 'required' : ''} class="form-select text-xs">
+                            <option value="">-- اختر --</option>
+                            ${attr.options.map(opt => `<option value="${opt}" ${String(val) === String(opt) ? 'selected' : ''}>${opt}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">${label} ${attr.required ? '*' : ''}</label>
+                        <input type="text" id="owner-attr-${key}" name="owner_attr_${key}" data-attr-key="${key}" data-attr-type="text" value="${val}" ${attr.required ? 'required' : ''} class="form-input text-xs" placeholder="${label}">
+                    </div>
+                `;
+            }
+        }).join('');
+    } catch (err) {
+        console.warn('Failed to load attributes for owner form:', err);
+    }
+}
+
+function calcOwnerFinalPrice() {
+    const basePrice = parseFloat(document.getElementById('owner-form-base-price')?.value) || 0;
+    const discountType = document.getElementById('owner-form-discount-type')?.value || 'none';
+    const discountVal = parseFloat(document.getElementById('owner-form-discount-value')?.value) || 0;
+
+    let finalPrice = basePrice;
+    if (discountType === 'percentage') {
+        const pct = Math.min(Math.max(discountVal, 0), 100);
+        finalPrice = basePrice - (basePrice * (pct / 100));
+    } else if (discountType === 'fixed') {
+        finalPrice = Math.max(0, basePrice - discountVal);
+    }
+
+    finalPrice = Math.round(finalPrice * 100) / 100;
+
+    const finalInput = document.getElementById('owner-form-final-price');
+    const finalBadge = document.getElementById('owner-form-final-badge');
+
+    if (finalInput) finalInput.value = finalPrice;
+    if (finalBadge) finalBadge.textContent = `السعر النهائي: ${finalPrice.toLocaleString()} ج.م`;
+}
+
+// ── Leaflet Map Picker for Owner Listing ──
+function initOwnerMapPicker() {
+    if (typeof L === 'undefined') return;
+
+    if (!state.ownerMapInstance) {
+        state.ownerMapInstance = L.map('owner-map-picker', {
+            center: [27.041086, 33.891272],
+            zoom: 12,
+            scrollWheelZoom: true,
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors',
+        }).addTo(state.ownerMapInstance);
+
+        state.ownerMapInstance.on('click', (e) => {
+            setOwnerMapCoordinates(e.latlng.lat, e.latlng.lng, false);
+        });
+    }
+
+    setTimeout(() => {
+        if (state.ownerMapInstance) state.ownerMapInstance.invalidateSize();
+    }, 150);
+}
+
+function setOwnerMapCoordinates(lat, lng, panTo = true) {
+    if (typeof L === 'undefined') return;
+    initOwnerMapPicker();
+    if (!state.ownerMapInstance) return;
+
+    const numLat = Number(Number(lat).toFixed(6));
+    const numLng = Number(Number(lng).toFixed(6));
+
+    const latInput = document.getElementById('owner-form-latitude');
+    const lngInput = document.getElementById('owner-form-longitude');
+    if (latInput) latInput.value = numLat;
+    if (lngInput) lngInput.value = numLng;
+
+    if (!state.ownerMapMarker) {
+        state.ownerMapMarker = L.marker([numLat, numLng], { draggable: true }).addTo(state.ownerMapInstance);
+        state.ownerMapMarker.on('dragend', (e) => {
+            const pos = e.target.getLatLng();
+            setOwnerMapCoordinates(pos.lat, pos.lng, false);
+        });
+    } else {
+        state.ownerMapMarker.setLatLng([numLat, numLng]);
+    }
+
+    if (panTo) {
+        state.ownerMapInstance.panTo([numLat, numLng]);
+    }
+}
+
+function getOwnerCurrentLocation() {
+    if (!navigator.geolocation) {
+        showToast('المتصفح لا يدعم تحديد الموقع الجغرافي', 'error');
+        return;
+    }
+
+    showToast('جاري تحديد موقعك الجغرافي...', 'info');
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            setOwnerMapCoordinates(pos.coords.latitude, pos.coords.longitude, true);
+            showToast('تم تحديد الموقع بنجاح', 'success');
+        },
+        (err) => {
+            showToast(`فشل في تحديد الموقع: ${err.message}`, 'error');
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+}
+
+function saveOwnerListingForm() {
+    const form = document.getElementById('owner-listing-form');
+    if (form) {
+        if (form.reportValidity()) {
+            handleOwnerListingSubmit(new Event('submit'));
+        }
+    }
+}
+
+async function handleOwnerListingSubmit(e) {
+    if (e) e.preventDefault();
+
+    const ad = getActiveOwnerAd();
+    if (!ad) {
+        showToast('لا يوجد إعلان محدد للحفظ', 'error');
+        return;
+    }
+    const adId = ad.id || ad._id;
+
+    const title = document.getElementById('owner-form-title')?.value.trim();
+    if (!title) {
+        showToast('عنوان الإعلان مطلوب', 'error');
+        return;
+    }
+
+    const category = document.getElementById('owner-form-category')?.value || null;
+    const unitType = document.getElementById('owner-form-unit-type')?.value || null;
+    const city = document.getElementById('owner-form-city')?.value || null;
+    const region = document.getElementById('owner-form-region')?.value || null;
+    const description = document.getElementById('owner-form-description')?.value.trim() || '';
+
+    const basePrice = parseFloat(document.getElementById('owner-form-base-price')?.value) || 0;
+    const pricingUnit = document.getElementById('owner-form-pricing-unit')?.value || 'per_night';
+    const minDuration = parseInt(document.getElementById('owner-form-min-duration')?.value, 10) || 1;
+    const discountType = document.getElementById('owner-form-discount-type')?.value || 'none';
+    const discountValue = parseFloat(document.getElementById('owner-form-discount-value')?.value) || 0;
+
+    const location = document.getElementById('owner-form-location')?.value.trim() || '';
+    const address = document.getElementById('owner-form-address')?.value.trim() || '';
+    const lat = document.getElementById('owner-form-latitude')?.value;
+    const lng = document.getElementById('owner-form-longitude')?.value;
+
+    const active = document.getElementById('owner-form-active')?.checked !== false;
+
+    const attributes = {};
+    document.querySelectorAll('#owner-dynamic-attributes-container [data-attr-key]').forEach(el => {
+        const key = el.getAttribute('data-attr-key');
+        const type = el.getAttribute('data-attr-type');
+        if (type === 'boolean') {
+            attributes[key] = el.checked;
+        } else if (type === 'number') {
+            attributes[key] = el.value !== '' ? Number(el.value) : null;
+        } else {
+            attributes[key] = el.value;
+        }
+    });
+
+    const payload = {
+        title,
+        description,
+        category,
+        unitType,
+        city,
+        region,
+        location,
+        address,
+        active,
+        basePrice,
+        price: basePrice,
+        pricingUnit,
+        minDuration,
+        discountType,
+        discountValue,
+        attributes,
+    };
+
+    if (lat !== '' && lng !== '' && !isNaN(Number(lat)) && !isNaN(Number(lng))) {
+        payload.latitude = Number(lat);
+        payload.longitude = Number(lng);
+    }
+
+    try {
+        const res = await apiFetch(`/api/v1/admin/advertisements/${adId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(payload),
+        });
+
+        showToast('تم حفظ وتحديث بيانات الإعلان بنجاح!', 'success');
+
+        if (res.data) {
+            const updated = res.data.advertisement || res.data;
+            const idx = state.ownerAds.findIndex(a => (a.id || a._id) === adId);
+            if (idx !== -1) {
+                state.ownerAds[idx] = { ...state.ownerAds[idx], ...updated };
+            }
+        }
+
+        loadOwnerOverviewTab();
+    } catch (err) {
+        // apiFetch shows error toast
+    }
+}
+
+// ── OWNER TAB 3: GALLERY MANAGER ──
+
+async function loadOwnerGalleryTab() {
+    const ad = getActiveOwnerAd();
+    if (!ad) return;
+
+    renderOwnerGalleryImages(ad);
+}
+
+function renderOwnerGalleryImages(ad) {
+    const container = document.getElementById('owner-gallery-images-grid');
+    const countEl = document.getElementById('owner-gallery-count');
+    if (!container) return;
+
+    let images = [];
+    if (Array.isArray(ad.images) && ad.images.length > 0) {
+        images = [...ad.images];
+    } else if (ad.image) {
+        images = [ad.image];
+    }
+
+    if (countEl) countEl.textContent = images.length;
+
+    if (images.length === 0) {
+        container.innerHTML = `
+            <div class="col-span-full text-center py-12 text-slate-400">
+                <i class="fas fa-images text-4xl mb-3 text-slate-300"></i>
+                <div class="text-xs font-semibold">لم تقم بإضافة صور لهذا الإعلان بعد</div>
+                <div class="text-[11px] text-slate-400 mt-1">قم برفع أول صورة من المربع أعلاه لظهور إعلانك بشكل جذاب</div>
+            </div>
+        `;
+        return;
+    }
+
+    const mainImg = ad.image || images[0];
+
+    container.innerHTML = images.map((img, idx) => {
+        const isMain = img === mainImg;
+        const fullSrc = img.startsWith('http') ? img : `/uploads/${img}`;
+
+        return `
+            <div class="card overflow-hidden p-0 bg-white border ${isMain ? 'border-amber-400 ring-2 ring-amber-400/30' : 'border-slate-200'} rounded-xl group relative shadow-sm transition hover:shadow-md">
+                <div class="relative h-36 bg-slate-100 overflow-hidden">
+                    <img src="${fullSrc}" alt="Listing Photo" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='images/kuba-logo.jpeg'">
+                    
+                    ${isMain ? `
+                        <div class="absolute top-2 start-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-full shadow flex items-center gap-1">
+                            <i class="fas fa-crown text-[9px]"></i>
+                            <span>الغلاف الرئيسي</span>
+                        </div>
+                    ` : ''}
+
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2 p-2">
+                        ${!isMain ? `
+                            <button type="button" onclick="setOwnerMainImage('${img}')" class="bg-white/95 text-slate-900 hover:bg-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow transition cursor-pointer flex items-center gap-1">
+                                <i class="fas fa-star text-amber-500"></i>
+                                <span>تعيين كغلاف</span>
+                            </button>
+                        ` : ''}
+                        <button type="button" onclick="deleteOwnerImage('${img}')" class="bg-red-600/90 hover:bg-red-600 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow transition cursor-pointer flex items-center gap-1" title="حذف الصورة">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-2 flex items-center justify-between text-[11px] bg-slate-50 border-t border-slate-100">
+                    <span class="text-slate-400 font-mono">صورة #${idx + 1}</span>
+                    <button type="button" onclick="deleteOwnerImage('${img}')" class="text-red-500 hover:text-red-700 text-xs cursor-pointer" title="حذف">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function handleOwnerImagesUpload(e) {
+    if (e) e.preventDefault();
+    const ad = getActiveOwnerAd();
+    if (!ad) return;
+    const adId = ad.id || ad._id;
+
+    const fileInput = document.getElementById('owner-gallery-files-input');
+    const urlInput = document.getElementById('owner-gallery-url-input');
+    const uploadBtn = document.getElementById('owner-gallery-upload-btn');
+
+    const files = fileInput?.files;
+    const url = urlInput?.value.trim();
+
+    if ((!files || files.length === 0) && !url) {
+        showToast('يرجى اختيار صور لرفعها أو إدخال رابط مباشر', 'warning');
+        return;
+    }
+
+    const originalBtnHtml = uploadBtn?.innerHTML;
+    if (uploadBtn) {
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>جاري الرفع...';
+    }
+
+    try {
+        let res;
+        if (files && files.length > 0) {
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('images', files[i]);
+            }
+            res = await apiFetch(`/api/v1/admin/advertisements/${adId}/images`, {
+                method: 'POST',
+                body: formData,
+            });
+        } else if (url) {
+            res = await apiFetch(`/api/v1/admin/advertisements/${adId}/images`, {
+                method: 'POST',
+                body: JSON.stringify({ imageUrl: url }),
+            });
+        }
+
+        showToast(res.message || 'تم رفع الصور بنجاح', 'success');
+
+        if (fileInput) fileInput.value = '';
+        if (urlInput) urlInput.value = '';
+
+        if (res.data?.advertisement) {
+            const updated = res.data.advertisement;
+            const idx = state.ownerAds.findIndex(a => (a.id || a._id) === adId);
+            if (idx !== -1) {
+                state.ownerAds[idx] = { ...state.ownerAds[idx], ...updated };
+            }
+            renderOwnerGalleryImages(updated);
+        }
+    } catch (err) {
+        // apiFetch shows error toast
+    } finally {
+        if (uploadBtn) {
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = originalBtnHtml;
+        }
+    }
+}
+
+async function deleteOwnerImage(imagePath) {
+    if (!confirm('هل أنت متأكد من حذف هذه الصورة من المعرض؟')) return;
+
+    const ad = getActiveOwnerAd();
+    if (!ad) return;
+    const adId = ad.id || ad._id;
+
+    try {
+        const res = await apiFetch(`/api/v1/admin/advertisements/${adId}/images`, {
+            method: 'DELETE',
+            body: JSON.stringify({ image: imagePath }),
+        });
+
+        showToast(res.message || 'تم حذف الصورة بنجاح', 'success');
+
+        if (res.data?.advertisement) {
+            const updated = res.data.advertisement;
+            const idx = state.ownerAds.findIndex(a => (a.id || a._id) === adId);
+            if (idx !== -1) {
+                state.ownerAds[idx] = { ...state.ownerAds[idx], ...updated };
+            }
+            renderOwnerGalleryImages(updated);
+        }
+    } catch (err) {
+        // apiFetch shows error toast
+    }
+}
+
+async function setOwnerMainImage(imagePath) {
+    const ad = getActiveOwnerAd();
+    if (!ad) return;
+    const adId = ad.id || ad._id;
+
+    try {
+        const res = await apiFetch(`/api/v1/admin/advertisements/${adId}/set-main-image`, {
+            method: 'PATCH',
+            body: JSON.stringify({ image: imagePath }),
+        });
+
+        showToast(res.message || 'تم تعيين الصورة كغلاف رئيسي للإعلان', 'success');
+
+        if (res.data?.advertisement) {
+            const updated = res.data.advertisement;
+            const idx = state.ownerAds.findIndex(a => (a.id || a._id) === adId);
+            if (idx !== -1) {
+                state.ownerAds[idx] = { ...state.ownerAds[idx], ...updated };
+            }
+            renderOwnerGalleryImages(updated);
+        }
+    } catch (err) {
+        // apiFetch shows error toast
+    }
+}
+
+// ── OWNER TAB 4: BOOKINGS ──
+
+async function loadOwnerBookingsTab() {
+    const container = document.getElementById('owner-bookings-cards-container');
+    if (container) {
+        container.innerHTML = '<div class="card p-8 text-center text-xs text-slate-400">جاري تحميل طلبات الحجز...</div>';
+    }
+
+    const ad = getActiveOwnerAd();
+    const adId = ad ? (ad.id || ad._id) : '';
+
+    try {
+        const endpoint = adId ? `/api/v1/admin/bookings?advertisement=${adId}` : '/api/v1/admin/bookings';
+        const res = await apiFetch(endpoint);
+        state.ownerBookings = res.data?.bookings || res.data || [];
+
+        const pendingCount = state.ownerBookings.filter(b => b.status === 'pending').length;
+        const badge = document.getElementById('owner-pending-badge-count');
+        if (badge) {
+            badge.textContent = pendingCount;
+            badge.classList.toggle('hidden', pendingCount === 0);
+        }
+
+        renderOwnerBookings();
+    } catch (err) {
+        if (container) {
+            container.innerHTML = `<div class="card p-8 text-center text-xs text-red-500">فشل في تحميل الحجوزات: ${err.message}</div>`;
+        }
+    }
+}
+
+function filterOwnerBookings(status) {
+    state.ownerCurrentBookingFilter = status || 'all';
+
+    document.querySelectorAll('.owner-booking-tab-btn').forEach(btn => {
+        const isMatch = btn.getAttribute('onclick')?.includes(`'${status}'`);
+        if (isMatch) {
+            btn.className = 'owner-booking-tab-btn active px-3 py-1.5 rounded-lg text-xs font-bold transition bg-[#2D4F2E] text-white cursor-pointer';
+        } else {
+            btn.className = 'owner-booking-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer';
+        }
+    });
+
+    renderOwnerBookings();
+}
+
+function filterOwnerBookingsText() {
+    renderOwnerBookings();
+}
+
+function renderOwnerBookings() {
+    const container = document.getElementById('owner-bookings-cards-container');
+    if (!container) return;
+
+    const list = state.ownerBookings || [];
+    const filter = state.ownerCurrentBookingFilter || 'all';
+    const search = document.getElementById('owner-booking-search-input')?.value.trim().toLowerCase() || '';
+
+    let filtered = list;
+    if (filter !== 'all') {
+        filtered = filtered.filter(b => b.status === filter);
+    }
+    if (search) {
+        filtered = filtered.filter(b => {
+            const userName = b.user?.name?.toLowerCase() || '';
+            const userPhone = b.user?.phone?.toLowerCase() || '';
+            const bId = (b.id || b._id || '').toLowerCase();
+            return userName.includes(search) || userPhone.includes(search) || bId.includes(search);
+        });
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div class="card p-10 text-center text-xs text-slate-400 bg-white">
+                <i class="fas fa-calendar-xmark text-4xl mb-3 text-slate-300"></i>
+                <div class="font-bold text-slate-600">لا توجد حجوزات في هذا التصنيف</div>
+                <div class="text-[11px] text-slate-400 mt-1">ستظهر طلبات الحجز هنا فور قيام العملاء بحجز إعلانك</div>
+            </div>
+        `;
+        return;
+    }
+
+    const statusBadge = {
+        pending: '<span class="badge bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold py-1 px-2.5">قيد الانتظار</span>',
+        confirmed: '<span class="badge bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold py-1 px-2.5">مؤكد ومقبول</span>',
+        completed: '<span class="badge bg-blue-100 text-blue-800 border border-blue-300 text-xs font-bold py-1 px-2.5">مكتمل</span>',
+        cancelled: '<span class="badge bg-red-100 text-red-800 border border-red-300 text-xs font-bold py-1 px-2.5">ملغي</span>',
+    };
+
+    container.innerHTML = filtered.map(b => {
+        const bId = b.id || b._id;
+        const shortId = bId ? bId.substring(bId.length - 6) : '--';
+        const customer = b.user || {};
+        const startStr = b.startDate ? new Date(b.startDate).toLocaleDateString('ar-EG', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '--';
+        const endStr = b.endDate ? new Date(b.endDate).toLocaleDateString('ar-EG', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '--';
+
+        const phoneNum = customer.phone || '';
+        const waLink = phoneNum ? `https://wa.me/${phoneNum.replace(/[^0-9]/g, '')}` : null;
+
+        return `
+            <div class="card p-5 bg-white space-y-4 border border-slate-200 transition hover:border-[#2D4F2E]/40">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <span class="font-mono font-bold text-xs bg-slate-100 px-2 py-1 rounded text-slate-700">#${shortId}</span>
+                        <div>
+                            <span class="text-xs text-slate-400">تاريخ الطلب:</span>
+                            <span class="text-xs font-semibold text-slate-700">${b.createdAt ? new Date(b.createdAt).toLocaleDateString('ar-EG') : '--'}</span>
+                        </div>
+                    </div>
+                    <div>${statusBadge[b.status] || b.status}</div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div class="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                        <div class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
+                            <i class="fas fa-user text-[#2D4F2E]"></i>
+                            <span>بيانات العميل</span>
+                        </div>
+                        <div class="font-bold text-slate-900 text-sm">${customer.name || 'عميل'}</div>
+                        <div class="text-slate-600 font-mono">${customer.phone || 'بدون هاتف'}</div>
+                        <div class="text-[11px] text-slate-400">${customer.email || ''}</div>
+                        ${phoneNum ? `
+                            <div class="flex items-center gap-2 pt-1.5">
+                                <a href="tel:${phoneNum}" class="text-[11px] bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold px-2 py-1 rounded-md transition flex items-center gap-1">
+                                    <i class="fas fa-phone text-emerald-600"></i>اتصال
+                                </a>
+                                <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-1 rounded-md transition flex items-center gap-1">
+                                    <i class="fab fa-whatsapp"></i>واتساب
+                                </a>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                        <div class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
+                            <i class="fas fa-calendar-range text-[#2D4F2E]"></i>
+                            <span>فترة الإقامة</span>
+                        </div>
+                        <div>من: <span class="font-bold text-slate-900">${startStr}</span></div>
+                        <div>إلى: <span class="font-bold text-slate-900">${endStr}</span></div>
+                        <div class="text-[11px] text-slate-500">المدة: <span class="font-bold text-[#2D4F2E]">${b.duration || 1}</span> ${b.pricingUnit === 'per_hour' ? 'ساعات' : 'أيام / ليال'}</div>
+                    </div>
+
+                    <div class="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                        <div class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
+                            <i class="fas fa-receipt text-[#2D4F2E]"></i>
+                            <span>التكلفة والحساب</span>
+                        </div>
+                        <div class="text-xl font-black text-[#2D4F2E]">${Number(b.totalPrice || 0).toLocaleString()} ج.م</div>
+                        <div class="text-[11px] text-slate-500">حالة الدفع: <span class="font-bold ${b.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-amber-600'}">${b.paymentStatus === 'paid' ? 'مدفوع' : 'غير مدفوع (عند الوصول)'}</span></div>
+                        ${b.notes ? `<div class="text-[11px] text-slate-500 italic mt-1">ملاحظات: "${b.notes}"</div>` : ''}
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    ${b.status === 'pending' ? `
+                        <button type="button" onclick="updateOwnerBookingStatus('${bId}', 'confirmed')" class="gold-btn text-xs py-1.5 px-4 shadow-sm cursor-pointer">
+                            <i class="fas fa-check-circle me-1"></i>
+                            <span>تأكيد الحجز</span>
+                        </button>
+                        <button type="button" onclick="updateOwnerBookingStatus('${bId}', 'cancelled')" class="btn-secondary text-xs py-1.5 px-3 text-red-600 hover:bg-red-50 hover:border-red-300 cursor-pointer">
+                            <i class="fas fa-times me-1"></i>
+                            <span>رفض / إلغاء</span>
+                        </button>
+                    ` : ''}
+
+                    ${b.status === 'confirmed' ? `
+                        <button type="button" onclick="updateOwnerBookingStatus('${bId}', 'completed')" class="btn-secondary text-xs py-1.5 px-3.5 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 cursor-pointer">
+                            <i class="fas fa-flag-checkered me-1"></i>
+                            <span>اكتمال الحجز</span>
+                        </button>
+                        <button type="button" onclick="updateOwnerBookingStatus('${bId}', 'cancelled')" class="btn-secondary text-xs py-1.5 px-3 text-red-600 hover:bg-red-50 cursor-pointer">
+                            <i class="fas fa-ban me-1"></i>
+                            <span>إلغاء</span>
+                        </button>
+                    ` : ''}
+
+                    ${b.status === 'completed' || b.status === 'cancelled' ? `
+                        <span class="text-xs text-slate-400 font-semibold">لا توجد إجراءات إضافية على هذا الحجز</span>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function updateOwnerBookingStatus(bookingId, newStatus) {
+    if (!bookingId || !newStatus) return;
+
+    if (newStatus === 'cancelled') {
+        if (!confirm('هل أنت متأكد من رغبتك في إلغاء هذا الحجز؟')) return;
+    }
+
+    try {
+        await apiFetch(`/api/v1/admin/bookings/${bookingId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: newStatus }),
+        });
+
+        const statusLabels = {
+            confirmed: 'تم تأكيد الحجز بنجاح!',
+            completed: 'تم تعيين الحجز كمكتمل بنجاح!',
+            cancelled: 'تم إلغاء الحجز',
+        };
+
+        showToast(statusLabels[newStatus] || 'تم تحديث حالة الحجز', 'success');
+
+        const item = state.ownerBookings.find(b => (b.id || b._id) === bookingId);
+        if (item) item.status = newStatus;
+
+        renderOwnerOverviewKPIs();
+        renderOwnerBookings();
+    } catch (err) {
+        // apiFetch shows error toast
+    }
+}
+
+// ── OWNER TAB 5: PROFILE & SECURITY ──
+
+function loadOwnerProfileTab() {
+    const user = state.user || {};
+    const nameInput = document.getElementById('owner-profile-name');
+    const emailInput = document.getElementById('owner-profile-email');
+    const phoneInput = document.getElementById('owner-profile-phone');
+
+    if (nameInput) nameInput.value = user.name || '';
+    if (emailInput) emailInput.value = user.email || '';
+    if (phoneInput) phoneInput.value = user.phone || '';
+}
+
+async function handleOwnerProfileUpdate(e) {
+    if (e) e.preventDefault();
+    const user = state.user;
+    if (!user) return;
+    const userId = user.id || user._id;
+
+    const name = document.getElementById('owner-profile-name')?.value.trim();
+    const phone = document.getElementById('owner-profile-phone')?.value.trim();
+
+    if (!name) {
+        showToast('الاسم مطلوب', 'error');
+        return;
+    }
+
+    try {
+        await apiFetch(`/api/v1/admin/users/${userId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ name, phone }),
+        });
+
+        showToast('تم تحديث البيانات الشخصية بنجاح', 'success');
+
+        state.user = { ...state.user, name, phone };
+        localStorage.setItem('kuba_admin_user', JSON.stringify(state.user));
+        updateAdminProfileUI();
+    } catch (err) {
+        // apiFetch shows error toast
+    }
+}
+
+async function handleOwnerPasswordUpdate(e) {
+    if (e) e.preventDefault();
+    const user = state.user;
+    if (!user) return;
+    const userId = user.id || user._id;
+
+    const newPassword = document.getElementById('owner-new-password')?.value;
+    const confirmPassword = document.getElementById('owner-confirm-password')?.value;
+
+    if (!newPassword || newPassword.length < 8) {
+        showToast('كلمة المرور يجب أن تكون 8 أحرف على الأقل', 'error');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        showToast('كلمتا المرور غير متطابقتين', 'error');
+        return;
+    }
+
+    try {
+        await apiFetch(`/api/v1/admin/users/${userId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ password: newPassword }),
+        });
+
+        showToast('تم تغيير كلمة المرور بنجاح!', 'success');
+        document.getElementById('owner-password-form')?.reset();
+    } catch (err) {
+        // apiFetch shows error toast
+    }
+}
+
+
 // ─── INITIALIZATION ───────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -4656,6 +6273,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('advertisement-form')?.addEventListener('submit', handleAdvertisementFormSubmit);
     document.getElementById('unit-type-form')?.addEventListener('submit', handleUnitTypeFormSubmit);
     document.getElementById('attribute-form')?.addEventListener('submit', handleAttributeFormSubmit);
+
+    // Ad Owner Management listeners
+    document.getElementById('ad-owner-create-form')?.addEventListener('submit', handleAdOwnerCreateSubmit);
+    document.getElementById('ad-owner-select-form')?.addEventListener('submit', handleAdOwnerSelectSubmit);
+
+    // Owner Portal listeners
+    document.getElementById('owner-listing-form')?.addEventListener('submit', handleOwnerListingSubmit);
+    document.getElementById('owner-gallery-upload-form')?.addEventListener('submit', handleOwnerImagesUpload);
+    document.getElementById('owner-profile-form')?.addEventListener('submit', handleOwnerProfileUpdate);
+    document.getElementById('owner-password-form')?.addEventListener('submit', handleOwnerPasswordUpdate);
 
     // Sidebar navigation
     document.querySelectorAll('.nav-link').forEach(link => {
