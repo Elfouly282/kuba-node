@@ -633,13 +633,28 @@ function loadCurrentTab() {
 
 // ─── OVERVIEW / STATS ─────────────────────────────────────────────────────────
 
+let userGrowthChartInstance = null;
+let adsRegionChartInstance = null;
+
+function setElText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text !== undefined && text !== null ? text : '0';
+}
+
 async function loadStats() {
+    const icon = document.getElementById('refresh-icon');
+    if (icon) icon.classList.add('fa-spin');
+
     try {
         const res = await apiFetch('/api/v1/admin/users/stats');
         state.stats = res.data;
         renderStats();
     } catch (err) {
         console.error('Stats loading error:', err);
+    } finally {
+        if (icon) {
+            setTimeout(() => icon.classList.remove('fa-spin'), 600);
+        }
     }
 }
 
@@ -647,53 +662,248 @@ function renderStats() {
     if (!state.stats) return;
     const s = state.stats;
 
-    document.getElementById('stat-total-users').textContent = s.totalUsers || 0;
-    document.getElementById('stat-active-users').textContent = s.activeUsers || 0;
-    document.getElementById('stat-verified-users').textContent = s.verifiedUsers || 0;
-    document.getElementById('stat-onboarding').textContent = s.totalOnboarding || 0;
-    const statCategories = document.getElementById('stat-categories');
-    if (statCategories) statCategories.textContent = s.totalCategories || 0;
-    const statBanners = document.getElementById('stat-banners');
-    if (statBanners) statBanners.textContent = s.totalBanners || 0;
-    const statCities = document.getElementById('stat-cities');
-    if (statCities) statCities.textContent = s.totalCities !== undefined ? s.totalCities : (state.cities?.length || 0);
-    const statRegions = document.getElementById('stat-regions');
-    if (statRegions) statRegions.textContent = s.totalRegions !== undefined ? s.totalRegions : (state.regions?.length || 0);
-    const statAds = document.getElementById('stat-advertisements');
-    if (statAds) statAds.textContent = s.totalAdvertisements || 0;
-    const statUnitTypes = document.getElementById('stat-unit-types');
-    if (statUnitTypes) statUnitTypes.textContent = s.totalUnitTypes || 0;
-    const statBookings = document.getElementById('stat-bookings');
-    if (statBookings) statBookings.textContent = s.totalBookings || 0;
+    // 1. Primary KPIs
+    setElText('stat-total-users', Number(s.totalUsers || 0).toLocaleString());
+    setElText('stat-active-users', Number(s.activeUsers || 0).toLocaleString());
+    setElText('stat-inactive-users', Number(s.inactiveUsers || 0).toLocaleString());
+    setElText('stat-verified-users', Number(s.verifiedUsers || 0).toLocaleString());
 
-    document.getElementById('info-env').textContent = s.environment || 'development';
-    document.getElementById('info-time').textContent = new Date(s.serverTime).toLocaleTimeString();
+    setElText('stat-bookings', Number(s.totalBookings || 0).toLocaleString());
+    const confirmedCount = s.charts?.bookingsByStatus?.find(b => b.status === 'confirmed')?.count || 0;
+    const pendingCount = s.charts?.bookingsByStatus?.find(b => b.status === 'pending')?.count || 0;
+    setElText('stat-bookings-confirmed', confirmedCount);
+    setElText('stat-bookings-pending', pendingCount);
 
-    // Render recent users
-    const recentList = document.getElementById('recent-users-list');
-    if (recentList && s.recentUsers) {
-        if (!Array.isArray(s.recentUsers) || s.recentUsers.length === 0) {
-            recentList.innerHTML = `<p class="text-sm text-slate-400 py-6 text-center">لا يوجد مستخدمون حتى الآن</p>`;
-        } else {
-            recentList.innerHTML = s.recentUsers.map(u => `
-                <div class="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition border border-slate-100 mb-2">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-[#eaf1ea] border border-[#c2d6c3] flex items-center justify-center font-black text-[#2D4F2E] text-sm shadow-sm">
-                            ${(u.name || u.email || 'U')[0].toUpperCase()}
-                        </div>
-                        <div>
-                            <div class="font-bold text-sm text-slate-900">${u.name || 'بدون اسم'}</div>
-                            <div class="text-xs text-slate-500">${u.email || u.phone || '—'}</div>
-                        </div>
+    setElText('stat-advertisements', Number(s.totalAdvertisements || 0).toLocaleString());
+    setElText('stat-unit-types', Number(s.totalUnitTypes || 0).toLocaleString());
+    setElText('stat-unit-types-bar', Number(s.totalUnitTypes || 0).toLocaleString());
+
+    setElText('stat-cities', Number(s.totalCities !== undefined ? s.totalCities : (state.cities?.length || 0)).toLocaleString());
+    setElText('stat-regions', Number(s.totalRegions !== undefined ? s.totalRegions : (state.regions?.length || 0)).toLocaleString());
+
+    // 2. Micro Content KPIs
+    setElText('stat-categories', Number(s.totalCategories || 0).toLocaleString());
+    setElText('stat-banners', Number(s.totalBanners || 0).toLocaleString());
+    setElText('stat-onboarding', Number(s.totalOnboarding || 0).toLocaleString());
+
+    // 3. System Meta & Clock
+    setElText('info-env', s.environment || 'development');
+    const serverTimeStr = s.serverTime ? new Date(s.serverTime).toLocaleTimeString(state.lang === 'ar' ? 'ar-EG' : 'en-US') : new Date().toLocaleTimeString();
+    setElText('info-time', serverTimeStr);
+    
+    const dbStatusEl = document.getElementById('info-db-status');
+    if (dbStatusEl) {
+        const isConnected = s.dbConnected !== false;
+        dbStatusEl.textContent = isConnected ? (state.lang === 'ar' ? 'متصلة (MongoDB)' : 'Connected (MongoDB)') : (state.lang === 'ar' ? 'غير متصلة' : 'Disconnected');
+        dbStatusEl.className = isConnected ? 'font-bold text-white' : 'font-bold text-red-300';
+    }
+
+    // 4. Render Visual Analytics Charts
+    renderOverviewCharts(s.charts);
+
+    // 5. Render Recent Registered Users
+    renderOverviewRecentUsers(s.recentUsers);
+}
+
+function renderOverviewCharts(charts) {
+    if (!window.Chart || !charts) return;
+
+    // Set Arabic-friendly font defaults
+    Chart.defaults.font.family = "'Cairo', 'Outfit', sans-serif";
+    Chart.defaults.color = '#64748b';
+
+    // A. User Growth Trend Chart (Last 6 Months)
+    const growthCanvas = document.getElementById('overviewUserGrowthChart');
+    if (growthCanvas) {
+        if (userGrowthChartInstance) {
+            userGrowthChartInstance.destroy();
+            userGrowthChartInstance = null;
+        }
+
+        const growthData = Array.isArray(charts.userGrowth) && charts.userGrowth.length > 0 ? charts.userGrowth : [];
+        const labels = growthData.map(item => item.label);
+        const data = growthData.map(item => item.count);
+        const totalRecent = data.reduce((a, b) => a + b, 0);
+
+        setElText('chart-user-growth-total', `+${totalRecent}`);
+
+        const ctx = growthCanvas.getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+        gradient.addColorStop(0, 'rgba(45, 79, 46, 0.28)');
+        gradient.addColorStop(1, 'rgba(45, 79, 46, 0.01)');
+
+        userGrowthChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels.length ? labels : ['الشهر 1', 'الشهر 2', 'الشهر 3', 'الشهر 4', 'الشهر 5', 'الشهر الحالي'],
+                datasets: [{
+                    label: state.lang === 'ar' ? 'مستخدم جديد' : 'New Users',
+                    data: data.length ? data : [0, 0, 0, 0, 0, 0],
+                    borderColor: '#2D4F2E',
+                    borderWidth: 3,
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.38,
+                    pointBackgroundColor: '#2D4F2E',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4.5,
+                    pointHoverRadius: 7,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        rtl: state.lang === 'ar',
+                        backgroundColor: '#1b331c',
+                        titleFont: { family: "'Cairo', sans-serif", size: 12, weight: 'bold' },
+                        bodyFont: { family: "'Cairo', sans-serif", size: 11 },
+                        padding: 10,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: (context) => ` ${context.parsed.y} ${state.lang === 'ar' ? 'مستخدم جديد' : 'new users'}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            font: { family: "'Cairo', sans-serif", size: 11 },
+                            color: '#64748b'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                            font: { family: "'Outfit', 'Cairo', sans-serif", size: 11 },
+                            color: '#94a3b8'
+                        },
+                        grid: {
+                            color: 'rgba(226, 232, 240, 0.7)',
+                            drawBorder: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // B. Ads by Region / Distribution Chart
+    const adsCanvas = document.getElementById('overviewAdsRegionChart');
+    if (adsCanvas) {
+        if (adsRegionChartInstance) {
+            adsRegionChartInstance.destroy();
+            adsRegionChartInstance = null;
+        }
+
+        const hasRegions = Array.isArray(charts.adsByRegion) && charts.adsByRegion.length > 0;
+        const regionItems = hasRegions ? charts.adsByRegion : [{ label: state.lang === 'ar' ? 'لا توجد بيانات كافية' : 'No data yet', count: 1 }];
+        const labels = regionItems.map(r => r.label);
+        const data = regionItems.map(r => r.count);
+        const palette = hasRegions
+            ? ['#2D4F2E', '#0284c7', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899']
+            : ['#cbd5e1'];
+
+        adsRegionChartInstance = new Chart(adsCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: palette,
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        rtl: state.lang === 'ar',
+                        labels: {
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            padding: 10,
+                            font: { family: "'Cairo', sans-serif", size: 11 }
+                        }
+                    },
+                    tooltip: {
+                        enabled: hasRegions,
+                        rtl: state.lang === 'ar',
+                        backgroundColor: '#1b331c',
+                        padding: 10,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: (context) => ` ${context.label}: ${context.parsed} ${state.lang === 'ar' ? 'إعلان' : 'listing'}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+function renderOverviewRecentUsers(users) {
+    const container = document.getElementById('recent-users-list');
+    if (!container) return;
+
+    if (!Array.isArray(users) || users.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-10 text-slate-400">
+                <i class="fas fa-user-clock text-3xl mb-2 opacity-50 text-slate-300"></i>
+                <p class="text-xs">لا يوجد مستخدمون مسجلون حتى الآن</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = users.map(u => {
+        const name = u.name || (state.lang === 'ar' ? 'بدون اسم' : 'Unnamed');
+        const initial = (u.name || u.email || 'U')[0].toUpperCase();
+        const contact = u.email || u.phone || '—';
+        const dateStr = u.createdAt ? new Date(u.createdAt).toLocaleDateString(state.lang === 'ar' ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+        const isActive = u.active !== false;
+        const isGoogle = u.provider === 'google';
+        const regionName = u.region?.name || null;
+
+        return `
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl hover:bg-slate-50 transition border border-slate-100 hover:border-slate-200 gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-200 text-[#2D4F2E] flex items-center justify-center font-black text-sm shrink-0 shadow-xs border border-emerald-300/40">
+                        ${initial}
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="badge ${u.active ? 'badge-success' : 'badge-danger'}">${u.active ? t('active') : t('inactive')}</span>
-                        <span class="text-xs text-slate-400 font-medium">${new Date(u.createdAt).toLocaleDateString()}</span>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-sm text-slate-900 truncate">${name}</span>
+                            ${isGoogle ? `<span class="inline-flex items-center gap-1 text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-100"><i class="fab fa-google text-[9px]"></i> Google</span>` : ''}
+                            ${regionName ? `<span class="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium truncate max-w-[100px]"><i class="fas fa-location-dot text-[8px] text-[#2D4F2E]"></i> ${regionName}</span>` : ''}
+                        </div>
+                        <div class="text-xs text-slate-500 font-mono truncate mt-0.5">${contact}</div>
                     </div>
                 </div>
-            `).join('');
-        }
-    }
+
+                <div class="flex items-center gap-2.5 self-end sm:self-center shrink-0">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold ${isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-600 border border-rose-200'}">
+                        <span class="w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
+                        <span>${isActive ? (state.lang === 'ar' ? 'نشط' : 'Active') : (state.lang === 'ar' ? 'معطل' : 'Inactive')}</span>
+                    </span>
+                    <span class="text-[11px] text-slate-400 font-medium">${dateStr}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 // ─── USERS MANAGEMENT ─────────────────────────────────────────────────────────
