@@ -34,7 +34,16 @@
         "regionSelected": "تم اختيار المنطقة بنجاح.",
         "addedToWishlist": "تمت إضافة الإعلان إلى قائمة المفضلة بنجاح.",
         "removedFromWishlist": "تمت إزالة الإعلان من قائمة المفضلة بنجاح.",
-        "wishlistCleared": "تم إفراغ قائمة المفضلة بنجاح."
+        "wishlistCleared": "تم إفراغ قائمة المفضلة بنجاح.",
+        "roomCreated": "تمت إضافة الغرفة بنجاح.",
+        "roomUpdated": "تم تحديث بيانات الغرفة بنجاح.",
+        "roomDeleted": "تم حذف الغرفة بنجاح.",
+        "bookingCreated": "تم إنشاء طلب الحجز بنجاح.",
+        "bookingUpdated": "تم تحديث بيانات الحجز بنجاح.",
+        "bookingCancelled": "تم إلغاء الحجز بنجاح.",
+        "bookingConfirmed": "تم تأكيد الحجز بنجاح.",
+        "bookingCompleted": "تم إكمال الحجز بنجاح.",
+        "bookingDeleted": "تم حذف الحجز بنجاح."
     },
     "errors": {
         "somethingWentWrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.",
@@ -82,7 +91,13 @@
         "imageRequired": "الصورة مطلوبة (يرجى رفع ملف صورة أو توفير رابط الصورة).",
         "dashboardAccessDenied": "عذراً، هذا الحساب غير مصرح له بالدخول للوحة التحكم. الدخول مخصص للمدراء وأصحاب الإعلانات فقط.",
         "ownerNotFound": "لم يتم العثور على حساب المالك المحدد.",
-        "adNotOwned": "ليس لديك صلاحية لإدارة هذا الإعلان."
+        "adNotOwned": "ليس لديك صلاحية لإدارة هذا الإعلان.",
+        "roomNotFound": "الغرفة المطلوبة غير موجودة.",
+        "invalidRoomId": "معرف الغرفة المحدد غير صالح.",
+        "roomInactive": "هذه الغرفة غير متاحة حالياً للحجز.",
+        "roomDoesNotBelongToHotel": "هذه الغرفة لا تنتمي إلى الفندق المحدد.",
+        "bookingDateConflict": "التواريخ أو الأوقات المحددة محجوزة مسبقاً، يرجى اختيار موعد آخر.",
+        "bookingNotFound": "طلب الحجز المحدد غير موجود."
     },
     "validation": {
         "nameRequired": "الاسم مطلوب.",
@@ -97,6 +112,7 @@
         "onboardingScreenNotFound": "شاشة الترحيب غير موجودة.",
         "categoryRequired": "التصنيف مطلوب.",
         "advertisementRequired": "معرف الإعلان مطلوب.",
+        "hotelRequired": "معرف الفندق مطلوب.",
         "positionRequired": "موضع البانر مطلوب.",
         "invalidPosition": "يجب أن يكون موضع البانر: top أو center أو bottom.",
         "cityRequired": "معرف المدينة مطلوب.",
@@ -105,6 +121,7 @@
         "datesRequired": "تاريخ البداية وتاريخ النهاية مطلوبان معًا.",
         "invalidDateRange": "تاريخ النهاية لازم يكون بعد تاريخ البداية.",
         "invalidDuration": "المدة لازم تكون رقم أكبر من صفر.",
-        "invalidGuests": "عدد الضيوف لازم يكون رقم صحيح أكبر من صفر."
+        "invalidGuests": "عدد الضيوف لازم يكون رقم صحيح أكبر من صفر.",
+        "invalidBookingStatus": "حالة الحجز غير صالحة."
     }
 }

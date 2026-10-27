@@ -329,6 +329,9 @@ const state = {
     selectedAdForOwnerModal: null,
     ownerMapInstance: null,
     ownerMapMarker: null,
+    activeHotelId: null,
+    activeHotelTitle: '',
+    hotelRooms: [],
 };
 
 // ─── HELPERS & API ────────────────────────────────────────────────────────────
@@ -3736,13 +3739,22 @@ function renderAdvertisementsGrid() {
                     </button>
                 </div>
 
-                <div class="flex items-center justify-end gap-1.5 pt-2 mt-2 border-t border-slate-100">
-                    <button onclick="openEditAdvertisementModal('${adId}')" class="btn-secondary text-xs py-1 px-2.5 cursor-pointer">
-                        <i class="fas fa-edit text-blue-600 me-1"></i> ${t('edit')}
-                    </button>
-                    <button onclick="deleteAdvertisement('${adId}')" class="btn-secondary text-xs py-1 px-2.5 hover:text-red-600 cursor-pointer">
-                        <i class="fas fa-trash-alt text-red-600 me-1"></i> ${t('delete')}
-                    </button>
+                <div class="flex items-center justify-between gap-1.5 pt-2 mt-2 border-t border-slate-100">
+                    <div>
+                        ${(ad.isHotel || ad.type === 'hotel' || ut?.slug === 'hotel' || ut?.slug === 'hotel_room') ? `
+                            <button onclick="openHotelRoomsManagementModal('${adId}', '${(ad.title || '').replace(/'/g, "\\'")}')" class="btn-secondary text-xs py-1 px-2.5 bg-purple-50 text-purple-800 border-purple-200 hover:bg-purple-100 font-bold cursor-pointer">
+                                <i class="fas fa-door-open text-purple-600 me-1"></i> إدارة الغرف
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="openEditAdvertisementModal('${adId}')" class="btn-secondary text-xs py-1 px-2.5 cursor-pointer">
+                            <i class="fas fa-edit text-blue-600 me-1"></i> ${t('edit')}
+                        </button>
+                        <button onclick="deleteAdvertisement('${adId}')" class="btn-secondary text-xs py-1 px-2.5 hover:text-red-600 cursor-pointer">
+                            <i class="fas fa-trash-alt text-red-600 me-1"></i> ${t('delete')}
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -4994,6 +5006,7 @@ async function loadBookingsTab() {
 
 function filterAdminBookings() {
     const search = document.getElementById('admin-booking-search')?.value.trim().toLowerCase() || '';
+    const bType = document.getElementById('admin-booking-filter-type')?.value || '';
     const status = document.getElementById('admin-booking-filter-status')?.value || '';
     const payment = document.getElementById('admin-booking-filter-payment')?.value || '';
 
@@ -5005,9 +5018,15 @@ function filterAdminBookings() {
             const userEmail = b.user?.email?.toLowerCase() || '';
             const userPhone = b.user?.phone?.toLowerCase() || '';
             const adTitle = b.advertisement?.title?.toLowerCase() || '';
+            const roomTitle = b.room?.title?.toLowerCase() || '';
+            const guestName = b.guestDetails?.fullName?.toLowerCase() || '';
             const bookingId = (b.id || b._id || '').toLowerCase();
-            return userName.includes(search) || userEmail.includes(search) || userPhone.includes(search) || adTitle.includes(search) || bookingId.includes(search);
+            return userName.includes(search) || userEmail.includes(search) || userPhone.includes(search) || adTitle.includes(search) || roomTitle.includes(search) || guestName.includes(search) || bookingId.includes(search);
         });
+    }
+
+    if (bType) {
+        filtered = filtered.filter(b => (b.bookingType || b.advertisement?.type) === bType);
     }
 
     if (status) {
@@ -5028,9 +5047,18 @@ function renderAdminBookingsTable(list) {
     if (!tbody) return;
 
     if (!list || list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400">لا توجد حجوزات مطابقة للبحث أو الفلتر</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-400">لا توجد حجوزات مطابقة للبحث أو الفلتر</td></tr>';
         return;
     }
+
+    const typeBadge = {
+        hotel: '<span class="badge bg-purple-50 text-purple-700 border border-purple-200 font-bold whitespace-nowrap"><i class="fas fa-hotel me-1"></i>فندق</span>',
+        chalet: '<span class="badge bg-amber-50 text-amber-700 border border-amber-200 font-bold whitespace-nowrap"><i class="fas fa-umbrella-beach me-1"></i>شاليه</span>',
+        yacht: '<span class="badge bg-cyan-50 text-cyan-700 border border-cyan-200 font-bold whitespace-nowrap"><i class="fas fa-ship me-1"></i>يخت</span>',
+        golf_car: '<span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold whitespace-nowrap"><i class="fas fa-car-side me-1"></i>جولف كار</span>',
+        villa: '<span class="badge bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold whitespace-nowrap"><i class="fas fa-house-chimney me-1"></i>فيلا</span>',
+        apartment: '<span class="badge bg-blue-50 text-blue-700 border border-blue-200 font-bold whitespace-nowrap"><i class="fas fa-building me-1"></i>شقة</span>',
+    };
 
     const statusBadge = {
         pending: '<span class="badge bg-amber-100 text-amber-700 border border-amber-300 font-bold">قيد الانتظار</span>',
@@ -5049,7 +5077,9 @@ function renderAdminBookingsTable(list) {
         const bId = b.id || b._id;
         const shortId = bId ? bId.substring(bId.length - 6) : '--';
         const ad = b.advertisement || {};
+        const room = b.room || null;
         const customer = b.user || {};
+        const bType = b.bookingType || ad.type || 'general';
         const adImg = ad.image?.startsWith('http') ? ad.image : (ad.image ? `/uploads/${ad.image}` : 'images/kuba-logo.jpeg');
 
         const startStr = b.startDate ? new Date(b.startDate).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', year: 'numeric' }) : '--';
@@ -5062,17 +5092,28 @@ function renderAdminBookingsTable(list) {
                     <div class="text-[10px] text-slate-400 font-sans">${b.createdAt ? new Date(b.createdAt).toLocaleDateString('ar-EG') : ''}</div>
                 </td>
                 <td class="p-3">
+                    ${typeBadge[bType] || `<span class="badge bg-slate-100 text-slate-700">${bType}</span>`}
+                    ${b.rentalType === 'hourly' ? '<div class="text-[9px] text-sky-700 font-bold mt-0.5">بالساعة</div>' : ''}
+                    ${b.rentalType === 'full_day' ? '<div class="text-[9px] text-indigo-700 font-bold mt-0.5">يوم كامل</div>' : ''}
+                </td>
+                <td class="p-3">
                     <div class="flex items-center gap-2">
-                        <img src="${adImg}" class="w-10 h-10 rounded-lg object-cover border border-slate-200" onerror="this.src='images/kuba-logo.jpeg'">
+                        <img src="${adImg}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0" onerror="this.src='images/kuba-logo.jpeg'">
                         <div class="max-w-[180px]">
                             <div class="font-bold text-slate-900 truncate" title="${ad.title || '--'}">${ad.title || 'إعلان محذوف'}</div>
                             <div class="text-[11px] text-slate-400 truncate">${ad.location || ''}</div>
+                            ${room ? `
+                                <div class="mt-1 inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                                    <i class="fas fa-door-closed text-[9px]"></i>
+                                    <span>غرفة: ${room.title || room.roomNumber || 'غرفة فندقية'}</span>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 </td>
                 <td class="p-3">
-                    <div class="font-bold text-slate-900">${customer.name || 'عميل بدون اسم'}</div>
-                    <div class="text-[11px] text-slate-500 font-mono">${customer.phone || customer.email || '--'}</div>
+                    <div class="font-bold text-slate-900">${customer.name || b.guestDetails?.fullName || 'عميل بدون اسم'}</div>
+                    <div class="text-[11px] text-slate-500 font-mono">${customer.phone || customer.email || b.guestDetails?.phone || '--'}</div>
                 </td>
                 <td class="p-3">
                     <div class="font-medium text-slate-700">من: <span class="font-bold">${startStr}</span></div>
@@ -5090,6 +5131,9 @@ function renderAdminBookingsTable(list) {
                 </td>
                 <td class="p-3 text-center">
                     <div class="inline-flex items-center gap-1">
+                        <button onclick="openBookingDetailsModal('${bId}')" class="text-slate-500 hover:text-[#2D4F2E] p-1.5 transition rounded hover:bg-slate-100" title="عرض تفاصيل الحجز">
+                            <i class="fas fa-eye text-xs"></i>
+                        </button>
                         <select onchange="changeBookingStatus('${bId}', this.value)" class="form-select text-[11px] py-1 px-2 border-slate-300">
                             <option value="">تغيير الحالة</option>
                             <option value="confirmed" ${b.status === 'confirmed' ? 'disabled' : ''}>تأكيد (Confirmed)</option>
@@ -5140,6 +5184,473 @@ async function deleteBookingAdmin(bookingId) {
         // apiFetch shows error toast
     }
 }
+
+
+// ─── BOOKING DETAILS MODAL & ACTIONS ──────────────────────────────────────────
+
+async function openBookingDetailsModal(bookingId) {
+    if (!bookingId) return;
+
+    let booking = (state.bookings || []).find(b => (b.id || b._id) === bookingId);
+    if (!booking && state.ownerBookings) {
+        booking = state.ownerBookings.find(b => (b.id || b._id) === bookingId);
+    }
+
+    if (!booking || !booking.room) {
+        try {
+            const res = await apiFetch('/api/v1/admin/bookings/' + bookingId);
+            if (res.data?.booking || res.data) {
+                booking = res.data.booking || res.data;
+            }
+        } catch (_) {}
+    }
+
+    if (!booking) {
+        showToast('لم يتم العثور على بيانات هذا الحجز', 'error');
+        return;
+    }
+
+    const bId = booking.id || booking._id;
+    const shortId = bId ? bId.substring(bId.length - 8) : '--';
+    const idEl = document.getElementById('bmodal-id');
+    if (idEl) idEl.textContent = '#' + shortId + ' (' + bId + ')';
+
+    const contentEl = document.getElementById('bmodal-content');
+    const actionsEl = document.getElementById('bmodal-quick-actions');
+    if (!contentEl) return;
+
+    const ad = booking.advertisement || {};
+    const room = booking.room || null;
+    const customer = booking.user || {};
+    const guest = booking.guestDetails || {};
+    const bType = booking.bookingType || ad.type || 'general';
+
+    const typeBadge = {
+        hotel: '<span class="badge bg-purple-50 text-purple-700 border border-purple-200 font-bold"><i class="fas fa-hotel me-1"></i>فندق</span>',
+        chalet: '<span class="badge bg-amber-50 text-amber-700 border border-amber-200 font-bold"><i class="fas fa-umbrella-beach me-1"></i>شاليه</span>',
+        yacht: '<span class="badge bg-cyan-50 text-cyan-700 border border-cyan-200 font-bold"><i class="fas fa-ship me-1"></i>يخت</span>',
+        golf_car: '<span class="badge bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold"><i class="fas fa-car-side me-1"></i>جولف كار</span>',
+        villa: '<span class="badge bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold"><i class="fas fa-house-chimney me-1"></i>فيلا</span>',
+        apartment: '<span class="badge bg-blue-50 text-blue-700 border border-blue-200 font-bold"><i class="fas fa-building me-1"></i>شقة</span>',
+    };
+
+    const statusBadge = {
+        pending: '<span class="badge bg-amber-100 text-amber-800 border border-amber-300 font-bold">قيد الانتظار (Pending)</span>',
+        confirmed: '<span class="badge bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold">مؤكد ومقبول (Confirmed)</span>',
+        completed: '<span class="badge bg-blue-100 text-blue-800 border border-blue-300 font-bold">مكتمل (Completed)</span>',
+        cancelled: '<span class="badge bg-red-100 text-red-800 border border-red-300 font-bold">ملغي (Cancelled)</span>',
+    };
+
+    const adImg = ad.image?.startsWith('http') ? ad.image : (ad.image ? ('/uploads/' + ad.image) : 'images/kuba-logo.jpeg');
+    const startStr = booking.startDate ? new Date(booking.startDate).toLocaleDateString('ar-EG', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '--';
+    const endStr = booking.endDate ? new Date(booking.endDate).toLocaleDateString('ar-EG', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '--';
+
+    const customerPhone = customer.phone || guest.phone || '';
+    const waLink = customerPhone ? ('https://wa.me/' + customerPhone.replace(/[^0-9]/g, '')) : null;
+
+    contentEl.innerHTML = `
+        <!-- Status & Type Header -->
+        <div class="flex flex-wrap items-center justify-between gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-500 font-semibold">حالة الحجز:</span>
+                ${statusBadge[booking.status] || booking.status}
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-500 font-semibold">نوع الوحدة:</span>
+                ${typeBadge[bType] || ('<span class="badge bg-slate-100">' + bType + '</span>')}
+                ${booking.rentalType === 'hourly' ? '<span class="badge bg-sky-100 text-sky-800 text-[10px] font-bold">إيجار بالساعة</span>' : ''}
+                ${booking.rentalType === 'full_day' ? '<span class="badge bg-indigo-100 text-indigo-800 text-[10px] font-bold">يوم كامل</span>' : ''}
+            </div>
+        </div>
+
+        <!-- Property & Room Card -->
+        <div class="p-4 bg-white border border-slate-200 rounded-xl space-y-3">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fas fa-building text-[#2D4F2E]"></i>
+                <span>بيانات العقار والوحدة</span>
+            </div>
+            <div class="flex items-start gap-3">
+                <img src="${adImg}" class="w-14 h-14 rounded-xl object-cover border border-slate-200 shrink-0" onerror="this.src='images/kuba-logo.jpeg'">
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-bold text-slate-900 text-sm truncate">${ad.title || 'إعلان غير محدد'}</h4>
+                    <p class="text-xs text-slate-500 mt-0.5"><i class="fas fa-location-dot text-[#2D4F2E] me-1"></i>${ad.location || ad.address || 'العنوان غير محدد'}</p>
+                </div>
+            </div>
+
+            ${room ? `
+                <div class="mt-2 p-3 bg-purple-50/80 border border-purple-200 rounded-lg space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-purple-900 text-xs flex items-center gap-1.5">
+                            <i class="fas fa-door-closed text-purple-600"></i>
+                            تفاصيل الغرفة الفندقية المحجوزة
+                        </span>
+                        ${room.roomNumber ? ('<span class="badge bg-purple-200 text-purple-800 font-mono text-[10px] font-bold">غرفة رقم: ' + room.roomNumber + '</span>') : ''}
+                    </div>
+                    <div class="font-bold text-slate-800 text-xs">${room.title || 'غرفة فندقية'}</div>
+                    <div class="text-[11px] text-slate-600 flex flex-wrap gap-x-4 gap-y-1 pt-0.5">
+                        <span><i class="fas fa-tag text-purple-600 me-1"></i>نوع الغرفة: <b>${room.roomType || 'standard'}</b></span>
+                        <span><i class="fas fa-bed text-purple-600 me-1"></i>الأسرّة: <b>${room.beds?.count || 1} (${room.beds?.bedType || 'مزدوج'})</b></span>
+                        <span><i class="fas fa-user-friends text-purple-600 me-1"></i>السعة: <b>${room.capacity?.adults || 2} بالغين ${room.capacity?.children ? ('+ ' + room.capacity.children + ' أطفال') : ''}</b></span>
+                    </div>
+                </div>
+            ` : ''}
+        </div>
+
+        <!-- Schedule & Timing -->
+        <div class="p-4 bg-white border border-slate-200 rounded-xl space-y-2">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fas fa-clock text-[#2D4F2E]"></i>
+                <span>فترة ومواعيد الحجز</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+                    <div class="text-slate-400 text-[10px] mb-0.5">تاريخ البداية (Check-In)</div>
+                    <div class="font-bold text-slate-800">${startStr}</div>
+                    ${booking.rentalType === 'hourly' && booking.startDate ? ('<div class="text-[10px] text-sky-700 font-mono mt-0.5 font-bold">الساعة: ' + new Date(booking.startDate).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) + '</div>') : ''}
+                </div>
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+                    <div class="text-slate-400 text-[10px] mb-0.5">تاريخ النهاية (Check-Out)</div>
+                    <div class="font-bold text-slate-800">${endStr}</div>
+                    ${booking.rentalType === 'hourly' && booking.endDate ? ('<div class="text-[10px] text-sky-700 font-mono mt-0.5 font-bold">الساعة: ' + new Date(booking.endDate).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) + '</div>') : ''}
+                </div>
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+                    <div class="text-slate-400 text-[10px] mb-0.5">المدة المحسوبة</div>
+                    <div class="font-bold text-[#2D4F2E] text-sm">${booking.duration || 1} ${booking.pricingUnit === 'per_hour' ? 'ساعات' : 'ليال / أيام'}</div>
+                    <div class="text-[10px] text-slate-400">${booking.rentalType === 'hourly' ? 'حساب بالساعة' : 'حساب باليوم'}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer & Guest Info -->
+        <div class="p-4 bg-white border border-slate-200 rounded-xl space-y-3">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                <span class="flex items-center gap-1.5"><i class="fas fa-user-check text-[#2D4F2E]"></i>بيانات العميل والنزيل</span>
+                ${customerPhone ? `
+                    <div class="flex items-center gap-1.5">
+                        <a href="tel:${customerPhone}" class="text-[11px] text-slate-700 hover:text-[#2D4F2E] font-bold flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded transition">
+                            <i class="fas fa-phone text-emerald-600"></i>اتصال
+                        </a>
+                        <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="text-[11px] text-white bg-emerald-600 hover:bg-emerald-700 font-bold flex items-center gap-1 px-2 py-0.5 rounded transition">
+                            <i class="fab fa-whatsapp"></i>واتساب
+                        </a>
+                    </div>
+                ` : ''}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100 space-y-1">
+                    <div class="text-slate-400 text-[10px]">حساب العميل المسجل</div>
+                    <div class="font-bold text-slate-900">${customer.name || 'عميل مسجل'}</div>
+                    <div class="text-slate-600 font-mono text-[11px]">${customer.phone || 'بدون هاتف'}</div>
+                    <div class="text-slate-400 text-[10px]">${customer.email || ''}</div>
+                </div>
+
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100 space-y-1">
+                    <div class="text-slate-400 text-[10px]">بيانات النزيل الفعلي (Guest Details)</div>
+                    <div class="font-bold text-slate-900">${guest.fullName || customer.name || 'نفس العميل'}</div>
+                    <div class="text-slate-600 font-mono text-[11px]">${guest.phone || customer.phone || '--'}</div>
+                    ${guest.nationalId ? ('<div class="text-[10px] text-slate-500">رقم الهوية: <b class="font-mono text-slate-700">' + guest.nationalId + '</b></div>') : ''}
+                    ${guest.adults ? ('<div class="text-[10px] text-slate-500">العدد: ' + guest.adults + ' بالغين ' + (guest.children ? ('+ ' + guest.children + ' أطفال') : '') + '</div>') : ''}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing & Financials -->
+        <div class="p-4 bg-white border border-slate-200 rounded-xl space-y-2">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fas fa-receipt text-[#2D4F2E]"></i>
+                <span>الحساب والدفع</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+                    <div class="text-slate-400 text-[10px]">سعر الوحدة / الفترة</div>
+                    <div class="font-bold text-slate-800">${Number(booking.unitPrice || (booking.totalPrice / (booking.duration || 1)) || 0).toLocaleString()} ج.م</div>
+                    <div class="text-[10px] text-slate-400">لكل ${booking.pricingUnit === 'per_hour' ? 'ساعة' : 'ليلة'}</div>
+                </div>
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+                    <div class="text-slate-400 text-[10px]">إجمالي التكلفة</div>
+                    <div class="font-black text-[#2D4F2E] text-base">${Number(booking.totalPrice || 0).toLocaleString()} ج.م</div>
+                    <div class="text-[10px] text-slate-400">شامل الضرائب والرسوم</div>
+                </div>
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+                    <div class="text-slate-400 text-[10px]">حالة وطريقة الدفع</div>
+                    <div class="font-bold ${booking.paymentStatus === 'paid' ? 'text-emerald-700' : 'text-amber-700'}">
+                        ${booking.paymentStatus === 'paid' ? 'مدفوع بالكامل' : (booking.paymentStatus === 'refunded' ? 'مسترجع' : 'غير مدفوع (عند الوصول)')}
+                    </div>
+                    <div class="text-[10px] text-slate-400 uppercase mt-0.5">طريقة الدفع: ${booking.paymentMethod || 'cash'}</div>
+                </div>
+            </div>
+        </div>
+
+        ${booking.notes || booking.cancellationReason ? `
+            <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs space-y-1">
+                ${booking.notes ? ('<div><b class="text-amber-900">ملاحظات العميل:</b> <span class="text-slate-700">"' + booking.notes + '"</span></div>') : ''}
+                ${booking.cancellationReason ? ('<div><b class="text-red-800">سبب الإلغاء:</b> <span class="text-red-700">"' + booking.cancellationReason + '"</span></div>') : ''}
+            </div>
+        ` : ''}
+    `;
+
+    // Dynamic Quick Actions
+    if (actionsEl) {
+        if (booking.status === 'pending') {
+            actionsEl.innerHTML = `
+                <button type="button" onclick="changeBookingStatusAndRefresh('${bId}', 'confirmed')" class="gold-btn text-xs py-1.5 px-3.5 shadow-sm cursor-pointer">
+                    <i class="fas fa-check-circle me-1"></i>تأكيد الحجز
+                </button>
+                <button type="button" onclick="changeBookingStatusAndRefresh('${bId}', 'cancelled')" class="btn-secondary text-xs py-1.5 px-3 text-red-600 hover:bg-red-50 cursor-pointer">
+                    <i class="fas fa-times me-1"></i>إلغاء الحجز
+                </button>
+            `;
+        } else if (booking.status === 'confirmed') {
+            actionsEl.innerHTML = `
+                <button type="button" onclick="changeBookingStatusAndRefresh('${bId}', 'completed')" class="btn-secondary text-xs py-1.5 px-3.5 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 cursor-pointer">
+                    <i class="fas fa-flag-checkered me-1"></i>اكتمال الحجز
+                </button>
+                <button type="button" onclick="changeBookingStatusAndRefresh('${bId}', 'cancelled')" class="btn-secondary text-xs py-1.5 px-3 text-red-600 hover:bg-red-50 cursor-pointer">
+                    <i class="fas fa-ban me-1"></i>إلغاء
+                </button>
+            `;
+        } else {
+            actionsEl.innerHTML = `
+                <span class="text-xs text-slate-400 font-semibold">لا توجد إجراءات إضافية</span>
+            `;
+        }
+    }
+
+    document.getElementById('booking-details-modal')?.classList.add('active');
+}
+
+async function changeBookingStatusAndRefresh(bookingId, status) {
+    await changeBookingStatus(bookingId, status);
+    openBookingDetailsModal(bookingId);
+}
+
+// ─── HOTEL ROOMS MANAGEMENT CONTROLLER ────────────────────────────────────────
+
+function openHotelRoomsManagementModal(hotelId, hotelTitle) {
+    if (!hotelId) return;
+
+    state.activeHotelId = hotelId;
+    state.activeHotelTitle = hotelTitle || '';
+
+    const titleEl = document.getElementById('hotel-rooms-modal-hotel-title');
+    if (titleEl) titleEl.textContent = hotelTitle || ('فندق #' + hotelId.substring(hotelId.length - 6));
+
+    switchHotelRoomsSubTab('list');
+    loadHotelRooms(hotelId);
+
+    document.getElementById('hotel-rooms-modal')?.classList.add('active');
+}
+
+function switchHotelRoomsSubTab(tab) {
+    const listContainer = document.getElementById('hotel-rooms-list-container');
+    const addForm = document.getElementById('hotel-room-add-form');
+    const listBtn = document.getElementById('tab-btn-hotel-rooms-list');
+    const addBtn = document.getElementById('tab-btn-hotel-rooms-add');
+
+    if (tab === 'add') {
+        if (listContainer) listContainer.classList.add('hidden');
+        if (addForm) {
+            addForm.classList.remove('hidden');
+            addForm.reset();
+        }
+        if (addBtn) addBtn.className = 'flex-1 py-1.5 rounded-md text-center transition bg-white text-[#2D4F2E] shadow-sm cursor-pointer';
+        if (listBtn) listBtn.className = 'flex-1 py-1.5 rounded-md text-center transition text-slate-600 hover:text-slate-900 cursor-pointer';
+    } else {
+        if (listContainer) listContainer.classList.remove('hidden');
+        if (addForm) addForm.classList.add('hidden');
+        if (listBtn) listBtn.className = 'flex-1 py-1.5 rounded-md text-center transition bg-white text-[#2D4F2E] shadow-sm cursor-pointer';
+        if (addBtn) addBtn.className = 'flex-1 py-1.5 rounded-md text-center transition text-slate-600 hover:text-slate-900 cursor-pointer';
+    }
+}
+
+async function loadHotelRooms(hotelId) {
+    const tbody = document.getElementById('hotel-rooms-table-body');
+    const badge = document.getElementById('hotel-rooms-count-badge');
+    if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">جاري تحميل الغرف الفندقية...</td></tr>';
+    }
+
+    try {
+        const res = await apiFetch('/api/v1/advertisements/' + hotelId + '/rooms');
+        const rooms = res.data?.rooms || (Array.isArray(res.data) ? res.data : []);
+        state.hotelRooms = rooms;
+
+        if (badge) badge.textContent = rooms.length;
+
+        if (!tbody) return;
+
+        if (rooms.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-8 text-slate-400">
+                        <i class="fas fa-door-open text-3xl mb-2 text-slate-300 block"></i>
+                        <div class="font-bold text-slate-600">لا توجد غرف مسجلة لهذا الفندق حتى الآن</div>
+                        <div class="text-[11px] text-slate-400 mt-1">اضغط على زر "إضافة غرفة جديدة" بالقسم العلوي لإضافة غرفة فندقية</div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        const roomTypeNames = {
+            standard: 'Standard (قياسية)',
+            deluxe: 'Deluxe (ديلوكس)',
+            suite: 'Suite (جناح)',
+            junior_suite: 'Junior Suite (جناح صغير)',
+            royal_suite: 'Royal Suite (جناح ملكي)',
+            studio: 'Studio (استوديو)',
+            family: 'Family (عائلية)',
+            chalet_room: 'Chalet Room (غرفة شاليه)',
+        };
+
+        tbody.innerHTML = rooms.map(r => {
+            const rId = r.id || r._id;
+            const rImg = r.image?.startsWith('http') ? r.image : (r.image ? ('/uploads/' + r.image) : 'images/kuba-logo.jpeg');
+            const priceVal = r.pricing?.finalPrice || r.price || 0;
+            const capAdults = r.capacity?.adults || 2;
+            const capChildren = r.capacity?.children || 0;
+            const bedsCount = r.beds?.count || 1;
+            const bedType = r.beds?.bedType || 'King';
+
+            return `
+                <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                    <td class="p-2.5">
+                        <div class="flex items-center gap-2">
+                            <img src="${rImg}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0" onerror="this.src='images/kuba-logo.jpeg'">
+                            <div>
+                                <div class="font-bold text-slate-800">${r.title || 'غرفة فندقية'}</div>
+                                <div class="text-[10px] text-slate-400 font-mono">رقم: ${r.roomNumber || '--'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-2.5">
+                        <span class="badge bg-purple-50 text-purple-700 border border-purple-200 font-bold whitespace-nowrap">
+                            ${roomTypeNames[r.roomType] || r.roomType || 'standard'}
+                        </span>
+                    </td>
+                    <td class="p-2.5">
+                        <div class="text-slate-800 font-semibold">${capAdults} بالغين ${capChildren > 0 ? ('+ ' + capChildren + ' أطفال') : ''}</div>
+                        <div class="text-[10px] text-slate-400">${bedsCount} سرير (${bedType})</div>
+                    </td>
+                    <td class="p-2.5">
+                        <div class="font-bold text-[#2D4F2E] text-sm">${Number(priceVal).toLocaleString()} ج.م</div>
+                        <div class="text-[10px] text-slate-400">لكل ليلة</div>
+                    </td>
+                    <td class="p-2.5 text-center">
+                        <button type="button" onclick="deleteHotelRoom('${rId}')" class="text-slate-400 hover:text-red-600 p-1.5 transition rounded hover:bg-red-50 cursor-pointer" title="حذف الغرفة">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error('Error loading hotel rooms:', err);
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-red-500">فشل في تحميل الغرف: ${err.message}</td></tr>`;
+        }
+    }
+}
+
+async function handleCreateHotelRoomSubmit(e) {
+    if (e) e.preventDefault();
+
+    if (!state.activeHotelId) {
+        showToast('لم يتم تحديد الفندق', 'error');
+        return;
+    }
+
+    const title = document.getElementById('hroom-title')?.value.trim();
+    const roomNumber = document.getElementById('hroom-number')?.value.trim();
+    const roomType = document.getElementById('hroom-type')?.value || 'standard';
+    const price = Number(document.getElementById('hroom-price')?.value || 0);
+    const adults = Number(document.getElementById('hroom-adults')?.value || 2);
+    const children = Number(document.getElementById('hroom-children')?.value || 0);
+    const bedsCount = Number(document.getElementById('hroom-beds-count')?.value || 1);
+    const bedType = document.getElementById('hroom-bed-type')?.value.trim() || 'King Bed';
+    const amenitiesStr = document.getElementById('hroom-amenities')?.value.trim() || '';
+
+    if (!title || price <= 0) {
+        showToast('يرجى كتابة اسم الغرفة وسعر الليلة بشكل صحيح', 'error');
+        return;
+    }
+
+    const amenities = amenitiesStr ? amenitiesStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+    const payload = {
+        title,
+        roomNumber,
+        roomType,
+        price,
+        pricing: {
+            basePrice: price,
+            finalPrice: price,
+            pricingUnit: 'per_night',
+            currency: 'EGP',
+        },
+        capacity: {
+            adults,
+            children,
+            maxGuests: adults + children,
+        },
+        beds: {
+            count: bedsCount,
+            bedType,
+        },
+        amenities,
+        active: true,
+    };
+
+    try {
+        await apiFetch('/api/v1/advertisements/' + state.activeHotelId + '/rooms', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+
+        showToast('تمت إضافة الغرفة الفندقية بنجاح!', 'success');
+        document.getElementById('hotel-room-add-form')?.reset();
+        switchHotelRoomsSubTab('list');
+        loadHotelRooms(state.activeHotelId);
+    } catch (err) {
+        // apiFetch shows error toast
+    }
+}
+
+async function deleteHotelRoom(roomId) {
+    if (!roomId) return;
+    if (!confirm('هل أنت متأكد من رغبتك في حذف هذه الغرفة نهائياً؟')) return;
+
+    try {
+        await apiFetch('/api/v1/rooms/' + roomId, {
+            method: 'DELETE',
+        });
+
+        showToast('تم حذف الغرفة بنجاح', 'success');
+        if (state.activeHotelId) {
+            loadHotelRooms(state.activeHotelId);
+        }
+    } catch (err) {
+        // apiFetch shows error toast
+    }
+}
+
+// Global window bindings for inline HTML handlers
+window.openModal = function(id) { document.getElementById(id)?.classList.add('active'); };
+window.openBookingDetailsModal = openBookingDetailsModal;
+window.changeBookingStatusAndRefresh = changeBookingStatusAndRefresh;
+window.openHotelRoomsManagementModal = openHotelRoomsManagementModal;
+window.switchHotelRoomsSubTab = switchHotelRoomsSubTab;
+window.loadHotelRooms = loadHotelRooms;
+window.handleCreateHotelRoomSubmit = handleCreateHotelRoomSubmit;
+window.deleteHotelRoom = deleteHotelRoom;
+function openOwnerHotelRoomsModal() {
+    const ad = getActiveOwnerAd();
+    if (!ad) return;
+    openHotelRoomsManagementModal(ad.id || ad._id, ad.title);
+}
+window.openOwnerHotelRoomsModal = openOwnerHotelRoomsModal;
 
 // ─── OWNER PORTAL: CONTROLLER & VIEWS ─────────────────────────────────────────
 
@@ -5367,6 +5878,12 @@ async function loadOwnerListingTab() {
     populateOwnerUnitTypes(ad.unitType?._id || ad.unitType?.id || ad.unitType);
     populateOwnerCities(ad.city?._id || ad.city?.id || ad.city);
     populateOwnerRegions(ad.city?._id || ad.city?.id || ad.city, ad.region?._id || ad.region?.id || ad.region);
+
+    const hotelBtn = document.getElementById('owner-manage-hotel-rooms-btn');
+    if (hotelBtn) {
+        const isHotelAd = ad.isHotel || ad.type === 'hotel' || ad.unitType?.slug === 'hotel' || ad.unitType?.slug === 'hotel_room';
+        hotelBtn.classList.toggle('hidden', !isHotelAd);
+    }
 
     const titleInput = document.getElementById('owner-form-title');
     const descInput = document.getElementById('owner-form-description');
@@ -6105,6 +6622,12 @@ function renderOwnerBookings() {
                         <div>من: <span class="font-bold text-slate-900">${startStr}</span></div>
                         <div>إلى: <span class="font-bold text-slate-900">${endStr}</span></div>
                         <div class="text-[11px] text-slate-500">المدة: <span class="font-bold text-[#2D4F2E]">${b.duration || 1}</span> ${b.pricingUnit === 'per_hour' ? 'ساعات' : 'أيام / ليال'}</div>
+                        ${b.room ? `
+                            <div class="mt-1 inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                                <i class="fas fa-door-closed text-[9px]"></i>
+                                <span>غرفة: ${b.room.title || b.room.roomNumber || 'غرفة فندقية'}</span>
+                            </div>
+                        ` : ''}
                     </div>
 
                     <div class="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-100">

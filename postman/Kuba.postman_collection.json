@@ -2,33 +2,59 @@
   "info": {
     "name": "Kuba",
     "_postman_id": "kuba-v1",
-    "description": "Kuba user API. Public reads plus the logged-in user account and bookings. No admin endpoints.",
+    "description": "Kuba Luxury API - User & Client Mobile Application Collection (مجموعة طلبات تطبيق المستخدم)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "https://kuba-app.com/api/v1",
-      "type": "string",
-      "description": "API base URL (Production: https://kuba-app.com/api/v1 | Local: http://localhost:3000/api/v1)"
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
     },
     {
       "key": "token",
       "value": "",
-      "type": "string",
-      "description": "JWT — set automatically after login / signup"
+      "type": "string"
     },
     {
       "key": "resetToken",
       "value": "",
-      "type": "string",
-      "description": "Reset token — set automatically after verify-reset-otp"
+      "type": "string"
     },
     {
       "key": "cityId",
       "value": "6ad616031ddbe497b5dd4416",
-      "type": "string",
-      "description": "City ID (Sahl Hasheesh: 6ad616031ddbe497b5dd4416)"
+      "type": "string"
+    },
+    {
+      "key": "hotelId",
+      "value": "6ae0680f3616124bfb59ae0a",
+      "type": "string"
+    },
+    {
+      "key": "roomId",
+      "value": "6ae0680f3616124bfb59ae0e",
+      "type": "string"
+    },
+    {
+      "key": "chaletId",
+      "value": "6ad4a387c14bf453e03001dd",
+      "type": "string"
+    },
+    {
+      "key": "yachtId",
+      "value": "6ae0655078a80f4e0abf2220",
+      "type": "string"
+    },
+    {
+      "key": "golfCarId",
+      "value": "6ae0655078a80f4e0abf2223",
+      "type": "string"
+    },
+    {
+      "key": "bookingId",
+      "value": "6ad61e834ed9ebba0418020d",
+      "type": "string"
     }
   ],
   "item": [
@@ -1078,6 +1104,42 @@
               ]
             }
           }
+        },
+        {
+          "name": "Get Hotel Available Rooms (الغرف المتاحة بالفندق بالتواريخ والنزلاء)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/advertisements/{{hotelId}}/available-rooms?startDate=2026-11-01&endDate=2026-11-05&guests=2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "advertisements",
+                "{{hotelId}}",
+                "available-rooms"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-11-01",
+                  "description": "تاريخ الدخول Check-in"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-11-05",
+                  "description": "تاريخ الخروج Check-out"
+                },
+                {
+                  "key": "guests",
+                  "value": "2",
+                  "description": "عدد النزلاء"
+                }
+              ]
+            },
+            "description": "يستعلم به المستخدم عن الغرف الفندقية الشاغرة فقط داخل الفندق للفترة المحددة مع حساب التكلفة."
+          }
         }
       ]
     },
@@ -1368,104 +1430,7 @@
       "description": "Booking endpoints — require user authentication.",
       "item": [
         {
-          "name": "Check Availability",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/bookings/check-availability/:advertisementId?startDate=2026-11-01&endDate=2026-11-05",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "bookings",
-                "check-availability",
-                ":advertisementId"
-              ],
-              "query": [
-                {
-                  "key": "startDate",
-                  "value": "2026-11-01"
-                },
-                {
-                  "key": "endDate",
-                  "value": "2026-11-05"
-                }
-              ],
-              "variable": [
-                {
-                  "key": "advertisementId",
-                  "value": "<ADVERTISEMENT_ID>"
-                }
-              ]
-            },
-            "description": "Check if an advertisement is available for the given date range. Public — no auth required."
-          }
-        },
-        {
-          "name": "Get All My Bookings",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/bookings",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "bookings"
-              ],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "pending",
-                  "disabled": true,
-                  "description": "pending | confirmed | cancelled | completed"
-                },
-                {
-                  "key": "advertisement",
-                  "value": "<ADVERTISEMENT_ID>",
-                  "disabled": true
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get One Booking",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/bookings/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "bookings",
-                ":id"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "<BOOKING_ID>"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Create Booking",
+          "name": "1. Create Booking [UNIVERSAL] (إنشاء حجز موحد لكافة الحالات)",
           "request": {
             "method": "POST",
             "header": [
@@ -1478,6 +1443,10 @@
                 "value": "Bearer {{token}}"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"advertisement\": \"{{chaletId}}\",\n  \"startDate\": \"2026-11-10T14:00:00.000Z\",\n  \"endDate\": \"2026-11-13T12:00:00.000Z\",\n  \"notes\": \"عائلات فقط\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/bookings",
               "host": [
@@ -1487,20 +1456,159 @@
                 "bookings"
               ]
             },
+            "description": "**ريكويست الحجز الموحد لتطبيق المستخدم (User Universal Booking):**\n\nنفس هذا الريكويست `POST /api/v1/bookings` ينفذ الحجز لكافة الحالات في التطبيق:\n\n---\n### 1️⃣ حجز شاليه أو فيلا (Chalet / Villa):\n```json\n{\n  \"advertisement\": \"{{chaletId}}\",\n  \"startDate\": \"2026-11-10T14:00:00.000Z\",\n  \"endDate\": \"2026-11-13T12:00:00.000Z\",\n  \"notes\": \"عائلات فقط\"\n}\n```\n\n---\n### 2️⃣ حجز فندق وغرفة فندقية (Hotel & Room):\n```json\n{\n  \"advertisement\": \"{{hotelId}}\",\n  \"room\": \"{{roomId}}\",\n  \"startDate\": \"2026-11-01T14:00:00.000Z\",\n  \"endDate\": \"2026-11-05T12:00:00.000Z\",\n  \"guestDetails\": {\n    \"adults\": 2,\n    \"children\": 1,\n    \"fullName\": \"أحمد زكي\",\n    \"phone\": \"01012345678\"\n  }\n}\n```\n\n---\n### 3️⃣ حجز يخت بالساعة (Yacht - Hourly):\n```json\n{\n  \"advertisement\": \"{{yachtId}}\",\n  \"rentalType\": \"hourly\",\n  \"date\": \"2026-11-20\",\n  \"startTime\": \"14:00\",\n  \"durationHours\": 3,\n  \"notes\": \"رحلة بحرية عائلية\"\n}\n```\n\n---\n### 4️⃣ حجز يخت يوم كامل (Yacht - Full Day):\n```json\n{\n  \"advertisement\": \"{{yachtId}}\",\n  \"rentalType\": \"full_day\",\n  \"date\": \"2026-11-21\"\n}\n```\n\n---\n### 5️⃣ حجز عربة جولف (Golf Car - Hourly or Daily):\n* **بالساعة:**\n```json\n{\n  \"advertisement\": \"{{golfCarId}}\",\n  \"rentalType\": \"hourly\",\n  \"date\": \"2026-11-25\",\n  \"startTime\": \"09:00\",\n  \"durationHours\": 2\n}\n```\n* **باليوم الكامل:**\n```json\n{\n  \"advertisement\": \"{{golfCarId}}\",\n  \"rentalType\": \"full_day\",\n  \"date\": \"2026-11-26\"\n}\n```\n"
+          },
+          "response": [
+            {
+              "name": "Example: Hotel Room Booking Response",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/bookings"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"advertisement\": \"{{hotelId}}\",\n  \"room\": \"{{roomId}}\",\n  \"startDate\": \"2026-11-01T14:00:00.000Z\",\n  \"endDate\": \"2026-11-05T12:00:00.000Z\"\n}"
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم إنشاء طلب الحجز بنجاح.\",\n  \"data\": {\n    \"booking\": {\n      \"id\": \"6ae068938a20f298624daadc\",\n      \"bookingType\": \"hotel\",\n      \"rentalType\": \"per_night\",\n      \"duration\": 4,\n      \"pricingUnit\": \"per_night\",\n      \"unitPrice\": 2500,\n      \"totalPrice\": 10000,\n      \"status\": \"pending\",\n      \"paymentStatus\": \"unpaid\"\n    }\n  }\n}"
+            },
+            {
+              "name": "Example: Chalet Direct Booking Response",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/bookings"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"advertisement\": \"{{chaletId}}\",\n  \"startDate\": \"2026-11-10T14:00:00.000Z\",\n  \"endDate\": \"2026-11-13T12:00:00.000Z\"\n}"
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم إنشاء طلب الحجز بنجاح.\",\n  \"data\": {\n    \"booking\": {\n      \"id\": \"6ae0688a177e70f5addef51c\",\n      \"bookingType\": \"chalet\",\n      \"rentalType\": \"per_night\",\n      \"duration\": 3,\n      \"pricingUnit\": \"per_night\",\n      \"unitPrice\": 3200,\n      \"totalPrice\": 9600,\n      \"status\": \"pending\",\n      \"paymentStatus\": \"unpaid\"\n    }\n  }\n}"
+            },
+            {
+              "name": "Example: Yacht Hourly Booking Response",
+              "originalRequest": {
+                "method": "POST",
+                "url": {
+                  "raw": "{{baseUrl}}/bookings"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"advertisement\": \"{{yachtId}}\",\n  \"rentalType\": \"hourly\",\n  \"date\": \"2026-11-20\",\n  \"startTime\": \"14:00\",\n  \"durationHours\": 3\n}"
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم إنشاء طلب الحجز بنجاح.\",\n  \"data\": {\n    \"booking\": {\n      \"id\": \"6ae0655078a80f4e0abf2221\",\n      \"bookingType\": \"yacht\",\n      \"rentalType\": \"hourly\",\n      \"duration\": 3,\n      \"pricingUnit\": \"per_hour\",\n      \"unitPrice\": 1500,\n      \"totalPrice\": 4500,\n      \"status\": \"pending\",\n      \"paymentStatus\": \"unpaid\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Check Availability & Estimate Price [UNIVERSAL] (فحص التوفر وتقدير السعر الموحد)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"advertisement\": \"<ADVERTISEMENT_ID>\",\n  \"startDate\": \"2026-11-01\",\n  \"endDate\": \"2026-11-05\",\n  \"notes\": \"Please prepare the place before arrival.\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"advertisement\": \"{{chaletId}}\",\n  \"startDate\": \"2026-11-10T14:00:00.000Z\",\n  \"endDate\": \"2026-11-13T12:00:00.000Z\"\n}"
             },
-            "description": "Required: advertisement (ID), startDate, endDate. Optional: notes."
+            "url": {
+              "raw": "{{baseUrl}}/bookings/calculate-price",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "calculate-price"
+              ]
+            },
+            "description": "فحص التوفر وحساب إجمالي السعر بدقة للعميل قبل شاشة الدفع أو تأكيد الحجز."
           }
         },
         {
-          "name": "Cancel Booking",
+          "name": "3. Yacht & Golf Car - Schedule Slots (مواعيد اليخت أو الجولف كار بالساعة واليوم)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/schedule/{{yachtId}}?date=2026-11-20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "schedule",
+                "{{yachtId}}"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-11-20",
+                  "description": "تاريخ اليوم المطلوب معرفة ساعاته"
+                }
+              ]
+            },
+            "description": "يستعلم به المستخدم لاختيار الساعات المتاحة لتأجير اليخت أو عربة الجولف."
+          }
+        },
+        {
+          "name": "4. Get All My Bookings (عرض حجوزاتي)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings"
+              ]
+            },
+            "description": "عرض جميع حجوزات المستخدم الحالية والسابقة في التطبيق."
+          }
+        },
+        {
+          "name": "5. Get One Booking (تفاصيل حجز)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "{{bookingId}}"
+              ]
+            },
+            "description": "عرض تفاصيل حجز محدد للمستخدم."
+          }
+        },
+        {
+          "name": "6. Cancel My Booking (إلغاء حجزي وتحرير الموعد)",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1513,60 +1621,22 @@
                 "value": "Bearer {{token}}"
               }
             ],
-            "url": {
-              "raw": "{{baseUrl}}/bookings/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "bookings",
-                ":id"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "<BOOKING_ID>"
-                }
-              ]
-            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"cancelled\",\n  \"notes\": \"Changed my plans.\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"reason\": \"تغيير في خطة السفر\"\n}"
             },
-            "description": "Users can only set status to cancelled. Requires: Bearer token."
-          }
-        },
-        {
-          "name": "Delete Booking",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
             "url": {
-              "raw": "{{baseUrl}}/bookings/:id",
+              "raw": "{{baseUrl}}/bookings/{{bookingId}}/cancel",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "bookings",
-                ":id"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "<BOOKING_ID>"
-                }
+                "{{bookingId}}",
+                "cancel"
               ]
-            }
+            },
+            "description": "إلغاء الحجز من قبل العميل وتحرير موعده في التقويم فوراً."
           }
         }
       ]

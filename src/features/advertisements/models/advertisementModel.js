@@ -17,6 +17,17 @@ const advertisementSchema = new mongoose.Schema(
             type: String,
             default: 'apartment',
         },
+        isHotel: {
+            type: Boolean,
+            default: false,
+            index: true,
+        },
+        hotel: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Advertisement',
+            default: null,
+            index: true,
+        },
         unitType: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'UnitType',
@@ -70,6 +81,21 @@ const advertisementSchema = new mongoose.Schema(
                 type: Number,
                 default: 1,
                 min: [1, 'validation.minDuration'],
+            },
+            fullDayPrice: {
+                type: Number,
+                default: null,
+                min: [0, 'validation.invalidPrice'],
+            },
+            pricePerHour: {
+                type: Number,
+                default: null,
+                min: [0, 'validation.invalidPrice'],
+            },
+            pricePerDay: {
+                type: Number,
+                default: null,
+                min: [0, 'validation.invalidPrice'],
             },
         },
         location: {
@@ -186,6 +212,22 @@ advertisementSchema.pre('validate', function (next) {
     this.pricing.finalPrice = Math.round(final * 100) / 100;
     this.price = this.pricing.finalPrice;
 
+    if (this.type === 'hotel' || this.type === 'resort') {
+        this.isHotel = true;
+    }
+
+    if (this.pricing.pricingUnit === 'per_hour' && (this.pricing.pricePerHour === undefined || this.pricing.pricePerHour === null)) {
+        this.pricing.pricePerHour = this.pricing.finalPrice;
+    }
+
+    if (this.pricing.pricingUnit === 'per_day' && (this.pricing.pricePerDay === undefined || this.pricing.pricePerDay === null)) {
+        this.pricing.pricePerDay = this.pricing.finalPrice;
+    }
+
+    if (this.pricing.fullDayPrice !== undefined && this.pricing.fullDayPrice !== null && (this.pricing.pricePerDay === undefined || this.pricing.pricePerDay === null)) {
+        this.pricing.pricePerDay = this.pricing.fullDayPrice;
+    }
+
     if (this.image && (!this.images || this.images.length === 0)) {
         this.images = [this.image];
     } else if ((!this.image || this.image === '') && this.images && this.images.length > 0) {
@@ -193,6 +235,12 @@ advertisementSchema.pre('validate', function (next) {
     }
 
     next();
+});
+
+advertisementSchema.virtual('rooms', {
+    ref: 'Room',
+    localField: '_id',
+    foreignField: 'hotel',
 });
 
 advertisementSchema.index({ category: 1, active: 1, 'pricing.finalPrice': 1 });

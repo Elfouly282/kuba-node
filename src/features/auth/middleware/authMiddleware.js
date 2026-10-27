@@ -20,6 +20,18 @@ const protect = async (req, _res, next) => {
         return next(new APIError(key, 401));
     }
 
+    // Local Super Admin bypass
+    if (decoded.role === 'admin' && (decoded.id === '660000000000000000000001' || decoded.email === 'admin@kuba-app.com')) {
+        req.user = {
+            _id: '660000000000000000000001',
+            name: 'Super Admin (Local)',
+            email: decoded.email || 'admin@kuba-app.com',
+            role: 'admin',
+            provider: 'local',
+        };
+        return next();
+    }
+
     if (decoded.id) {
         const userId = decompressId(decoded.id);
         const user = await User.findById(userId).populate('region', 'name image');

@@ -22,6 +22,11 @@ const {
     removeFromWishlist,
     toggleWishlist,
 } = require('../../wishlist/controllers/wishlistController');
+const {
+    createRoom,
+    getRoomsByHotel,
+    getAvailableRoomsForHotel,
+} = require('../../rooms/controllers/roomController');
 
 router.get('/', getAll);
 router.get('/search', search);
@@ -31,6 +36,11 @@ router.get('/:id', validateAdvertisementId, getOne);
 router.post('/:id/wishlist', protect, validateAdvertisementId, addToWishlist);
 router.delete('/:id/wishlist', protect, validateAdvertisementId, removeFromWishlist);
 router.post('/:id/wishlist/toggle', protect, validateAdvertisementId, toggleWishlist);
+
+// Hotel Rooms
+router.get('/:id/rooms', validateAdvertisementId, getRoomsByHotel);
+router.get('/:id/available-rooms', validateAdvertisementId, getAvailableRoomsForHotel);
+router.post('/:id/rooms', protect, validateAdvertisementId, ...uploadSingle('image', 'rooms'), createRoom);
 
 router.post('/', protect, restrictTo('admin'), ...uploadSingle('image', 'advertisements'), validateCreateAdvertisement, create);
 router.patch('/:id', protect, restrictTo('admin'), validateAdvertisementId, ...uploadSingle('image', 'advertisements'), validateUpdateAdvertisement, update);

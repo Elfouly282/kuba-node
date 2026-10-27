@@ -884,10 +884,21 @@
                         </div>
 
                         <!-- Filter bar for bookings -->
-                        <div class="card p-4 bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="card p-4 bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                             <div class="relative">
                                 <input type="text" id="admin-booking-search" oninput="filterAdminBookings()" class="form-input text-xs ps-9" placeholder="ابحث باسم العميل أو الإعلان أو الهاتف...">
                                 <i class="fas fa-search absolute top-3 start-3 text-slate-400 text-xs"></i>
+                            </div>
+                            <div>
+                                <select id="admin-booking-filter-type" onchange="filterAdminBookings()" class="form-select text-xs">
+                                    <option value="">كل أنواع الحجز (All Types)</option>
+                                    <option value="hotel">🏨 فنادق (غرف فندقية)</option>
+                                    <option value="chalet">🏖️ شاليهات</option>
+                                    <option value="yacht">🛥️ يخوت ورِحلات</option>
+                                    <option value="golf_car">🛺 عربيات جولف</option>
+                                    <option value="apartment">🏢 شقق ساحلية</option>
+                                    <option value="villa">🏡 فلل مستقلة</option>
+                                </select>
                             </div>
                             <div>
                                 <select id="admin-booking-filter-status" onchange="filterAdminBookings()" class="form-select text-xs">
@@ -918,6 +929,7 @@
                                     <thead>
                                         <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
                                             <th class="p-3 text-start">معرف الحجز</th>
+                                            <th class="p-3 text-start">نوع الحجز</th>
                                             <th class="p-3 text-start">الإعلان / العقار</th>
                                             <th class="p-3 text-start">العميل</th>
                                             <th class="p-3 text-start">فترة الحجز</th>
@@ -929,7 +941,7 @@
                                     </thead>
                                     <tbody id="admin-bookings-table-body" class="divide-y divide-slate-100">
                                         <tr>
-                                            <td colspan="8" class="text-center py-8 text-slate-400">جاري تحميل الحجوزات...</td>
+                                            <td colspan="9" class="text-center py-8 text-slate-400">جاري تحميل الحجوزات...</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -1087,10 +1099,16 @@
                                 <h2 class="text-lg font-bold text-slate-900">تعديل بيانات وتفاصيل الإعلان</h2>
                                 <p class="text-xs text-slate-500">تحكم بالكامل في مواصفات وحدتك وأسعارها وعروضها الترويجية</p>
                             </div>
-                            <button type="button" onclick="saveOwnerListingForm()" class="gold-btn text-xs py-2 px-4 shadow-md cursor-pointer">
-                                <i class="fas fa-floppy-disk me-1.5"></i>
-                                <span>حفظ التعديلات</span>
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="owner-manage-hotel-rooms-btn" onclick="openOwnerHotelRoomsModal()" class="hidden btn-secondary text-xs py-2 px-3.5 bg-purple-50 text-purple-800 border-purple-200 hover:bg-purple-100 font-bold cursor-pointer">
+                                    <i class="fas fa-door-open text-purple-600 me-1.5"></i>
+                                    <span>إدارة غرف الفندق</span>
+                                </button>
+                                <button type="button" onclick="saveOwnerListingForm()" class="gold-btn text-xs py-2 px-4 shadow-md cursor-pointer">
+                                    <i class="fas fa-floppy-disk me-1.5"></i>
+                                    <span>حفظ التعديلات</span>
+                                </button>
+                            </div>
                         </div>
 
                         <form id="owner-listing-form" onsubmit="handleOwnerListingSubmit(event)" class="space-y-6">
@@ -2543,6 +2561,149 @@
                     <button type="submit" class="gold-btn text-xs py-2 px-5 cursor-pointer">
                         <i class="fas fa-link me-1"></i>
                         <span>ربط المستخدم المختار</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BOOKING DETAILS MODAL -->
+    <div id="booking-details-modal" class="modal-overlay">
+        <div class="modal-content p-6 bg-white max-w-2xl">
+            <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 rounded-xl bg-[#2D4F2E]/10 text-[#2D4F2E] flex items-center justify-center font-bold text-sm">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base">تفاصيل طلب الحجز</h3>
+                        <p class="text-xs text-slate-400 font-mono" id="bmodal-id">#000000</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('booking-details-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold cursor-pointer">&times;</button>
+            </div>
+
+            <div id="bmodal-content" class="space-y-4 max-h-[75vh] overflow-y-auto pe-1">
+                <!-- Injected dynamically via openBookingDetailsModal -->
+            </div>
+
+            <div class="flex items-center justify-between pt-4 mt-4 border-t border-slate-100">
+                <div id="bmodal-quick-actions" class="flex items-center gap-2">
+                    <!-- Confirm / Complete / Cancel buttons injected dynamically -->
+                </div>
+                <button type="button" onclick="closeModal('booking-details-modal')" class="btn-secondary text-xs">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOTEL ROOMS MANAGEMENT MODAL -->
+    <div id="hotel-rooms-modal" class="modal-overlay">
+        <div class="modal-content p-6 bg-white max-w-3xl">
+            <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold text-sm">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base">إدارة غرف الفندق</h3>
+                        <p class="text-xs text-slate-500 font-semibold truncate max-w-md" id="hotel-rooms-modal-hotel-title">--</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('hotel-rooms-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold cursor-pointer">&times;</button>
+            </div>
+
+            <!-- Tabs: Rooms List vs Add New Room -->
+            <div class="flex items-center gap-2 p-1 bg-slate-100 rounded-lg mb-4 text-xs font-bold">
+                <button type="button" id="tab-btn-hotel-rooms-list" onclick="switchHotelRoomsSubTab('list')" class="flex-1 py-1.5 rounded-md text-center transition bg-white text-[#2D4F2E] shadow-sm cursor-pointer">
+                    <i class="fas fa-list me-1"></i>الغرف الحالية (<span id="hotel-rooms-count-badge">0</span>)
+                </button>
+                <button type="button" id="tab-btn-hotel-rooms-add" onclick="switchHotelRoomsSubTab('add')" class="flex-1 py-1.5 rounded-md text-center transition text-slate-600 hover:text-slate-900 cursor-pointer">
+                    <i class="fas fa-plus me-1"></i>إضافة غرفة جديدة
+                </button>
+            </div>
+
+            <!-- View 1: Rooms List Table -->
+            <div id="hotel-rooms-list-container" class="space-y-3">
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-start border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                                <th class="p-2.5 text-start">رقم / اسم الغرفة</th>
+                                <th class="p-2.5 text-start">نوع الغرفة</th>
+                                <th class="p-2.5 text-start">السعة والأسرّة</th>
+                                <th class="p-2.5 text-start">السعر / ليلة</th>
+                                <th class="p-2.5 text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hotel-rooms-table-body" class="divide-y divide-slate-100">
+                            <tr><td colspan="5" class="text-center py-6 text-slate-400">جاري تحميل الغرف...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- View 2: Add New Room Form -->
+            <form id="hotel-room-add-form" onsubmit="handleCreateHotelRoomSubmit(event)" class="space-y-3 hidden">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">اسم أو وصف الغرفة *</label>
+                        <input type="text" id="hroom-title" required class="form-input text-xs" placeholder="مثال: Deluxe Ocean View Suite">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">رقم الغرفة (Room Number)</label>
+                        <input type="text" id="hroom-number" class="form-input text-xs" placeholder="مثال: 101 أو Villa 4">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">نوع الغرفة (Room Type) *</label>
+                        <select id="hroom-type" class="form-select text-xs">
+                            <option value="standard">Standard (قياسية)</option>
+                            <option value="deluxe">Deluxe (ديلوكس)</option>
+                            <option value="suite">Suite (جناح)</option>
+                            <option value="junior_suite">Junior Suite (جناح صغير)</option>
+                            <option value="royal_suite">Royal Suite (جناح ملكي)</option>
+                            <option value="studio">Studio (استوديو)</option>
+                            <option value="family">Family Room (عائلية)</option>
+                            <option value="chalet_room">Chalet Room (غرفة شاليه)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">سعر الليلة (ج.م) *</label>
+                        <input type="number" id="hroom-price" required min="0" class="form-input text-xs font-bold text-[#2D4F2E]" placeholder="2000">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">عدد البالغين (Adults)</label>
+                        <input type="number" id="hroom-adults" min="1" value="2" class="form-input text-xs">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">عدد الأطفال (Children)</label>
+                        <input type="number" id="hroom-children" min="0" value="0" class="form-input text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">عدد الأسرّة (Beds Count)</label>
+                        <input type="number" id="hroom-beds-count" min="1" value="1" class="form-input text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">نوع السرير (Bed Type)</label>
+                        <input type="text" id="hroom-bed-type" class="form-input text-xs" placeholder="مثال: King Bed أو 2 Twin Beds">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">المرافق والخدمات (مفصولة بفاصلة)</label>
+                    <input type="text" id="hroom-amenities" class="form-input text-xs" placeholder="واي فاي مجاني, شاشة سمارت, ميني بار, شرفة خاصة, إطلالة بحر">
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="switchHotelRoomsSubTab('list')" class="btn-secondary text-xs">إلغاء</button>
+                    <button type="submit" class="gold-btn text-xs py-2 px-5">
+                        <i class="fas fa-plus-circle me-1"></i>
+                        <span>إضافة الغرفة الآن</span>
                     </button>
                 </div>
             </form>

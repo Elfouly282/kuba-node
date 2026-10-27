@@ -42,6 +42,7 @@ const regionRoutes = require('./features/regions/routes/regionRoutes');
 const unitTypeRoutes = require('./features/unit-types/routes/unitTypeRoutes');
 const bookingRoutes = require('./features/bookings/routes/bookingRoutes');
 const wishlistRoutes = require('./features/wishlist/routes/wishlistRoutes');
+const roomRoutes = require('./features/rooms/routes/roomRoutes');
 
 const adminAuthRoutes = require('../admin/features/auth/routes/authRoutes');
 const adminOnboardingRoutes = require('../admin/features/onboarding/routes/onboardingRoutes');
@@ -101,6 +102,7 @@ app.use('/api/v1/regions', regionRoutes);
 app.use('/api/v1/unit-types', unitTypeRoutes);
 app.use('/api/v1/bookings', bookingRoutes);
 app.use('/api/v1/wishlist', wishlistRoutes);
+app.use('/api/v1/rooms', roomRoutes);
 
 // Admin APIs
 app.use('/api/v1/admin/auth', adminAuthRoutes);

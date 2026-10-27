@@ -34,7 +34,16 @@
         "regionSelected": "Region selected successfully.",
         "addedToWishlist": "Advertisement added to wishlist successfully.",
         "removedFromWishlist": "Advertisement removed from wishlist successfully.",
-        "wishlistCleared": "Wishlist cleared successfully."
+        "wishlistCleared": "Wishlist cleared successfully.",
+        "roomCreated": "Room created successfully.",
+        "roomUpdated": "Room updated successfully.",
+        "roomDeleted": "Room deleted successfully.",
+        "bookingCreated": "Booking created successfully.",
+        "bookingUpdated": "Booking updated successfully.",
+        "bookingCancelled": "Booking cancelled successfully.",
+        "bookingConfirmed": "Booking confirmed successfully.",
+        "bookingCompleted": "Booking completed successfully.",
+        "bookingDeleted": "Booking deleted successfully."
     },
     "errors": {
         "somethingWentWrong": "Something went wrong. Please try again later.",
@@ -82,7 +91,13 @@
         "imageRequired": "Image is required (please upload an image file or provide an image URL).",
         "dashboardAccessDenied": "Sorry, this account is not authorized to access the dashboard. Access is restricted to Administrators and Listing Owners only.",
         "ownerNotFound": "The specified owner account was not found.",
-        "adNotOwned": "You do not have permission to manage this listing."
+        "adNotOwned": "You do not have permission to manage this listing.",
+        "roomNotFound": "The requested room was not found.",
+        "invalidRoomId": "Invalid room ID provided.",
+        "roomInactive": "This room is currently inactive.",
+        "roomDoesNotBelongToHotel": "This room does not belong to the specified hotel.",
+        "bookingDateConflict": "The selected dates or times are already booked. Please choose another slot.",
+        "bookingNotFound": "The requested booking was not found."
     },
     "validation": {
         "nameRequired": "Name is required.",
@@ -97,6 +112,7 @@
         "onboardingScreenNotFound": "Onboarding screen not found.",
         "categoryRequired": "Category is required.",
         "advertisementRequired": "Advertisement ID is required.",
+        "hotelRequired": "Hotel ID is required.",
         "positionRequired": "Banner position is required.",
         "invalidPosition": "Banner position must be one of: top, center, bottom.",
         "cityRequired": "City ID is required.",
@@ -105,6 +121,7 @@
         "datesRequired": "Start and end dates are both required.",
         "invalidDateRange": "The end date must be after the start date.",
         "invalidDuration": "Duration must be a number greater than zero.",
-        "invalidGuests": "Number of guests must be a whole number greater than zero."
+        "invalidGuests": "Number of guests must be a whole number greater than zero.",
+        "invalidBookingStatus": "Invalid booking status."
     }
 }
