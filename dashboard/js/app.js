@@ -686,17 +686,14 @@ function renderStats() {
     setElText('stat-banners', Number(s.totalBanners || 0).toLocaleString());
     setElText('stat-onboarding', Number(s.totalOnboarding || 0).toLocaleString());
 
-    // 3. System Meta & Clock
-    setElText('info-env', s.environment || 'development');
-    const serverTimeStr = s.serverTime ? new Date(s.serverTime).toLocaleTimeString(state.lang === 'ar' ? 'ar-EG' : 'en-US') : new Date().toLocaleTimeString();
-    setElText('info-time', serverTimeStr);
-    
-    const dbStatusEl = document.getElementById('info-db-status');
-    if (dbStatusEl) {
-        const isConnected = s.dbConnected !== false;
-        dbStatusEl.textContent = isConnected ? (state.lang === 'ar' ? 'متصلة (MongoDB)' : 'Connected (MongoDB)') : (state.lang === 'ar' ? 'غير متصلة' : 'Disconnected');
-        dbStatusEl.className = isConnected ? 'font-bold text-white' : 'font-bold text-red-300';
-    }
+    // 3. Date & Banner Info
+    const todayDateStr = new Date().toLocaleDateString(state.lang === 'ar' ? 'ar-EG' : 'en-US', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+    setElText('overview-today-date', todayDateStr);
 
     // 4. Render Visual Analytics Charts
     renderOverviewCharts(s.charts);
