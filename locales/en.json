@@ -31,7 +31,10 @@
         "regionCreated": "Region created successfully.",
         "regionUpdated": "Region updated successfully.",
         "regionDeleted": "Region deleted successfully.",
-        "regionSelected": "Region selected successfully."
+        "regionSelected": "Region selected successfully.",
+        "addedToWishlist": "Advertisement added to wishlist successfully.",
+        "removedFromWishlist": "Advertisement removed from wishlist successfully.",
+        "wishlistCleared": "Wishlist cleared successfully."
     },
     "errors": {
         "somethingWentWrong": "Something went wrong. Please try again later.",

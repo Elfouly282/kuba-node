@@ -695,6 +695,182 @@ if (existingCitiesIndex >= 0) {
 }
 col.item.splice(regIndex >= 0 ? regIndex : col.item.length, 0, citiesFolder);
 
+const wishlistFolder = {
+  name: 'Wishlist',
+  description: 'User saved advertisements (wishlist / favorites). Supports adding, removing, toggling (heart icon), clearing, and retrieving all saved listings.',
+  item: [
+    {
+      name: 'Get User Wishlist',
+      request: {
+        method: 'GET',
+        header: [
+          {
+            key: 'Authorization',
+            value: 'Bearer {{token}}'
+          }
+        ],
+        url: {
+          raw: '{{baseUrl}}/wishlist',
+          host: ['{{baseUrl}}'],
+          path: ['wishlist'],
+          query: [
+            {
+              key: 'page',
+              value: '1',
+              disabled: true,
+              description: 'Optional page number'
+            },
+            {
+              key: 'limit',
+              value: '20',
+              disabled: true,
+              description: 'Optional items per page'
+            }
+          ]
+        },
+        description: 'Returns all saved advertisements in the authenticated user\'s wishlist, fully populated with images, category, city, region, unit type, and pricing.'
+      }
+    },
+    {
+      name: 'Add to Wishlist (Body)',
+      request: {
+        method: 'POST',
+        header: [
+          {
+            key: 'Content-Type',
+            value: 'application/json'
+          },
+          {
+            key: 'Authorization',
+            value: 'Bearer {{token}}'
+          }
+        ],
+        url: {
+          raw: '{{baseUrl}}/wishlist',
+          host: ['{{baseUrl}}'],
+          path: ['wishlist']
+        },
+        body: {
+          mode: 'raw',
+          raw: '{\n  "advertisementId": "<ADVERTISEMENT_ID>"\n}',
+          options: {
+            raw: {
+              language: 'json'
+            }
+          }
+        },
+        description: 'Add an advertisement to the authenticated user\'s wishlist using request body. Automatically prevents duplicates.'
+      }
+    },
+    {
+      name: 'Add to Wishlist (URL Param)',
+      request: {
+        method: 'POST',
+        header: [
+          {
+            key: 'Authorization',
+            value: 'Bearer {{token}}'
+          }
+        ],
+        url: {
+          raw: '{{baseUrl}}/wishlist/:advertisementId',
+          host: ['{{baseUrl}}'],
+          path: ['wishlist', ':advertisementId'],
+          variable: [
+            {
+              key: 'advertisementId',
+              value: '<ADVERTISEMENT_ID>',
+              description: 'Advertisement ObjectId'
+            }
+          ]
+        },
+        description: 'Add an advertisement to user\'s wishlist by passing the advertisement ID directly in the URL.'
+      }
+    },
+    {
+      name: 'Remove from Wishlist',
+      request: {
+        method: 'DELETE',
+        header: [
+          {
+            key: 'Authorization',
+            value: 'Bearer {{token}}'
+          }
+        ],
+        url: {
+          raw: '{{baseUrl}}/wishlist/:advertisementId',
+          host: ['{{baseUrl}}'],
+          path: ['wishlist', ':advertisementId'],
+          variable: [
+            {
+              key: 'advertisementId',
+              value: '<ADVERTISEMENT_ID>',
+              description: 'Advertisement ObjectId'
+            }
+          ]
+        },
+        description: 'Remove an advertisement from the authenticated user\'s wishlist.'
+      }
+    },
+    {
+      name: 'Toggle Wishlist',
+      request: {
+        method: 'POST',
+        header: [
+          {
+            key: 'Content-Type',
+            value: 'application/json'
+          },
+          {
+            key: 'Authorization',
+            value: 'Bearer {{token}}'
+          }
+        ],
+        url: {
+          raw: '{{baseUrl}}/wishlist/toggle',
+          host: ['{{baseUrl}}'],
+          path: ['wishlist', 'toggle']
+        },
+        body: {
+          mode: 'raw',
+          raw: '{\n  "advertisementId": "<ADVERTISEMENT_ID>"\n}',
+          options: {
+            raw: {
+              language: 'json'
+            }
+          }
+        },
+        description: 'Toggle advertisement in user\'s wishlist (adds if not present, removes if already present). Returns { inWishlist: true|false }.'
+      }
+    },
+    {
+      name: 'Clear Wishlist',
+      request: {
+        method: 'DELETE',
+        header: [
+          {
+            key: 'Authorization',
+            value: 'Bearer {{token}}'
+          }
+        ],
+        url: {
+          raw: '{{baseUrl}}/wishlist',
+          host: ['{{baseUrl}}'],
+          path: ['wishlist']
+        },
+        description: 'Removes all advertisements from the user\'s wishlist.'
+      }
+    }
+  ]
+};
+
+const existingWishlistIndex = col.item.findIndex(i => i.name === 'Wishlist');
+if (existingWishlistIndex >= 0) {
+  col.item.splice(existingWishlistIndex, 1);
+}
+const adsIndex = col.item.findIndex(i => i.name === 'Advertisements');
+col.item.splice(adsIndex >= 0 ? adsIndex + 1 : col.item.length, 0, wishlistFolder);
+
 // Keep this collection for the mobile user only.
 const isAdminRequest = (item) => {
   const name = item.name || '';

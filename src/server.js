@@ -29,6 +29,7 @@ const { getUploadsRoot } = require('./config/uploadsPath');
 const { i18nMiddleware } = require('../utils/i18n');
 const globalErrorHandler = require('./middleware/errorMiddleware');
 const APIError = require('./utils/apiError');
+const { SuccessResponse } = require('./utils/apiResponse');
 
 const authRoutes = require('./features/auth/routes/authRoutes');
 const onboardingRoutes = require('./features/onboarding/routes/onboardingRoutes');
@@ -40,6 +41,7 @@ const cityRoutes = require('./features/cities/routes/cityRoutes');
 const regionRoutes = require('./features/regions/routes/regionRoutes');
 const unitTypeRoutes = require('./features/unit-types/routes/unitTypeRoutes');
 const bookingRoutes = require('./features/bookings/routes/bookingRoutes');
+const wishlistRoutes = require('./features/wishlist/routes/wishlistRoutes');
 
 const adminAuthRoutes = require('../admin/features/auth/routes/authRoutes');
 const adminOnboardingRoutes = require('../admin/features/onboarding/routes/onboardingRoutes');
@@ -98,6 +100,7 @@ app.use('/api/v1/cities', cityRoutes);
 app.use('/api/v1/regions', regionRoutes);
 app.use('/api/v1/unit-types', unitTypeRoutes);
 app.use('/api/v1/bookings', bookingRoutes);
+app.use('/api/v1/wishlist', wishlistRoutes);
 
 // Admin APIs
 app.use('/api/v1/admin/auth', adminAuthRoutes);
@@ -114,8 +117,7 @@ app.use('/api/v1/admin/bookings', adminBookingRoutes);
 // Root Route - Serves Luxury Landing Page or JSON Healthcheck
 app.get(['/', '/index.html'], (req, res) => {
     if (req.query.format === 'json' || (req.headers.accept && req.headers.accept.includes('application/json') && !req.headers.accept.includes('text/html'))) {
-        return res.status(200).json({
-            status: 'success',
+        return SuccessResponse.ok(res, {
             message: 'API is running successfully',
         });
     }

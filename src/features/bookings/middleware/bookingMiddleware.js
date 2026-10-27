@@ -54,40 +54,36 @@ const validateAvailabilityQuery = (req, _res, next) => {
 };
 
 const validateCreateBooking = async (req, res, next) => {
-    try {
-        const { advertisement: adId, startDate, endDate } = req.body;
+    const { advertisement: adId, startDate, endDate } = req.body;
 
-        if (!adId || !mongoose.Types.ObjectId.isValid(adId)) {
-            return next(new APIError('errors.invalidAdvertisementId', 400));
-        }
-
-        const ad = await Advertisement.findById(adId);
-        if (!ad) {
-            return next(new APIError('errors.advertisementNotFound', 404));
-        }
-
-        if (!ad.active) {
-            return next(new APIError('errors.advertisementInactive', 400));
-        }
-
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) {
-            return next(new APIError('validation.invalidDateRange', 400));
-        }
-
-        const isOverlap = await checkBookingOverlap(ad._id, start, end);
-        if (isOverlap) {
-            return next(new APIError('errors.bookingDateConflict', 400));
-        }
-
-        req.bookingAd = ad;
-        req.bookingDates = { start, end };
-        next();
-    } catch (err) {
-        next(err);
+    if (!adId || !mongoose.Types.ObjectId.isValid(adId)) {
+        return next(new APIError('errors.invalidAdvertisementId', 400));
     }
+
+    const ad = await Advertisement.findById(adId);
+    if (!ad) {
+        return next(new APIError('errors.advertisementNotFound', 404));
+    }
+
+    if (!ad.active) {
+        return next(new APIError('errors.advertisementInactive', 400));
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) {
+        return next(new APIError('validation.invalidDateRange', 400));
+    }
+
+    const isOverlap = await checkBookingOverlap(ad._id, start, end);
+    if (isOverlap) {
+        return next(new APIError('errors.bookingDateConflict', 400));
+    }
+
+    req.bookingAd = ad;
+    req.bookingDates = { start, end };
+    next();
 };
 
 const validateUpdateBooking = (req, _res, next) => {

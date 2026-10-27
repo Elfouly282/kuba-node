@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { buildZoneGeometry } = require('../../../utils/geospatial');
 
 const regionSchema = new mongoose.Schema(
     {
@@ -84,24 +85,10 @@ const regionSchema = new mongoose.Schema(
 );
 
 regionSchema.pre('save', function (next) {
-    if (this.points && Array.isArray(this.points) && this.points.length >= 3) {
-        const ring = this.points.map((p) => [Number(p.longitude), Number(p.latitude)]);
-        const first = ring[0];
-        const last = ring[ring.length - 1];
-        if (first[0] !== last[0] || first[1] !== last[1]) {
-            ring.push([first[0], first[1]]);
-        }
-        this.boundaries = {
-            type: 'Polygon',
-            coordinates: [ring],
-        };
-
-        const sumLat = this.points.reduce((acc, p) => acc + Number(p.latitude), 0);
-        const sumLng = this.points.reduce((acc, p) => acc + Number(p.longitude), 0);
-        this.center = {
-            latitude: Number((sumLat / this.points.length).toFixed(6)),
-            longitude: Number((sumLng / this.points.length).toFixed(6)),
-        };
+    const zone = buildZoneGeometry(this.points);
+    if (zone) {
+        this.boundaries = zone.boundaries;
+        this.center = zone.center;
     } else if (this.points && this.points.length === 0) {
         this.boundaries = undefined;
         this.center = { latitude: null, longitude: null };

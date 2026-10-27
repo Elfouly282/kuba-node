@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const APIError = require('../../../utils/apiError');
+const toKey = require('../../../utils/toKey');
 
 const validateUnitTypeId = (req, _res, next) => {
     const { id } = req.params;
@@ -51,11 +52,7 @@ const validateCreateAttribute = (req, _res, next) => {
         return next(new APIError('validation.nameRequired', 400));
     }
 
-    const safeKey = (key || name)
-        .toLowerCase()
-        .trim()
-        .replace(/[\s\W-]+/g, '_')
-        .replace(/^_|_$/g, '');
+    const safeKey = toKey(key || name);
 
     if (!safeKey) {
         return next(new APIError('validation.keyRequired', 400));

@@ -691,8 +691,117 @@
       ]
     },
     {
+      "name": "Regions",
+      "description": "Endpoints for sub-regions and areas (e.g. Jamaran, Azzurra, Old Town) belonging to a parent City (e.g. Sahl Hasheesh).",
+      "item": [
+        {
+          "name": "Get All Regions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/regions?city={{cityId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "regions"
+              ],
+              "query": [
+                {
+                  "key": "active",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "city",
+                  "value": "{{cityId}}",
+                  "description": "Filter regions by parent City ID (e.g. Sahl Hasheesh)",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Returns all regions. Each region includes points [{latitude, longitude}], color (default #2D4F2E), center {latitude, longitude}, and boundaries (GeoJSON Polygon, set when points has at least 3 vertices). Optional: ?active=true|false"
+          }
+        },
+        {
+          "name": "Get Region Data (by query param)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/regions/data?regionId=<REGION_ID>",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "regions",
+                "data"
+              ],
+              "query": [
+                {
+                  "key": "regionId",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            },
+            "description": "Returns the region plus its banners, chalets, advertisements, and categories. Advertisements include listings assigned to this region and listings whose latitude/longitude fall inside the region zone (when the zone has at least 3 points). Pass regionId as a query param."
+          }
+        },
+        {
+          "name": "Get One Region",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/regions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "regions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            },
+            "description": "Returns one region, including points, color, center, and boundaries."
+          }
+        },
+        {
+          "name": "Get Region Data (by path param)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/regions/:id/data",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "regions",
+                ":id",
+                "data"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            },
+            "description": "Same payload as Get Region Data (by query param). Region id is in the path. Advertisements include listings inside the zone, not only listings whose region field matches."
+          }
+        }
+      ]
+    },
+    {
       "name": "Cities",
-      "description": "Cities the user can browse. Each city can contain sub-regions.",
+      "description": "Endpoints for managing and viewing main destination cities (e.g., Sahl Hasheesh, North Coast, Sharm El Sheikh). Each city can have polygon zone boundaries, center, and contains multiple sub-regions/areas.",
       "item": [
         {
           "name": "Get All Cities",
@@ -808,115 +917,6 @@
               ]
             },
             "description": "Returns aggregated data for the City screen: city details, list of sub-regions inside the city, city-specific banners, chalets, all advertisements, and categories."
-          }
-        }
-      ]
-    },
-    {
-      "name": "Regions",
-      "description": "Endpoints for sub-regions and areas (e.g. Jamaran, Azzurra, Old Town) belonging to a parent City (e.g. Sahl Hasheesh).",
-      "item": [
-        {
-          "name": "Get All Regions",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/regions?city={{cityId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "regions"
-              ],
-              "query": [
-                {
-                  "key": "active",
-                  "value": "true",
-                  "disabled": true
-                },
-                {
-                  "key": "city",
-                  "value": "{{cityId}}",
-                  "description": "Filter regions by parent City ID (e.g. Sahl Hasheesh)",
-                  "disabled": false
-                }
-              ]
-            },
-            "description": "Returns all regions. Each region includes points [{latitude, longitude}], color (default #2D4F2E), center {latitude, longitude}, and boundaries (GeoJSON Polygon, set when points has at least 3 vertices). Optional: ?active=true|false"
-          }
-        },
-        {
-          "name": "Get Region Data (by query param)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/regions/data?regionId=<REGION_ID>",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "regions",
-                "data"
-              ],
-              "query": [
-                {
-                  "key": "regionId",
-                  "value": "<REGION_ID>"
-                }
-              ]
-            },
-            "description": "Returns the region plus its banners, chalets, advertisements, and categories. Advertisements include listings assigned to this region and listings whose latitude/longitude fall inside the region zone (when the zone has at least 3 points). Pass regionId as a query param."
-          }
-        },
-        {
-          "name": "Get One Region",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/regions/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "regions",
-                ":id"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "<REGION_ID>"
-                }
-              ]
-            },
-            "description": "Returns one region, including points, color, center, and boundaries."
-          }
-        },
-        {
-          "name": "Get Region Data (by path param)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/regions/:id/data",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "regions",
-                ":id",
-                "data"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "<REGION_ID>"
-                }
-              ]
-            },
-            "description": "Same payload as Get Region Data (by query param). Region id is in the path. Advertisements include listings inside the zone, not only listings whose region field matches."
           }
         }
       ]
@@ -1077,6 +1077,201 @@
                 }
               ]
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wishlist",
+      "description": "User saved advertisements (wishlist / favorites). Supports adding, removing, toggling (heart icon), clearing, and retrieving all saved listings.",
+      "item": [
+        {
+          "name": "Get User Wishlist",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/wishlist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wishlist"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true,
+                  "description": "Optional page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true,
+                  "description": "Optional items per page"
+                }
+              ]
+            },
+            "description": "Returns all saved advertisements in the authenticated user's wishlist, fully populated with images, category, city, region, unit type, and pricing."
+          }
+        },
+        {
+          "name": "Add to Wishlist (Body)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/wishlist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wishlist"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"advertisementId\": \"<ADVERTISEMENT_ID>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Add an advertisement to the authenticated user's wishlist using request body. Automatically prevents duplicates."
+          }
+        },
+        {
+          "name": "Add to Wishlist (URL Param)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/wishlist/:advertisementId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wishlist",
+                ":advertisementId"
+              ],
+              "variable": [
+                {
+                  "key": "advertisementId",
+                  "value": "<ADVERTISEMENT_ID>",
+                  "description": "Advertisement ObjectId"
+                }
+              ]
+            },
+            "description": "Add an advertisement to user's wishlist by passing the advertisement ID directly in the URL."
+          }
+        },
+        {
+          "name": "Remove from Wishlist",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/wishlist/:advertisementId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wishlist",
+                ":advertisementId"
+              ],
+              "variable": [
+                {
+                  "key": "advertisementId",
+                  "value": "<ADVERTISEMENT_ID>",
+                  "description": "Advertisement ObjectId"
+                }
+              ]
+            },
+            "description": "Remove an advertisement from the authenticated user's wishlist."
+          }
+        },
+        {
+          "name": "Toggle Wishlist",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/wishlist/toggle",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wishlist",
+                "toggle"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"advertisementId\": \"<ADVERTISEMENT_ID>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Toggle advertisement in user's wishlist (adds if not present, removes if already present). Returns { inWishlist: true|false }."
+          }
+        },
+        {
+          "name": "Clear Wishlist",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/wishlist",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wishlist"
+              ]
+            },
+            "description": "Removes all advertisements from the user's wishlist."
           }
         }
       ]

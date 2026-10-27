@@ -1,14 +1,12 @@
 const OnboardingScreen = require('../models/onboardingScreenModel');
 const { localizeOnboardingScreens } = require('../../../../utils/localize');
+const { SuccessResponse } = require('../../../utils/apiResponse');
 
-exports.getAll = async (req, res, next) => {
-    try {
-        const screens = await OnboardingScreen.find().sort('order');
+exports.getAll = async (req, res) => {
+    const screens = await OnboardingScreen.find().sort('order');
 
-        res.status(200).json({
-            status: 'success',
-            results: screens.length,
-            data: { screens: localizeOnboardingScreens(screens, req.locale) },
-        });
-    } catch (err) { next(err); }
+    SuccessResponse.ok(res, {
+        results: screens.length,
+        data: { screens: localizeOnboardingScreens(screens, req.locale) },
+    });
 };

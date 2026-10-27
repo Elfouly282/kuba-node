@@ -31,7 +31,10 @@
         "regionCreated": "تم إنشاء المنطقة بنجاح.",
         "regionUpdated": "تم تحديث المنطقة بنجاح.",
         "regionDeleted": "تم حذف المنطقة بنجاح.",
-        "regionSelected": "تم اختيار المنطقة بنجاح."
+        "regionSelected": "تم اختيار المنطقة بنجاح.",
+        "addedToWishlist": "تمت إضافة الإعلان إلى قائمة المفضلة بنجاح.",
+        "removedFromWishlist": "تمت إزالة الإعلان من قائمة المفضلة بنجاح.",
+        "wishlistCleared": "تم إفراغ قائمة المفضلة بنجاح."
     },
     "errors": {
         "somethingWentWrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.",

@@ -1,4 +1,5 @@
 const APIError = require('../utils/apiError');
+const { FailResponse, HttpStatus, ResponseStatus } = require('../utils/apiResponse');
 const { translate } = require('../../utils/i18n');
 const multer = require('multer');
 
@@ -35,7 +36,7 @@ const getLocalizedMessage = (err, locale) => {
 };
 
 const sendErrorDev = (err, req, res) => {
-    res.status(err.statusCode).json({
+    FailResponse.send(res, err.statusCode, {
         status: err.status,
         message: getLocalizedMessage(err, req.locale),
         stack: err.stack,
@@ -45,15 +46,15 @@ const sendErrorDev = (err, req, res) => {
 
 const sendErrorProd = (err, req, res) => {
     if (err.isOperational) {
-        return res.status(err.statusCode).json({
+        return FailResponse.send(res, err.statusCode, {
             status: err.status,
             message: getLocalizedMessage(err, req.locale),
         });
     }
 
     console.error('UNEXPECTED ERROR 💥', err);
-    res.status(500).json({
-        status: 'error',
+    FailResponse.send(res, HttpStatus.INTERNAL_SERVER_ERROR, {
+        status: ResponseStatus.ERROR,
         message: translate(req.locale, 'errors.somethingWentWrong'),
     });
 };

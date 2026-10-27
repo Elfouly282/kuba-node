@@ -1,23 +1,11 @@
-const path = require('path');
-const fs = require('fs');
 const mongoose = require('mongoose');
 const Banner = require('../models/bannerModel');
 const Advertisement = require('../../advertisements/models/advertisementModel');
 const Region = require('../../regions/models/regionModel');
 const City = require('../../cities/models/cityModel');
 const APIError = require('../../../utils/apiError');
-const { getUploadsRoot } = require('../../../config/uploadsPath');
-const { getImageUrl, getRelativeImagePath } = require('../../../utils/imageUrl');
-
-const deleteImageFile = (imagePath) => {
-    if (!imagePath || imagePath.startsWith('http://') || imagePath.startsWith('https://')) return;
-    const absPath = path.join(getUploadsRoot(), imagePath.replace(/^uploads[\\/]/, ''));
-    try {
-        if (fs.existsSync(absPath)) {
-            fs.unlinkSync(absPath);
-        }
-    } catch (_) { }
-};
+const { SuccessResponse } = require('../../../utils/apiResponse');
+const { getImageUrl, getRelativeImagePath, deleteImageFile } = require('../../../utils/imageUrl');
 
 const formatBanner = (doc) => {
     if (!doc) return null;
@@ -49,316 +37,290 @@ const formatBanner = (doc) => {
 };
 
 exports.getAll = async (req, res, next) => {
-    try {
-        if (mongoose.connection.readyState !== 1) {
-            return res.status(200).json({
-                status: 'success',
-                results: 0,
-                data: { banners: [] },
-                dbConnected: false,
+    if (mongoose.connection.readyState !== 1) {
+        return SuccessResponse.ok(res, {
+            results: 0,
+            data: { banners: [] },
+            dbConnected: false,
+        });
+    }
+
+    const andConditions = [];
+
+    const cityParam = req.query.city || req.query.cityId;
+    if (cityParam && mongoose.Types.ObjectId.isValid(cityParam)) {
+        if (req.query.strict === 'true') {
+            andConditions.push({ city: cityParam });
+        } else {
+            andConditions.push({
+                $or: [
+                    { city: cityParam },
+                    { city: null },
+                    { city: { $exists: false } },
+                ],
             });
         }
-
-        const andConditions = [];
-
-        const cityParam = req.query.city || req.query.cityId;
-        if (cityParam && mongoose.Types.ObjectId.isValid(cityParam)) {
-            if (req.query.strict === 'true') {
-                andConditions.push({ city: cityParam });
-            } else {
-                andConditions.push({
-                    $or: [
-                        { city: cityParam },
-                        { city: null },
-                        { city: { $exists: false } },
-                    ],
-                });
-            }
-        }
-
-        const regionParam = req.query.region || req.query.regionId;
-        if (regionParam && mongoose.Types.ObjectId.isValid(regionParam)) {
-            if (req.query.strict === 'true') {
-                andConditions.push({ region: regionParam });
-            } else {
-                andConditions.push({
-                    $or: [
-                        { region: regionParam },
-                        { region: null },
-                        { region: { $exists: false } },
-                    ],
-                });
-            }
-        }
-
-        if (req.query.position) {
-            const pos = req.query.position.toString().toLowerCase().trim();
-            if (!['top', 'center', 'bottom'].includes(pos)) {
-                return next(new APIError('errors.invalidPosition', 400));
-            }
-            if (pos === 'top') {
-                andConditions.push({
-                    $or: [
-                        { position: 'top' },
-                        { position: null },
-                        { position: { $exists: false } },
-                    ],
-                });
-            } else {
-                andConditions.push({ position: pos });
-            }
-        }
-
-        const filter = andConditions.length > 0 ? { $and: andConditions } : {};
-
-        const rawBanners = await Banner.find(filter)
-            .populate('city', 'name image')
-            .populate('region', 'name image')
-            .sort({ createdAt: -1 });
-
-        const banners = rawBanners.map(formatBanner);
-
-        res.status(200).json({
-            status: 'success',
-            results: banners.length,
-            data: { banners },
-        });
-    } catch (err) {
-        next(err);
     }
+
+    const regionParam = req.query.region || req.query.regionId;
+    if (regionParam && mongoose.Types.ObjectId.isValid(regionParam)) {
+        if (req.query.strict === 'true') {
+            andConditions.push({ region: regionParam });
+        } else {
+            andConditions.push({
+                $or: [
+                    { region: regionParam },
+                    { region: null },
+                    { region: { $exists: false } },
+                ],
+            });
+        }
+    }
+
+    if (req.query.position) {
+        const pos = req.query.position.toString().toLowerCase().trim();
+        if (!['top', 'center', 'bottom'].includes(pos)) {
+            return next(new APIError('errors.invalidPosition', 400));
+        }
+        if (pos === 'top') {
+            andConditions.push({
+                $or: [
+                    { position: 'top' },
+                    { position: null },
+                    { position: { $exists: false } },
+                ],
+            });
+        } else {
+            andConditions.push({ position: pos });
+        }
+    }
+
+    const filter = andConditions.length > 0 ? { $and: andConditions } : {};
+
+    const rawBanners = await Banner.find(filter)
+        .populate('city', 'name image')
+        .populate('region', 'name image')
+        .sort({ createdAt: -1 });
+
+    const banners = rawBanners.map(formatBanner);
+
+    SuccessResponse.ok(res, {
+        results: banners.length,
+        data: { banners },
+    });
 };
 
 exports.getOne = async (req, res, next) => {
-    try {
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return next(new APIError('errors.invalidBannerId', 400));
-        }
-
-        const banner = await Banner.findById(req.params.id)
-            .populate('city', 'name image')
-            .populate('region', 'name image');
-        if (!banner) {
-            return next(new APIError('errors.bannerNotFound', 404));
-        }
-
-        res.status(200).json({
-            status: 'success',
-            data: { banner: formatBanner(banner) },
-        });
-    } catch (err) {
-        next(err);
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return next(new APIError('errors.invalidBannerId', 400));
     }
+
+    const banner = await Banner.findById(req.params.id)
+        .populate('city', 'name image')
+        .populate('region', 'name image');
+    if (!banner) {
+        return next(new APIError('errors.bannerNotFound', 404));
+    }
+
+    SuccessResponse.ok(res, {
+        data: { banner: formatBanner(banner) },
+    });
 };
 
 
 exports.create = async (req, res, next) => {
-    try {
-        const advertisementId = req.body.advertisementId ? req.body.advertisementId.toString().trim() : '';
+    const advertisementId = req.body.advertisementId ? req.body.advertisementId.toString().trim() : '';
 
-        if (!advertisementId) {
+    if (!advertisementId) {
+        return next(new APIError('validation.advertisementRequired', 400));
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(advertisementId)) {
+        return next(new APIError('errors.invalidAdvertisementId', 400));
+    }
+
+    const adExists = await Advertisement.findById(advertisementId);
+    if (!adExists) {
+        return next(new APIError('errors.advertisementNotFound', 404));
+    }
+
+    let city = null;
+    if (req.body.city && req.body.city.toString().trim() !== '') {
+        const cId = req.body.city.toString().trim();
+        if (!mongoose.Types.ObjectId.isValid(cId)) {
+            return next(new APIError('errors.invalidCityId', 400));
+        }
+        const cityExists = await City.findById(cId);
+        if (!cityExists) {
+            return next(new APIError('errors.cityNotFound', 404));
+        }
+        city = cId;
+    }
+
+    let region = null;
+    if (req.body.region && req.body.region.toString().trim() !== '') {
+        const regId = req.body.region.toString().trim();
+        if (!mongoose.Types.ObjectId.isValid(regId)) {
+            return next(new APIError('errors.invalidRegionId', 400));
+        }
+        const regExists = await Region.findById(regId);
+        if (!regExists) {
+            return next(new APIError('errors.regionNotFound', 404));
+        }
+        region = regId;
+        if (!city && regExists.city) {
+            city = regExists.city;
+        }
+    }
+
+    let position = 'top';
+    if (req.body.position !== undefined && req.body.position !== null && req.body.position.toString().trim() !== '') {
+        const pos = req.body.position.toString().toLowerCase().trim();
+        if (!['top', 'center', 'bottom'].includes(pos)) {
+            return next(new APIError('errors.invalidPosition', 400));
+        }
+        position = pos;
+    }
+
+    let image = null;
+    if (req.file) {
+        image = `banners/${req.file.filename}`;
+    } else if (req.body.image) {
+        image = getRelativeImagePath(req.body.image.trim());
+    }
+
+    if (!image) {
+        return next(new APIError('errors.imageRequired', 400));
+    }
+
+    const banner = await Banner.create({
+        image,
+        advertisementId,
+        position,
+        city,
+        region,
+    });
+
+    const populated = await Banner.findById(banner._id)
+        .populate('city', 'name image')
+        .populate('region', 'name image');
+
+    SuccessResponse.created(res, {
+        message: req.t ? req.t('messages.bannerCreated') : 'Banner created successfully.',
+        data: { banner: formatBanner(populated) },
+    });
+};
+
+exports.update = async (req, res, next) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return next(new APIError('errors.invalidBannerId', 400));
+    }
+
+    const banner = await Banner.findById(req.params.id);
+    if (!banner) {
+        return next(new APIError('errors.bannerNotFound', 404));
+    }
+
+    if (req.body.advertisementId !== undefined) {
+        const newAdId = req.body.advertisementId.toString().trim();
+        if (!newAdId) {
             return next(new APIError('validation.advertisementRequired', 400));
         }
 
-        if (!mongoose.Types.ObjectId.isValid(advertisementId)) {
+        if (!mongoose.Types.ObjectId.isValid(newAdId)) {
             return next(new APIError('errors.invalidAdvertisementId', 400));
         }
 
-        const adExists = await Advertisement.findById(advertisementId);
+        const adExists = await Advertisement.findById(newAdId);
         if (!adExists) {
             return next(new APIError('errors.advertisementNotFound', 404));
         }
 
-        let city = null;
-        if (req.body.city && req.body.city.toString().trim() !== '') {
-            const cId = req.body.city.toString().trim();
-            if (!mongoose.Types.ObjectId.isValid(cId)) {
+        banner.advertisementId = newAdId;
+    }
+
+    if (req.body.city !== undefined) {
+        const newCity = req.body.city ? req.body.city.toString().trim() : '';
+        if (newCity && newCity !== 'null' && newCity !== '') {
+            if (!mongoose.Types.ObjectId.isValid(newCity)) {
                 return next(new APIError('errors.invalidCityId', 400));
             }
-            const cityExists = await City.findById(cId);
+            const cityExists = await City.findById(newCity);
             if (!cityExists) {
                 return next(new APIError('errors.cityNotFound', 404));
             }
-            city = cId;
+            banner.city = newCity;
+        } else {
+            banner.city = null;
         }
+    }
 
-        let region = null;
-        if (req.body.region && req.body.region.toString().trim() !== '') {
-            const regId = req.body.region.toString().trim();
-            if (!mongoose.Types.ObjectId.isValid(regId)) {
+    if (req.body.region !== undefined) {
+        const newRegion = req.body.region ? req.body.region.toString().trim() : '';
+        if (newRegion && newRegion !== 'null' && newRegion !== '') {
+            if (!mongoose.Types.ObjectId.isValid(newRegion)) {
                 return next(new APIError('errors.invalidRegionId', 400));
             }
-            const regExists = await Region.findById(regId);
+            const regExists = await Region.findById(newRegion);
             if (!regExists) {
                 return next(new APIError('errors.regionNotFound', 404));
             }
-            region = regId;
-            if (!city && regExists.city) {
-                city = regExists.city;
+            banner.region = newRegion;
+            if (!banner.city && regExists.city) {
+                banner.city = regExists.city;
             }
+        } else {
+            banner.region = null;
         }
-
-        let position = 'top';
-        if (req.body.position !== undefined && req.body.position !== null && req.body.position.toString().trim() !== '') {
-            const pos = req.body.position.toString().toLowerCase().trim();
-            if (!['top', 'center', 'bottom'].includes(pos)) {
-                return next(new APIError('errors.invalidPosition', 400));
-            }
-            position = pos;
-        }
-
-        let image = null;
-        if (req.file) {
-            image = `banners/${req.file.filename}`;
-        } else if (req.body.image) {
-            image = getRelativeImagePath(req.body.image.trim());
-        }
-
-        if (!image) {
-            return next(new APIError('errors.imageRequired', 400));
-        }
-
-        const banner = await Banner.create({
-            image,
-            advertisementId,
-            position,
-            city,
-            region,
-        });
-
-        const populated = await Banner.findById(banner._id)
-            .populate('city', 'name image')
-            .populate('region', 'name image');
-
-        res.status(201).json({
-            status: 'success',
-            message: req.t ? req.t('messages.bannerCreated') : 'Banner created successfully.',
-            data: { banner: formatBanner(populated) },
-        });
-    } catch (err) {
-        next(err);
     }
-};
 
-exports.update = async (req, res, next) => {
-    try {
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return next(new APIError('errors.invalidBannerId', 400));
+    if (req.body.position !== undefined) {
+        const pos = req.body.position ? req.body.position.toString().toLowerCase().trim() : '';
+        if (!['top', 'center', 'bottom'].includes(pos)) {
+            return next(new APIError('errors.invalidPosition', 400));
         }
+        banner.position = pos;
+    }
 
-        const banner = await Banner.findById(req.params.id);
-        if (!banner) {
-            return next(new APIError('errors.bannerNotFound', 404));
-        }
-
-        if (req.body.advertisementId !== undefined) {
-            const newAdId = req.body.advertisementId.toString().trim();
-            if (!newAdId) {
-                return next(new APIError('validation.advertisementRequired', 400));
-            }
-
-            if (!mongoose.Types.ObjectId.isValid(newAdId)) {
-                return next(new APIError('errors.invalidAdvertisementId', 400));
-            }
-
-            const adExists = await Advertisement.findById(newAdId);
-            if (!adExists) {
-                return next(new APIError('errors.advertisementNotFound', 404));
-            }
-
-            banner.advertisementId = newAdId;
-        }
-
-        if (req.body.city !== undefined) {
-            const newCity = req.body.city ? req.body.city.toString().trim() : '';
-            if (newCity && newCity !== 'null' && newCity !== '') {
-                if (!mongoose.Types.ObjectId.isValid(newCity)) {
-                    return next(new APIError('errors.invalidCityId', 400));
-                }
-                const cityExists = await City.findById(newCity);
-                if (!cityExists) {
-                    return next(new APIError('errors.cityNotFound', 404));
-                }
-                banner.city = newCity;
-            } else {
-                banner.city = null;
-            }
-        }
-
-        if (req.body.region !== undefined) {
-            const newRegion = req.body.region ? req.body.region.toString().trim() : '';
-            if (newRegion && newRegion !== 'null' && newRegion !== '') {
-                if (!mongoose.Types.ObjectId.isValid(newRegion)) {
-                    return next(new APIError('errors.invalidRegionId', 400));
-                }
-                const regExists = await Region.findById(newRegion);
-                if (!regExists) {
-                    return next(new APIError('errors.regionNotFound', 404));
-                }
-                banner.region = newRegion;
-                if (!banner.city && regExists.city) {
-                    banner.city = regExists.city;
-                }
-            } else {
-                banner.region = null;
-            }
-        }
-
-        if (req.body.position !== undefined) {
-            const pos = req.body.position ? req.body.position.toString().toLowerCase().trim() : '';
-            if (!['top', 'center', 'bottom'].includes(pos)) {
-                return next(new APIError('errors.invalidPosition', 400));
-            }
-            banner.position = pos;
-        }
-
-        if (req.file) {
+    if (req.file) {
+        deleteImageFile(banner.image);
+        banner.image = `banners/${req.file.filename}`;
+    } else if (req.body.image !== undefined && req.body.image.trim() !== '') {
+        const newRelative = getRelativeImagePath(req.body.image.trim());
+        if (banner.image !== newRelative) {
             deleteImageFile(banner.image);
-            banner.image = `banners/${req.file.filename}`;
-        } else if (req.body.image !== undefined && req.body.image.trim() !== '') {
-            const newRelative = getRelativeImagePath(req.body.image.trim());
-            if (banner.image !== newRelative) {
-                deleteImageFile(banner.image);
-                banner.image = newRelative;
-            }
+            banner.image = newRelative;
         }
-
-        await banner.save();
-
-        const populated = await Banner.findById(banner._id)
-            .populate('city', 'name image')
-            .populate('region', 'name image');
-
-        res.status(200).json({
-            status: 'success',
-            message: req.t ? req.t('messages.bannerUpdated') : 'Banner updated successfully.',
-            data: { banner: formatBanner(populated) },
-        });
-    } catch (err) {
-        next(err);
     }
+
+    await banner.save();
+
+    const populated = await Banner.findById(banner._id)
+        .populate('city', 'name image')
+        .populate('region', 'name image');
+
+    SuccessResponse.ok(res, {
+        message: req.t ? req.t('messages.bannerUpdated') : 'Banner updated successfully.',
+        data: { banner: formatBanner(populated) },
+    });
 };
 
 exports.remove = async (req, res, next) => {
-    try {
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return next(new APIError('errors.invalidBannerId', 400));
-        }
-
-        const banner = await Banner.findById(req.params.id);
-        if (!banner) {
-            return next(new APIError('errors.bannerNotFound', 404));
-        }
-
-        deleteImageFile(banner.image);
-        await banner.deleteOne();
-
-        res.status(200).json({
-            status: 'success',
-            message: req.t ? req.t('messages.bannerDeleted') : 'Banner deleted successfully.',
-        });
-    } catch (err) {
-        next(err);
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return next(new APIError('errors.invalidBannerId', 400));
     }
+
+    const banner = await Banner.findById(req.params.id);
+    if (!banner) {
+        return next(new APIError('errors.bannerNotFound', 404));
+    }
+
+    deleteImageFile(banner.image);
+    await banner.deleteOne();
+
+    SuccessResponse.ok(res, {
+        message: req.t ? req.t('messages.bannerDeleted') : 'Banner deleted successfully.',
+    });
 };
 
 exports.deleteImageFile = deleteImageFile;

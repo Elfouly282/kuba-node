@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const toKey = require('../../../utils/toKey');
 
 const unitTypeSchema = new mongoose.Schema(
     {
@@ -78,11 +79,7 @@ const unitTypeSchema = new mongoose.Schema(
 
 unitTypeSchema.pre('save', function (next) {
     if (!this.slug || this.isModified('name')) {
-        this.slug = (this.slug || this.name)
-            .toLowerCase()
-            .trim()
-            .replace(/[\s\W-]+/g, '_')
-            .replace(/^_|_$/g, '');
+        this.slug = toKey(this.slug || this.name);
     }
     next();
 });

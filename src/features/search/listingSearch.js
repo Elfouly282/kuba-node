@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { escapeRegExp, groupBy } = require('lodash');
 const Advertisement = require('../advertisements/models/advertisementModel');
 const Booking = require('../bookings/models/bookingModel');
 const Category = require('../categories/models/categoryModel');
@@ -11,8 +12,6 @@ const { isPointInPolygon, getPolygonBoundingBox } = require('../../utils/geospat
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 const CAPACITY_KEYS = ['guests_count', 'max_passengers', 'passengers', 'guests', 'guest_count', 'guestcount', 'capacity'];
-
-const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const parseIdList = (...values) => {
     const ids = [];
@@ -86,10 +85,6 @@ const measureGap = (start, end, pricingUnit) => {
     return Math.round(days * 100) / 100;
 };
 
-/**
- * Earliest continuous free gap inside the window that is at least requiredMs long.
- * The returned range is the whole gap, clipped to the window.
- */
 const findFreeSlot = (bookings, windowStart, windowEnd, requiredMs) => {
     const startMs = new Date(windowStart).getTime();
     const endMs = new Date(windowEnd).getTime();
@@ -385,7 +380,7 @@ const buildMongoFilter = async (query, params, options) => {
     });
 
     if (params.search) {
-        const regex = new RegExp(escapeRegex(params.search), 'i');
+        const regex = new RegExp(escapeRegExp(params.search), 'i');
         andClauses.push({
             $or: [
                 { title: regex },
@@ -481,7 +476,7 @@ const searchAdvertisements = async (query, options = {}) => {
     }
 
     const candidates = await populateListing(Advertisement.find(filter)).sort(sortSpec(sort));
-    let bookingsByAd = new Map();
+    let bookingsByAd = {};
 
     if (params.startDate) {
         const ids = candidates.map((ad) => ad._id);
@@ -494,12 +489,7 @@ const searchAdvertisements = async (query, options = {}) => {
             }).select('advertisement startDate endDate').lean()
             : [];
 
-        bookingsByAd = bookings.reduce((map, booking) => {
-            const key = String(booking.advertisement);
-            if (!map.has(key)) map.set(key, []);
-            map.get(key).push(booking);
-            return map;
-        }, new Map());
+        bookingsByAd = groupBy(bookings, (booking) => String(booking.advertisement));
     }
 
     const availability = {};
@@ -512,7 +502,7 @@ const searchAdvertisements = async (query, options = {}) => {
         if (params.startDate) {
             const slot = matchAvailability(
                 ad,
-                bookingsByAd.get(String(ad._id)) || [],
+                bookingsByAd[String(ad._id)] || [],
                 params.startDate,
                 params.endDate,
                 params.duration
