@@ -38,7 +38,7 @@ const assertHotelOwnership = async (req, hotelId) => {
 
 exports.createRoom = async (req, res, next) => {
     try {
-        const hotelId = req.params.hotelId || req.body.hotel;
+        const hotelId = req.params.hotelId || req.params.id || req.body.hotel;
         if (!hotelId || !mongoose.Types.ObjectId.isValid(hotelId)) {
             return next(new APIError('errors.invalidAdvertisementId', 400));
         }

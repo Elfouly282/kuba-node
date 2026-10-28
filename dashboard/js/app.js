@@ -5787,6 +5787,7 @@ async function handleCreateHotelRoomSubmit(e) {
     const amenities = amenitiesStr ? amenitiesStr.split(',').map(s => s.trim()).filter(Boolean) : [];
 
     const payload = {
+        hotel: state.activeHotelId,
         title,
         roomNumber,
         roomType,
