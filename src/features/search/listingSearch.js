@@ -421,7 +421,7 @@ const compareAds = (a, b, sort) => {
 const populateListing = (query) => query
     .populate('category', 'name image')
     .populate('city', 'name image')
-    .populate('region', 'name image')
+    .populate('region', 'name')
     .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
     .populate('owner', 'name email phone avatar');
 

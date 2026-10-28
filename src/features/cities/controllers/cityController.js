@@ -71,7 +71,7 @@ const formatCity = (doc, regionsCount = 0) => {
 const formatRegion = (doc) => {
     if (!doc) return null;
     const obj = typeof doc.toJSON === 'function' ? doc.toJSON() : { ...doc };
-    if (obj.image) obj.image = getImageUrl(obj.image);
+    delete obj.image;
     obj.points = Array.isArray(obj.points) ? obj.points : [];
     obj.color = obj.color || '#2D4F2E';
     return obj;
@@ -100,8 +100,8 @@ const formatAdvertisement = (doc) => {
     if (obj.city && obj.city.image) {
         obj.city.image = getImageUrl(obj.city.image);
     }
-    if (obj.region && obj.region.image) {
-        obj.region.image = getImageUrl(obj.region.image);
+    if (obj.region && typeof obj.region === 'object') {
+        delete obj.region.image;
     }
     return obj;
 };
@@ -251,13 +251,13 @@ exports.getCityData = async (req, res, next) => {
     })
         .populate('category', 'name image')
         .populate('city', 'name image')
-        .populate('region', 'name image')
+        .populate('region', 'name')
         .sort({ createdAt: -1 });
 
     const rawAdvertisements = await Advertisement.find(adFilter)
         .populate('category', 'name image')
         .populate('city', 'name image')
-        .populate('region', 'name image')
+        .populate('region', 'name')
         .sort({ createdAt: -1 });
 
     const rawCategories = await Category.find().sort({ createdAt: -1 });

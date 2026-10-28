@@ -61,7 +61,7 @@ const syncAdvertisementsInZone = async (regionDoc) => {
 const formatRegion = (doc) => {
     if (!doc) return null;
     const obj = typeof doc.toJSON === 'function' ? doc.toJSON() : { ...doc };
-    if (obj.image) obj.image = getImageUrl(obj.image);
+    delete obj.image;
     if (obj.city && typeof obj.city === 'object') {
         if (obj.city.image) obj.city.image = getImageUrl(obj.city.image);
     }
@@ -89,8 +89,8 @@ const formatAdvertisement = (doc) => {
     if (obj.category && obj.category.image) {
         obj.category.image = getImageUrl(obj.category.image);
     }
-    if (obj.region && obj.region.image) {
-        obj.region.image = getImageUrl(obj.region.image);
+    if (obj.region && typeof obj.region === 'object') {
+        delete obj.region.image;
     }
     return obj;
 };
@@ -198,11 +198,11 @@ exports.getRegionData = async (req, res, next) => {
     const rawChalets = await Advertisement.find({
         ...adFilter,
         type: 'chalet',
-    }).populate('category', 'name image').populate('region', 'name image').sort({ createdAt: -1 });
+    }).populate('category', 'name image').populate('region', 'name').sort({ createdAt: -1 });
 
     const rawAdvertisements = await Advertisement.find(adFilter)
         .populate('category', 'name image')
-        .populate('region', 'name image')
+        .populate('region', 'name')
         .sort({ createdAt: -1 });
 
     const rawCategories = await Category.find().sort({ createdAt: -1 });
@@ -228,13 +228,6 @@ exports.create = async (req, res, next) => {
         return next(new APIError('validation.nameRequired', 400));
     }
 
-    let image = '';
-    if (req.file) {
-        image = `regions/${req.file.filename}`;
-    } else if (req.body.image) {
-        image = getRelativeImagePath(req.body.image.trim());
-    }
-
     const active = req.body.active !== undefined ? String(req.body.active) === 'true' : true;
     const order = req.body.order !== undefined ? Number(req.body.order) : 0;
     const points = parsePoints(req.body.points);
@@ -245,7 +238,6 @@ exports.create = async (req, res, next) => {
     const region = new Region({
         name,
         city,
-        image,
         active,
         order,
         points,
@@ -291,17 +283,6 @@ exports.update = async (req, res, next) => {
         region.order = Number(req.body.order);
     }
 
-    if (req.file) {
-        deleteImageFile(region.image);
-        region.image = `regions/${req.file.filename}`;
-    } else if (req.body.image !== undefined && req.body.image.trim() !== '') {
-        const newRelative = getRelativeImagePath(req.body.image.trim());
-        if (region.image !== newRelative) {
-            deleteImageFile(region.image);
-            region.image = newRelative;
-        }
-    }
-
     if (req.body.city !== undefined) {
         const cityParam = req.body.city || req.body.cityId;
         region.city = cityParam && mongoose.Types.ObjectId.isValid(cityParam) ? cityParam : null;
@@ -314,6 +295,11 @@ exports.update = async (req, res, next) => {
 
     if (req.body.color !== undefined) {
         region.color = req.body.color.trim();
+    }
+
+    if (region.image) {
+        deleteImageFile(region.image);
+        region.set('image', undefined);
     }
 
     await region.save();
@@ -340,7 +326,9 @@ exports.remove = async (req, res, next) => {
         return next(new APIError('errors.regionNotFound', 404));
     }
 
-    deleteImageFile(region.image);
+    if (region.image) {
+        deleteImageFile(region.image);
+    }
     await region.deleteOne();
 
     SuccessResponse.ok(res, {

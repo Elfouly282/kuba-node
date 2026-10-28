@@ -111,7 +111,7 @@ exports.login = async (req, res, next) => {
     if (!email || !password) return next(new APIError('errors.missingFields', 400));
 
     const normalizedEmail = email.toLowerCase().trim();
-    const user = await User.findOne({ email: normalizedEmail }).select('+password').populate('region', 'name image');
+    const user = await User.findOne({ email: normalizedEmail }).select('+password').populate('region', 'name');
     if (!user || !(await user.comparePassword(password))) return next(new APIError('errors.invalidCredentials', 401));
     if (user.provider !== 'local') return next(new APIError('errors.useGoogleLogin', 400));
 
@@ -134,7 +134,7 @@ exports.selectCity = async (req, res, next) => {
         req.user._id,
         { city: city._id },
         { new: true }
-    ).populate('city', 'name image').populate('region', 'name image');
+    ).populate('city', 'name image').populate('region', 'name');
 
     if (!user) return next(new APIError('errors.userNotFound', 404));
 
@@ -168,7 +168,7 @@ exports.selectRegion = async (req, res, next) => {
         req.user._id,
         updateObj,
         { new: true }
-    ).populate('city', 'name image').populate('region', 'name image');
+    ).populate('city', 'name image').populate('region', 'name');
 
     if (!user) return next(new APIError('errors.userNotFound', 404));
 

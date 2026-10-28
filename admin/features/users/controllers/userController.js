@@ -56,7 +56,7 @@ exports.getAllUsers = async (req, res, next) => {
         const total = await User.countDocuments(queryObj).setOptions({ includeInactive: true });
         const users = await User.find(queryObj)
             .setOptions({ includeInactive: true })
-            .populate('region', 'name image')
+            .populate('region', 'name')
             .select('+active')
             .sort({ createdAt: -1 })
             .skip(skip)

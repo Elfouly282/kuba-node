@@ -27,8 +27,8 @@ const formatAdvertisement = (doc) => {
     if (obj.city && typeof obj.city === 'object' && obj.city.image) {
         obj.city.image = getImageUrl(obj.city.image);
     }
-    if (obj.region && typeof obj.region === 'object' && obj.region.image) {
-        obj.region.image = getImageUrl(obj.region.image);
+    if (obj.region && typeof obj.region === 'object') {
+        delete obj.region.image;
     }
 
     if (obj.owner && typeof obj.owner === 'object') {
@@ -139,7 +139,7 @@ exports.getOne = async (req, res, next) => {
     const advertisement = await Advertisement.findById(req.params.id)
         .populate('category', 'name image')
         .populate('city', 'name image')
-        .populate('region', 'name image')
+        .populate('region', 'name')
         .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 
@@ -312,7 +312,7 @@ exports.create = async (req, res, next) => {
     const populated = await Advertisement.findById(advertisement._id)
         .populate('category', 'name image')
         .populate('city', 'name image')
-        .populate('region', 'name image')
+        .populate('region', 'name')
         .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 
@@ -499,7 +499,7 @@ exports.update = async (req, res, next) => {
     const populated = await Advertisement.findById(advertisement._id)
         .populate('category', 'name image')
         .populate('city', 'name image')
-        .populate('region', 'name image')
+        .populate('region', 'name')
         .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 
@@ -595,7 +595,7 @@ exports.assignOwner = async (req, res, next) => {
     const populated = await Advertisement.findById(advertisement._id)
         .populate('category', 'name image')
         .populate('city', 'name image')
-        .populate('region', 'name image')
+        .populate('region', 'name')
         .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 
@@ -689,7 +689,7 @@ exports.addImages = async (req, res, next) => {
     const populated = await Advertisement.findById(advertisement._id)
         .populate('category', 'name image')
         .populate('city', 'name image')
-        .populate('region', 'name image')
+        .populate('region', 'name')
         .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 
@@ -735,7 +735,7 @@ exports.deleteImage = async (req, res, next) => {
     const populated = await Advertisement.findById(advertisement._id)
         .populate('category', 'name image')
         .populate('city', 'name image')
-        .populate('region', 'name image')
+        .populate('region', 'name')
         .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 
@@ -777,7 +777,7 @@ exports.setMainImage = async (req, res, next) => {
     const populated = await Advertisement.findById(advertisement._id)
         .populate('category', 'name image')
         .populate('city', 'name image')
-        .populate('region', 'name image')
+        .populate('region', 'name')
         .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 

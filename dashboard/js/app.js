@@ -2439,7 +2439,6 @@ function renderRegions() {
 
     grid.innerHTML = filteredRegions.map(region => {
         const regId = region.id || region._id;
-        const imgSrc = region.image?.startsWith('http') ? region.image : (region.image ? `/uploads/${region.image}` : 'https://placehold.co/400x250?text=Region+Image');
         const isActive = region.active !== false;
         const hasZone = Array.isArray(region.points) && region.points.length >= 3;
 
@@ -2458,27 +2457,29 @@ function renderRegions() {
         `;
 
         return `
-            <div class="card p-3 bg-white border border-slate-200 hover:border-[#2D4F2E] transition group relative flex flex-col justify-between">
+            <div class="card p-4 bg-white border border-slate-200 hover:border-[#2D4F2E] hover:shadow-sm transition group relative flex flex-col justify-between rounded-xl">
                 <div>
-                    <div class="h-32 w-full rounded-lg overflow-hidden bg-slate-100 mb-2 relative">
-                        <img src="${imgSrc}" alt="${region.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/400x250?text=Region+Image'">
-                        <span class="absolute top-2 start-2 badge ${isActive ? 'badge-success' : 'badge-danger'} text-[10px] shadow">
-                            ${isActive ? 'نشطة' : 'معطلة'}
-                        </span>
-                        <span class="absolute bottom-2 start-2 bg-[#2D4F2E]/90 backdrop-blur text-white text-[10px] px-2 py-0.5 rounded-md font-semibold shadow flex items-center gap-1">
-                            <i class="fas fa-city text-amber-300"></i>
+                    <div class="flex items-center justify-between gap-2 mb-2.5">
+                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#2D4F2E]/10 text-[#2D4F2E] border border-[#2D4F2E]/20">
+                            <i class="fas fa-city text-[#2D4F2E]"></i>
                             <span>${parentCityName}</span>
                         </span>
+                        <span class="badge ${isActive ? 'badge-success' : 'badge-danger'} text-[10px]">
+                            ${isActive ? 'نشطة' : 'معطلة'}
+                        </span>
                     </div>
-                    <div class="font-bold text-slate-900 text-sm mb-1 flex items-center justify-between">
+                    <div class="font-bold text-slate-900 text-sm mb-1.5 flex items-center justify-between">
                         <span>${region.name}</span>
-                        <span class="text-[10px] text-slate-400 font-mono">#${region.order || 0}</span>
+                        <span class="text-[10px] text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded">#${region.order || 0}</span>
                     </div>
-                    <div class="mt-1 flex items-center justify-between">
+                    <div class="mt-2 flex items-center justify-between gap-2">
                         ${zoneBadge}
-                        <span class="w-3.5 h-3.5 rounded-full border border-slate-300 inline-block shadow-sm" style="background-color: ${region.color || '#2D4F2E'}" title="لون النطاق"></span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] text-slate-400">اللون:</span>
+                            <span class="w-3.5 h-3.5 rounded-full border border-slate-300 inline-block shadow-sm" style="background-color: ${region.color || '#2D4F2E'}" title="لون النطاق"></span>
+                        </div>
                     </div>
-                    <div class="text-[10px] text-slate-400 font-mono truncate mt-1" title="ID: ${regId}">ID: ${regId}</div>
+                    <div class="text-[10px] text-slate-400 font-mono truncate mt-2.5 pt-2 border-t border-slate-100" title="ID: ${regId}">ID: ${regId}</div>
                 </div>
                 <div class="flex items-center justify-end gap-1.5 pt-3 mt-2 border-t border-slate-100">
                     ${hasZone ? `
@@ -2664,7 +2665,6 @@ function openAddRegionModal(preselectedCityId) {
     document.getElementById('region-form').reset();
     document.getElementById('region-modal-active').checked = true;
     document.getElementById('region-modal-order').value = state.regions.length;
-    document.getElementById('region-modal-preview').innerHTML = '';
     document.getElementById('region-modal-color').value = '#2D4F2E';
     regionZoneColor = '#2D4F2E';
 
@@ -2720,17 +2720,6 @@ function openEditRegionModal(regionId) {
 
     clearRegionZone();
 
-    const urlInput = document.getElementById('region-modal-image-url');
-    if (region.image?.startsWith('http')) {
-        urlInput.value = region.image;
-    } else {
-        urlInput.value = '';
-    }
-
-    const preview = document.getElementById('region-modal-preview');
-    const imgSrc = region.image?.startsWith('http') ? region.image : (region.image ? `/uploads/${region.image}` : '');
-    preview.innerHTML = imgSrc ? `<img src="${imgSrc}" class="h-20 w-auto rounded border border-slate-300 object-cover mt-2">` : '';
-
     setTimeout(() => {
         initRegionZoneMap();
         if (regionZoneMap) {
@@ -2764,8 +2753,6 @@ async function handleRegionFormSubmit(e) {
     const active = document.getElementById('region-modal-active').checked;
     const pointsStr = document.getElementById('region-modal-points').value || '[]';
     const color = document.getElementById('region-modal-color').value || '#2D4F2E';
-    const imageFile = document.getElementById('region-modal-image-file').files[0];
-    const imageUrl = document.getElementById('region-modal-image-url').value.trim();
 
     if (!city) {
         showToast('يرجى اختيار المدينة التابعة لها هذه المنطقة', 'error');
@@ -2777,29 +2764,14 @@ async function handleRegionFormSubmit(e) {
         return;
     }
 
-    let payload;
-
-    if (imageFile) {
-        payload = new FormData();
-        payload.append('city', city);
-        payload.append('name', name);
-        payload.append('order', order);
-        payload.append('active', active);
-        payload.append('points', pointsStr);
-        payload.append('color', color);
-        payload.append('image', imageFile);
-    } else {
-        const bodyObj = {
-            city,
-            name,
-            order,
-            active,
-            points: JSON.parse(pointsStr),
-            color,
-        };
-        if (imageUrl) bodyObj.image = imageUrl;
-        payload = JSON.stringify(bodyObj);
-    }
+    const payload = JSON.stringify({
+        city,
+        name,
+        order,
+        active,
+        points: JSON.parse(pointsStr),
+        color,
+    });
 
     try {
         if (state.editingRegionId) {
