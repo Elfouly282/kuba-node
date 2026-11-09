@@ -2602,6 +2602,7 @@ function renderRegions() {
         const parentCityId = region.city ? (region.city._id || region.city.id || region.city) : null;
         const parentCity = parentCityId ? state.cities.find(c => (c.id || c._id) === parentCityId) : null;
         const parentCityName = parentCity ? parentCity.name : (region.city?.name || 'بدون مدينة');
+        const regionImgSrc = resolveRegionImageSrc(region.image);
 
         const zoneBadge = hasZone ? `
             <button type="button" onclick="openZonePreviewModal('region', '${regId}')" class="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full hover:bg-emerald-100 transition flex items-center gap-1 cursor-pointer" title="عرض نطاق المنطقة والإعلانات الواقعة داخله">
@@ -2615,6 +2616,11 @@ function renderRegions() {
         return `
             <div class="card p-4 bg-white border border-slate-200 hover:border-[#2D4F2E] hover:shadow-sm transition group relative flex flex-col justify-between rounded-xl">
                 <div>
+                    <div class="h-28 w-full rounded-lg overflow-hidden bg-slate-100 mb-3 flex items-center justify-center">
+                        ${regionImgSrc
+                            ? `<img src="${regionImgSrc}" alt="${region.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.replaceWith(Object.assign(document.createElement('i'), { className: 'fas fa-image text-slate-300 text-2xl' }))">`
+                            : `<i class="fas fa-image text-slate-300 text-2xl" title="لا توجد صورة"></i>`}
+                    </div>
                     <div class="flex items-center justify-between gap-2 mb-2.5">
                         <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#2D4F2E]/10 text-[#2D4F2E] border border-[#2D4F2E]/20">
                             <i class="fas fa-city text-[#2D4F2E]"></i>
@@ -2823,6 +2829,7 @@ function openAddRegionModal(preselectedCityId) {
     document.getElementById('region-modal-order').value = state.regions.length;
     document.getElementById('region-modal-color').value = '#2D4F2E';
     regionZoneColor = '#2D4F2E';
+    setRegionModalImage('');
 
     populateLocationSelects();
 
@@ -2873,6 +2880,7 @@ function openEditRegionModal(regionId) {
 
     regionZoneColor = region.color || '#2D4F2E';
     document.getElementById('region-modal-color').value = regionZoneColor;
+    setRegionModalImage(region.image || '');
 
     clearRegionZone();
 
@@ -2909,6 +2917,9 @@ async function handleRegionFormSubmit(e) {
     const active = document.getElementById('region-modal-active').checked;
     const pointsStr = document.getElementById('region-modal-points').value || '[]';
     const color = document.getElementById('region-modal-color').value || '#2D4F2E';
+    const imageFile = document.getElementById('region-modal-image-file').files[0];
+    const imageUrl = document.getElementById('region-modal-image-url').value.trim();
+    const currentImage = document.getElementById('region-modal-image-current').value.trim();
 
     if (!city) {
         showToast('يرجى اختيار المدينة التابعة لها هذه المنطقة', 'error');
@@ -2920,14 +2931,30 @@ async function handleRegionFormSubmit(e) {
         return;
     }
 
-    const payload = JSON.stringify({
-        city,
-        name,
-        order,
-        active,
-        points: JSON.parse(pointsStr),
-        color,
-    });
+    let payload;
+
+    if (imageFile) {
+        payload = new FormData();
+        payload.append('city', city);
+        payload.append('name', name);
+        payload.append('order', order);
+        payload.append('active', active);
+        payload.append('points', pointsStr);
+        payload.append('color', color);
+        payload.append('image', imageFile);
+    } else {
+        const bodyObj = {
+            city,
+            name,
+            order,
+            active,
+            points: JSON.parse(pointsStr),
+            color,
+        };
+        const image = imageUrl || currentImage;
+        if (image || state.editingRegionId) bodyObj.image = image;
+        payload = JSON.stringify(bodyObj);
+    }
 
     try {
         if (state.editingRegionId) {
@@ -2947,6 +2974,57 @@ async function handleRegionFormSubmit(e) {
         closeModal('region-modal');
         loadCitiesAndRegions();
     } catch (err) {}
+}
+
+function resolveRegionImageSrc(image) {
+    if (!image) return '';
+    if (/^(https?:|blob:|data:|\/)/.test(image)) return image;
+    return `/uploads/${image}`;
+}
+
+function renderRegionImagePreview(src) {
+    const preview = document.getElementById('region-modal-preview');
+    if (!preview) return;
+    preview.innerHTML = src ? `
+        <div class="relative inline-block mt-2">
+            <img src="${src}" class="h-20 w-auto rounded border border-slate-300 object-cover" onerror="this.closest('div').remove()">
+            <button type="button" onclick="removeRegionModalImage()" class="absolute -top-2 -end-2 w-5 h-5 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center shadow cursor-pointer" title="إزالة الصورة">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    ` : '';
+}
+
+function setRegionModalImage(image) {
+    const fileInput = document.getElementById('region-modal-image-file');
+    const urlInput = document.getElementById('region-modal-image-url');
+    const currentInput = document.getElementById('region-modal-image-current');
+    if (fileInput) fileInput.value = '';
+    if (urlInput) urlInput.value = '';
+    if (currentInput) currentInput.value = image || '';
+    renderRegionImagePreview(resolveRegionImageSrc(image));
+}
+
+function previewRegionImageFile(input) {
+    const file = input?.files?.[0];
+    if (!file) {
+        const urlVal = document.getElementById('region-modal-image-url')?.value.trim();
+        const current = document.getElementById('region-modal-image-current')?.value;
+        renderRegionImagePreview(resolveRegionImageSrc(urlVal || current));
+        return;
+    }
+    renderRegionImagePreview(URL.createObjectURL(file));
+}
+
+function previewRegionImageUrl(value) {
+    const fileInput = document.getElementById('region-modal-image-file');
+    if (fileInput?.files?.length) return;
+    const current = document.getElementById('region-modal-image-current')?.value;
+    renderRegionImagePreview(resolveRegionImageSrc(value.trim() || current));
+}
+
+function removeRegionModalImage() {
+    setRegionModalImage('');
 }
 
 async function deleteRegion(regionId) {

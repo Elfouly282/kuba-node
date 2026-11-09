@@ -372,6 +372,7 @@ if (regionsFolder) {
       order: 0,
       active: true,
       color: '#2D4F2E',
+      image: 'https://example.com/jamaran.jpg',
       points: [
         { latitude: 27.045, longitude: 33.885 },
         { latitude: 27.045, longitude: 33.895 },

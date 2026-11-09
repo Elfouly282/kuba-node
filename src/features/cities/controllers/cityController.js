@@ -71,7 +71,7 @@ const formatCity = (doc, regionsCount = 0) => {
 const formatRegion = (doc) => {
     if (!doc) return null;
     const obj = typeof doc.toJSON === 'function' ? doc.toJSON() : { ...doc };
-    delete obj.image;
+    obj.image = getImageUrl(obj.image);
     obj.points = Array.isArray(obj.points) ? obj.points : [];
     obj.color = obj.color || '#2D4F2E';
     return obj;

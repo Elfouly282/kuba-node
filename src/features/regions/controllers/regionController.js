@@ -61,7 +61,7 @@ const syncAdvertisementsInZone = async (regionDoc) => {
 const formatRegion = (doc) => {
     if (!doc) return null;
     const obj = typeof doc.toJSON === 'function' ? doc.toJSON() : { ...doc };
-    delete obj.image;
+    obj.image = getImageUrl(obj.image);
     if (obj.city && typeof obj.city === 'object') {
         if (obj.city.image) obj.city.image = getImageUrl(obj.city.image);
     }
@@ -235,9 +235,17 @@ exports.create = async (req, res, next) => {
     const cityParam = req.body.city || req.body.cityId;
     const city = cityParam && mongoose.Types.ObjectId.isValid(cityParam) ? cityParam : null;
 
+    let image = '';
+    if (req.file) {
+        image = `regions/${req.file.filename}`;
+    } else if (req.body.image) {
+        image = getRelativeImagePath(req.body.image.trim());
+    }
+
     const region = new Region({
         name,
         city,
+        image,
         active,
         order,
         points,
@@ -297,9 +305,15 @@ exports.update = async (req, res, next) => {
         region.color = req.body.color.trim();
     }
 
-    if (region.image) {
+    if (req.file) {
         deleteImageFile(region.image);
-        region.set('image', undefined);
+        region.image = `regions/${req.file.filename}`;
+    } else if (req.body.image !== undefined) {
+        const nextImage = getRelativeImagePath(String(req.body.image || '').trim());
+        if (nextImage !== region.image) {
+            deleteImageFile(region.image);
+            region.image = nextImage;
+        }
     }
 
     await region.save();

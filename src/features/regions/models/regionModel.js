@@ -16,6 +16,11 @@ const regionSchema = new mongoose.Schema(
             default: null,
             index: true,
         },
+        image: {
+            type: String,
+            trim: true,
+            default: '',
+        },
         active: {
             type: Boolean,
             default: true,
@@ -65,7 +70,6 @@ const regionSchema = new mongoose.Schema(
             transform: (_doc, ret) => {
                 ret.id = ret._id;
                 delete ret.__v;
-                delete ret.image;
                 return ret;
             },
         },
@@ -74,7 +78,6 @@ const regionSchema = new mongoose.Schema(
             transform: (_doc, ret) => {
                 ret.id = ret._id;
                 delete ret.__v;
-                delete ret.image;
                 return ret;
             },
         },
