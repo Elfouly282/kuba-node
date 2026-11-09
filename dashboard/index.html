@@ -144,6 +144,10 @@
                                 <i class="fas fa-images w-5 text-center"></i>
                                 <span data-i18n="bannersTitle">البانرات الإعلانية</span>
                             </a>
+                            <a href="#" class="nav-link" data-tab="flashsale">
+                                <i class="fas fa-bolt w-5 text-center"></i>
+                                <span data-i18n="flashsaleTitle">عروض الفلاش</span>
+                            </a>
                             <a href="#" class="nav-link" data-tab="onboarding">
                                 <i class="fas fa-mobile-screen w-5 text-center"></i>
                                 <span data-i18n="onboarding">شاشات الترحيب</span>
@@ -439,7 +443,7 @@
                         </div>
 
                         <!-- App Surface & Quick Micro-KPIs Bar -->
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-4">
                             <!-- Categories -->
                             <div onclick="switchTab('categories')" class="card p-4 bg-white hover:border-[#2D4F2E]/40 hover:shadow-sm transition cursor-pointer group flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm font-bold border border-emerald-100 group-hover:bg-[#2D4F2E] group-hover:text-white transition">
@@ -459,6 +463,17 @@
                                 <div class="min-w-0">
                                     <div class="text-xs text-slate-500 font-bold truncate" data-i18n="bannersTitle">البانرات الإعلانية</div>
                                     <div class="text-lg font-black text-slate-900" id="stat-banners">0</div>
+                                </div>
+                            </div>
+
+                            <!-- Flash Sale -->
+                            <div onclick="switchTab('flashsale')" class="card p-4 bg-white hover:border-[#2D4F2E]/40 hover:shadow-sm transition cursor-pointer group flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-sm font-bold border border-rose-100 group-hover:bg-rose-600 group-hover:text-white transition">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-xs text-slate-500 font-bold truncate" data-i18n="flashsaleTitle">عروض الفلاش</div>
+                                    <div class="text-lg font-black text-slate-900" id="stat-flashsale">0</div>
                                 </div>
                             </div>
 
@@ -769,6 +784,50 @@
 
                             <div id="banners-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                 <div class="col-span-full text-center py-8 text-slate-400 text-xs">جاري تحميل البانرات الإعلانية...</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- FLASH SALE VIEW -->
+                    <section id="view-flashsale" class="tab-view hidden space-y-6">
+                        <div class="page-head">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900" data-i18n="flashsaleTitle">عروض الفلاش</h2>
+                                <p class="text-xs text-slate-500" data-i18n="flashsaleSubtitle">اختر من الإعلانات الموجودة ما يظهر في عروض الفلاش بالصفحة الرئيسية</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="loadFlashSaleTab()" class="btn-secondary text-xs" title="تحديث">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card p-5 bg-white space-y-4">
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-sm">
+                                        <i class="fas fa-bolt"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-slate-900 text-sm" data-i18n="flashsaleTitle">عروض الفلاش (Flash Sale)</h3>
+                                        <p class="text-[11px] text-slate-500">حتى 3 صور، نسبة الخصم، والسعر قبل الخصم وبعده</p>
+                                    </div>
+                                </div>
+                                <span class="badge badge-brand text-xs" id="badge-flashsale-count">0 عرض</span>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                <select id="flashsale-ad-select" class="form-select text-xs flex-1">
+                                    <option value="">اختر إعلاناً من الإعلانات الموجودة</option>
+                                </select>
+                                <button type="button" onclick="addFlashSaleAd()" class="gold-btn text-xs whitespace-nowrap">
+                                    <i class="fas fa-bolt"></i>
+                                    <span>إضافة لعروض الفلاش</span>
+                                </button>
+                            </div>
+
+                            <div id="flashsale-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                <div class="col-span-full text-center py-8 text-slate-400 text-xs">جاري تحميل عروض الفلاش...</div>
                             </div>
                         </div>
                     </section>
@@ -2610,6 +2669,10 @@
                     <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-medium">
                         <input type="checkbox" id="ad-modal-active" checked class="rounded border-slate-300 text-[#2D4F2E] focus:ring-[#2D4F2E]">
                         <span data-i18n="active">الإعلان نشط ومعروض للمستخدمين</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-xs text-rose-700 font-medium">
+                        <input type="checkbox" id="ad-modal-flashsale" class="rounded border-slate-300 text-rose-600 focus:ring-rose-500">
+                        <span>عرض فلاش في الصفحة الرئيسية</span>
                     </label>
                 </div>
 

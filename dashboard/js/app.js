@@ -91,6 +91,9 @@ const I18N = {
         addBanner: 'إضافة بانر جديد',
         categoriesTitle: 'التصنيفات',
         bannersTitle: 'البانرات الإعلانية',
+        flashsaleTitle: 'عروض الفلاش',
+        flashsaleSubtitle: 'اختر من الإعلانات الموجودة ما يظهر في عروض الفلاش',
+        kpiFlashSaleHint: 'إعلانات اخترتها لعروض الفلاش',
         categoryName: 'اسم التصنيف',
         categoryImage: 'صورة التصنيف',
         bannerImage: 'صورة البانر',
@@ -234,6 +237,9 @@ const I18N = {
         addBanner: 'Add Banner',
         categoriesTitle: 'Categories',
         bannersTitle: 'Promotional Banners',
+        flashsaleTitle: 'Flash Sale',
+        flashsaleSubtitle: 'Pick existing listings to show in the home flash sale',
+        kpiFlashSaleHint: 'Listings you marked as flash sale',
         categoryName: 'Category Name',
         categoryImage: 'Category Image',
         bannerImage: 'Banner Image',
@@ -302,6 +308,7 @@ const state = {
     onboardingScreens: [],
     categories: [],
     banners: [],
+    flashsale: [],
     advertisements: [],
     cities: [],
     regions: [],
@@ -568,6 +575,7 @@ const PAGE_TITLES = {
     onboarding: 'onboarding',
     categories: 'categoriesTitle',
     banners: 'bannersTitle',
+    flashsale: 'flashsaleTitle',
     system: 'systemStatus',
     'owner-overview': 'ownerOverview',
     'owner-listing': 'ownerListing',
@@ -618,6 +626,8 @@ function loadCurrentTab() {
         loadCategories();
     } else if (state.currentTab === 'banners') {
         loadBannersTab();
+    } else if (state.currentTab === 'flashsale') {
+        loadFlashSaleTab();
     } else if (state.currentTab === 'owner-overview') {
         loadOwnerOverviewTab();
     } else if (state.currentTab === 'owner-listing') {
@@ -684,6 +694,7 @@ function renderStats() {
     // 2. Micro Content KPIs
     setElText('stat-categories', Number(s.totalCategories || 0).toLocaleString());
     setElText('stat-banners', Number(s.totalBanners || 0).toLocaleString());
+    setElText('stat-flashsale', Number(s.totalFlashSale || 0).toLocaleString());
     setElText('stat-onboarding', Number(s.totalOnboarding || 0).toLocaleString());
 
     // 3. Date & Banner Info
@@ -1638,6 +1649,151 @@ async function handleBannerFormSubmit(e) {
         closeModal('banner-modal');
         loadBanners();
     } catch (err) {}
+}
+
+async function loadFlashSaleTab() {
+    try {
+        const [flashRes, adsRes] = await Promise.all([
+            apiFetch('/api/v1/admin/flashsale?limit=100'),
+            apiFetch('/api/v1/admin/advertisements?limit=100'),
+        ]);
+        state.flashsale = flashRes.data?.flashsale || [];
+        state.advertisements = adsRes.data?.advertisements || state.advertisements;
+        renderFlashSale(flashRes.total);
+    } catch (err) {
+        console.error('Error loading flash sale:', err);
+    }
+}
+
+function populateFlashSaleSelect() {
+    const select = document.getElementById('flashsale-ad-select');
+    if (!select) return;
+    const selectedIds = new Set(state.flashsale.map((deal) => deal.id));
+    const available = state.advertisements.filter((ad) => !selectedIds.has(ad.id || ad._id));
+    select.innerHTML = '<option value="">اختر إعلاناً من الإعلانات الموجودة</option>' + available.map((ad) => {
+        const id = ad.id || ad._id;
+        const pricing = ad.pricing || {};
+        const base = Number(pricing.basePrice || ad.price || 0);
+        const finalPrice = Number(pricing.finalPrice || ad.price || 0);
+        const percent = base > finalPrice && base > 0 ? Math.round(((base - finalPrice) / base) * 100) : 0;
+        const discountLabel = percent > 0 ? ` — خصم ${percent}%` : '';
+        return `<option value="${id}">${ad.title || 'إعلان'}${discountLabel}</option>`;
+    }).join('');
+}
+
+async function addFlashSaleAd() {
+    const select = document.getElementById('flashsale-ad-select');
+    const adId = select?.value;
+    if (!adId) {
+        showToast('اختر إعلاناً من القائمة أولاً', 'error');
+        return;
+    }
+
+    try {
+        await apiFetch(`/api/v1/admin/advertisements/${adId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ isFlashSale: true }),
+        });
+        showToast('تمت إضافة الإعلان لعروض الفلاش', 'success');
+        loadFlashSaleTab();
+    } catch (err) {}
+}
+
+async function removeFlashSaleAd(adId) {
+    if (!confirm('إزالة هذا الإعلان من عروض الفلاش؟ الإعلان نفسه يفضل موجوداً.')) return;
+
+    try {
+        await apiFetch(`/api/v1/admin/advertisements/${adId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ isFlashSale: false }),
+        });
+        showToast('تمت إزالة الإعلان من عروض الفلاش', 'success');
+        loadFlashSaleTab();
+    } catch (err) {}
+}
+
+function renderFlashSale(total) {
+    const grid = document.getElementById('flashsale-grid');
+    const badge = document.getElementById('badge-flashsale-count');
+    const count = Number.isFinite(Number(total)) ? Number(total) : state.flashsale.length;
+    if (badge) badge.textContent = `${count} عرض`;
+    populateFlashSaleSelect();
+    if (!grid) return;
+
+    if (state.flashsale.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-xs">لم تختر عروض فلاش بعد. اختر إعلاناً من القائمة أعلاه ليظهر في الصفحة الرئيسية.</div>`;
+        return;
+    }
+
+    const unitLabels = {
+        per_night: '/ ليلة',
+        per_hour: '/ ساعة',
+        per_day: '/ يوم',
+        per_trip: '/ رحلة',
+        fixed: 'سعر ثابت',
+    };
+
+    grid.innerHTML = state.flashsale.map((deal) => {
+        const images = Array.isArray(deal.images) ? deal.images.slice(0, 3) : [];
+        const cols = images.length <= 1 ? 1 : images.length;
+        const cityName = deal.city && typeof deal.city === 'object' ? deal.city.name : '';
+        const regionName = deal.region && typeof deal.region === 'object' ? deal.region.name : '';
+        const unit = unitLabels[deal.pricingUnit] || '';
+        const hasDiscount = Number(deal.discountPercent) > 0 && Number(deal.priceBefore) > Number(deal.priceAfter);
+        const thumbs = images.length
+            ? `<div class="grid gap-1 h-36" style="grid-template-columns: repeat(${cols}, minmax(0, 1fr));">${images.map((src) => `
+                <img src="${src}" alt="${deal.title || ''}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x250?text=No+Image'">
+            `).join('')}</div>`
+            : `<img src="https://placehold.co/400x250?text=No+Image" alt="" class="w-full h-36 object-cover">`;
+
+        return `
+            <div class="card p-3 bg-white border border-slate-200 hover:border-rose-300 transition flex flex-col justify-between">
+                <div>
+                    <div class="rounded-lg overflow-hidden bg-slate-100 mb-3 relative">
+                        ${thumbs}
+                        ${hasDiscount ? `<span class="absolute top-2 start-2 badge bg-rose-600 text-white text-[10px] shadow"><i class="fas fa-bolt me-1"></i> خصم ${deal.discountPercent}%</span>` : `<span class="absolute top-2 start-2 badge bg-rose-600 text-white text-[10px] shadow"><i class="fas fa-bolt me-1"></i> فلاش</span>`}
+                    </div>
+                    <div class="font-bold text-slate-900 line-clamp-1 text-sm mb-2">${deal.title || ''}</div>
+                    <div>
+                        ${hasDiscount ? `<div class="text-[11px] text-slate-400 line-through">${Number(deal.priceBefore || 0).toLocaleString()} ج.م</div>` : ''}
+                        <div class="font-black text-[#2D4F2E] text-base">${Number(deal.priceAfter || 0).toLocaleString()} ج.م <span class="text-[10px] text-slate-400 font-medium">${unit}</span></div>
+                    </div>
+                    ${(cityName || regionName || deal.location) ? `
+                        <div class="mt-2 text-[11px] text-slate-500 truncate">
+                            <i class="fas fa-map-marker-alt text-rose-500 me-1"></i>
+                            ${[cityName, regionName, deal.location].filter(Boolean).join(' · ')}
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="flex items-center justify-end gap-1.5 pt-3 mt-3 border-t border-slate-100">
+                    <button onclick="openFlashSaleAd('${deal.id}')" class="btn-secondary text-xs py-1 px-2.5">
+                        <i class="fas fa-edit text-blue-600 me-1"></i> ${t('edit')}
+                    </button>
+                    <button onclick="removeFlashSaleAd('${deal.id}')" class="btn-secondary text-xs py-1 px-2.5 hover:text-red-600">
+                        <i class="fas fa-times text-red-600 me-1"></i> إزالة
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function openFlashSaleAd(adId) {
+    let ad = state.advertisements.find((item) => (item.id || item._id) === adId);
+    if (!ad) {
+        try {
+            const res = await apiFetch(`/api/v1/admin/advertisements/${adId}`);
+            ad = res.data?.advertisement;
+            if (ad) state.advertisements.push(ad);
+        } catch (err) {
+            return;
+        }
+    }
+    if (!ad) {
+        showToast('تعذر فتح الإعلان', 'error');
+        return;
+    }
+    openEditAdvertisementModal(adId);
 }
 
 async function deleteBanner(bannerId) {
@@ -3847,6 +4003,7 @@ function renderAdvertisementsGrid() {
                         <span class="absolute top-2 end-2 badge ${isActive ? 'badge-success' : 'badge-danger'} text-[10px] shadow">
                             ${isActive ? 'نشط' : 'معطل'}
                         </span>
+                        ${ad.isFlashSale ? `<span class="absolute bottom-2 start-2 badge bg-rose-600 text-white text-[10px] shadow"><i class="fas fa-bolt me-1"></i>فلاش</span>` : ''}
                     </div>
 
                     <div class="space-y-1 text-xs">
@@ -4631,6 +4788,8 @@ function openAddAdvertisementModal() {
     document.getElementById('advertisement-modal-title').textContent = t('addAdvertisement');
     document.getElementById('advertisement-form').reset();
     document.getElementById('ad-modal-active').checked = true;
+    const flashInput = document.getElementById('ad-modal-flashsale');
+    if (flashInput) flashInput.checked = false;
     document.getElementById('ad-modal-preview').innerHTML = '';
 
     populateLocationSelects();
@@ -4674,6 +4833,8 @@ async function openEditAdvertisementModal(adId) {
     document.getElementById('ad-modal-address').value = ad.address || '';
     document.getElementById('ad-modal-description').value = ad.description || '';
     document.getElementById('ad-modal-active').checked = ad.active !== false;
+    const flashInput = document.getElementById('ad-modal-flashsale');
+    if (flashInput) flashInput.checked = ad.isFlashSale === true;
 
     // Populate and sync coordinates with map picker
     const hasValidCoords = ad.latitude !== null && ad.latitude !== undefined && !isNaN(Number(ad.latitude)) &&
@@ -4773,6 +4934,7 @@ async function handleAdvertisementFormSubmit(e) {
 
     const description = document.getElementById('ad-modal-description').value.trim();
     const active = document.getElementById('ad-modal-active').checked;
+    const isFlashSale = document.getElementById('ad-modal-flashsale')?.checked === true;
     const owner = document.getElementById('ad-modal-owner')?.value || null;
     const imageFile = document.getElementById('ad-modal-image-file').files[0];
     const imageUrl = document.getElementById('ad-modal-image-url').value.trim();
@@ -4837,6 +4999,7 @@ async function handleAdvertisementFormSubmit(e) {
         if (longitude !== null) payload.append('longitude', longitude);
         payload.append('description', description);
         payload.append('active', active);
+        payload.append('isFlashSale', isFlashSale);
         if (owner) payload.append('owner', owner);
         payload.append('attributes', JSON.stringify(attributes));
         payload.append('image', imageFile);
@@ -4856,6 +5019,7 @@ async function handleAdvertisementFormSubmit(e) {
             longitude,
             description,
             active,
+            isFlashSale,
             attributes,
         };
         if (imageUrl) bodyObj.image = imageUrl;
@@ -4879,6 +5043,7 @@ async function handleAdvertisementFormSubmit(e) {
 
         closeModal('advertisement-modal');
         loadAdvertisementsTab();
+        if (state.currentTab === 'flashsale') loadFlashSaleTab();
     } catch (err) {}
 }
 
@@ -4889,6 +5054,7 @@ async function deleteAdvertisement(adId) {
         await apiFetch(`/api/v1/admin/advertisements/${adId}`, { method: 'DELETE' });
         showToast('تم حذف الإعلان بنجاح', 'success');
         loadAdvertisementsTab();
+        if (state.currentTab === 'flashsale') loadFlashSaleTab();
     } catch (err) {}
 }
 

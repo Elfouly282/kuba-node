@@ -163,6 +163,11 @@ const advertisementSchema = new mongoose.Schema(
             default: true,
             index: true,
         },
+        isFlashSale: {
+            type: Boolean,
+            default: false,
+            index: true,
+        },
     },
     {
         timestamps: true,
@@ -244,6 +249,7 @@ advertisementSchema.virtual('rooms', {
 });
 
 advertisementSchema.index({ category: 1, active: 1, 'pricing.finalPrice': 1 });
+advertisementSchema.index({ isFlashSale: 1, active: 1, status: 1 });
 advertisementSchema.index({ unitType: 1, active: 1, 'pricing.finalPrice': 1 });
 advertisementSchema.index({ region: 1, active: 1 });
 advertisementSchema.index({ city: 1, active: 1 });

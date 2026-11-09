@@ -8,6 +8,7 @@ const Region = require('../../../../src/features/regions/models/regionModel');
 const Advertisement = require('../../../../src/features/advertisements/models/advertisementModel');
 const UnitType = require('../../../../src/features/unit-types/models/unitTypeModel');
 const Booking = require('../../../../src/features/bookings/models/bookingModel');
+const { countFlashSales } = require('../../../../src/features/flashsale/controllers/flashsaleController');
 const { deleteUserData } = require('../../../../src/features/auth/controllers/authController');
 const APIError = require('../../../utils/apiError');
 const bcrypt = require('bcrypt');
@@ -90,6 +91,7 @@ exports.getUserStats = async (_req, res, next) => {
                     totalOnboarding: 0,
                     totalCategories: 0,
                     totalBanners: 0,
+                    totalFlashSale: 0,
                     totalCities: 0,
                     totalRegions: 0,
                     totalAdvertisements: 0,
@@ -113,6 +115,7 @@ exports.getUserStats = async (_req, res, next) => {
             totalOnboarding,
             totalCategories,
             totalBanners,
+            totalFlashSale,
             totalCities,
             totalRegions,
             totalAdvertisements,
@@ -129,6 +132,7 @@ exports.getUserStats = async (_req, res, next) => {
             OnboardingScreen.countDocuments().setOptions({ includeInactive: true }),
             Category.countDocuments(),
             Banner.countDocuments(),
+            countFlashSales(),
             City.countDocuments(),
             Region.countDocuments(),
             Advertisement.countDocuments(),
@@ -248,6 +252,7 @@ exports.getUserStats = async (_req, res, next) => {
                 totalOnboarding,
                 totalCategories,
                 totalBanners,
+                totalFlashSale: totalFlashSale || 0,
                 totalCities: totalCities || 0,
                 totalRegions,
                 totalAdvertisements,

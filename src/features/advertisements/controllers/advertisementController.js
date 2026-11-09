@@ -307,6 +307,7 @@ exports.create = async (req, res, next) => {
         status: status || 'published',
         owner: (req.user?.role === 'admin' && req.body.owner && mongoose.Types.ObjectId.isValid(req.body.owner)) ? req.body.owner : (req.user?._id || null),
         active: active !== undefined ? (String(active) === 'true' || active === true) : true,
+        isFlashSale: req.body.isFlashSale === true || req.body.isFlashSale === 'true',
     });
 
     const populated = await Advertisement.findById(advertisement._id)
@@ -357,6 +358,9 @@ exports.update = async (req, res, next) => {
         advertisement.longitude = (req.body.longitude !== '' && req.body.longitude !== null && !isNaN(Number(req.body.longitude))) ? Number(req.body.longitude) : null;
     }
     if (req.body.active !== undefined) advertisement.active = String(req.body.active) === 'true' || req.body.active === true;
+    if (req.body.isFlashSale !== undefined) {
+        advertisement.isFlashSale = req.body.isFlashSale === true || req.body.isFlashSale === 'true';
+    }
 
     if (req.body.category !== undefined) {
         if (req.body.category && mongoose.Types.ObjectId.isValid(req.body.category)) {

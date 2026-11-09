@@ -658,6 +658,42 @@ if (homeFolder) {
     });
   }
 
+  if (!homeFolder.item.find(i => i.name === 'Get Flash Sale')) {
+    homeFolder.item.push({
+      name: 'Get Flash Sale',
+      request: {
+        method: 'GET',
+        header: [],
+        url: {
+          raw: '{{baseUrl}}/flashsale',
+          host: ['{{baseUrl}}'],
+          path: ['flashsale'],
+          query: [
+            {
+              key: 'city',
+              value: '{{cityId}}',
+              description: 'Filter flash deals by City ID',
+              disabled: true
+            },
+            {
+              key: 'region',
+              value: '<REGION_ID>',
+              description: 'Filter flash deals by Region ID',
+              disabled: true
+            },
+            {
+              key: 'limit',
+              value: '20',
+              description: 'Max deals to return (1-100). Defaults to 20.',
+              disabled: true
+            }
+          ]
+        },
+        description: 'Home flash sale. Returns only advertisements an admin marked as flash sale. Each item includes up to 3 image URLs, discountPercent, priceBefore, and priceAfter.'
+      }
+    });
+  }
+
   if (!homeFolder.item.find(i => i.name === 'Delete Banner (Admin)')) {
     homeFolder.item.push({
       name: 'Delete Banner (Admin)',

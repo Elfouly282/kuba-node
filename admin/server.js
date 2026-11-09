@@ -21,6 +21,7 @@ const onboardingRoutes = require('./features/onboarding/routes/onboardingRoutes'
 const userRoutes = require('./features/users/routes/userRoutes');
 const categoryRoutes = require('./features/categories/routes/categoryRoutes');
 const bannerRoutes = require('./features/banners/routes/bannerRoutes');
+const flashsaleRoutes = require('./features/flashsale/routes/flashsaleRoutes');
 const advertisementRoutes = require('./features/advertisements/routes/advertisementRoutes');
 const searchRoutes = require('../src/features/search/routes/searchRoutes');
 const cityRoutes = require('./features/cities/routes/cityRoutes');
@@ -57,6 +58,7 @@ app.use('/api/v1/admin/onboarding', onboardingRoutes);
 app.use('/api/v1/admin/users', userRoutes);
 app.use('/api/v1/admin/categories', categoryRoutes);
 app.use('/api/v1/admin/banners', bannerRoutes);
+app.use('/api/v1/admin/flashsale', flashsaleRoutes);
 app.use('/api/v1/admin/advertisements', advertisementRoutes);
 app.use('/api/v1/admin/cities', cityRoutes);
 app.use('/api/v1/admin/regions', regionRoutes);
@@ -66,6 +68,7 @@ app.use('/api/v1/admin/bookings', bookingRoutes);
 // Mirror routes under client-style paths for dashboard convenience
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/banners', bannerRoutes);
+app.use('/api/v1/flashsale', flashsaleRoutes);
 app.use('/api/v1/search', searchRoutes);
 app.use('/api/v1/advertisements', advertisementRoutes);
 app.use('/api/v1/cities', cityRoutes);
