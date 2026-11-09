@@ -697,8 +697,39 @@ col.item.splice(regIndex >= 0 ? regIndex : col.item.length, 0, citiesFolder);
 
 const wishlistFolder = {
   name: 'Wishlist',
-  description: 'User saved advertisements (wishlist / favorites). Supports adding, removing, toggling (heart icon), clearing, and retrieving all saved listings.',
+  description: 'User saved advertisements (wishlist / favorites). Supports toggling (heart icon - add/remove), retrieving, and clearing all saved listings.',
   item: [
+    {
+      name: 'Toggle Wishlist',
+      request: {
+        method: 'POST',
+        header: [
+          {
+            key: 'Content-Type',
+            value: 'application/json'
+          },
+          {
+            key: 'Authorization',
+            value: 'Bearer {{token}}'
+          }
+        ],
+        url: {
+          raw: '{{baseUrl}}/wishlist/toggle',
+          host: ['{{baseUrl}}'],
+          path: ['wishlist', 'toggle']
+        },
+        body: {
+          mode: 'raw',
+          raw: '{\n  "advertisementId": "<ADVERTISEMENT_ID>"\n}',
+          options: {
+            raw: {
+              language: 'json'
+            }
+          }
+        },
+        description: 'Toggle advertisement in user\'s wishlist (adds if not present, removes if already present). Returns { inWishlist: true|false }.'
+      }
+    },
     {
       name: 'Get User Wishlist',
       request: {
@@ -732,118 +763,6 @@ const wishlistFolder = {
       }
     },
     {
-      name: 'Add to Wishlist (Body)',
-      request: {
-        method: 'POST',
-        header: [
-          {
-            key: 'Content-Type',
-            value: 'application/json'
-          },
-          {
-            key: 'Authorization',
-            value: 'Bearer {{token}}'
-          }
-        ],
-        url: {
-          raw: '{{baseUrl}}/wishlist',
-          host: ['{{baseUrl}}'],
-          path: ['wishlist']
-        },
-        body: {
-          mode: 'raw',
-          raw: '{\n  "advertisementId": "<ADVERTISEMENT_ID>"\n}',
-          options: {
-            raw: {
-              language: 'json'
-            }
-          }
-        },
-        description: 'Add an advertisement to the authenticated user\'s wishlist using request body. Automatically prevents duplicates.'
-      }
-    },
-    {
-      name: 'Add to Wishlist (URL Param)',
-      request: {
-        method: 'POST',
-        header: [
-          {
-            key: 'Authorization',
-            value: 'Bearer {{token}}'
-          }
-        ],
-        url: {
-          raw: '{{baseUrl}}/wishlist/:advertisementId',
-          host: ['{{baseUrl}}'],
-          path: ['wishlist', ':advertisementId'],
-          variable: [
-            {
-              key: 'advertisementId',
-              value: '<ADVERTISEMENT_ID>',
-              description: 'Advertisement ObjectId'
-            }
-          ]
-        },
-        description: 'Add an advertisement to user\'s wishlist by passing the advertisement ID directly in the URL.'
-      }
-    },
-    {
-      name: 'Remove from Wishlist',
-      request: {
-        method: 'DELETE',
-        header: [
-          {
-            key: 'Authorization',
-            value: 'Bearer {{token}}'
-          }
-        ],
-        url: {
-          raw: '{{baseUrl}}/wishlist/:advertisementId',
-          host: ['{{baseUrl}}'],
-          path: ['wishlist', ':advertisementId'],
-          variable: [
-            {
-              key: 'advertisementId',
-              value: '<ADVERTISEMENT_ID>',
-              description: 'Advertisement ObjectId'
-            }
-          ]
-        },
-        description: 'Remove an advertisement from the authenticated user\'s wishlist.'
-      }
-    },
-    {
-      name: 'Toggle Wishlist',
-      request: {
-        method: 'POST',
-        header: [
-          {
-            key: 'Content-Type',
-            value: 'application/json'
-          },
-          {
-            key: 'Authorization',
-            value: 'Bearer {{token}}'
-          }
-        ],
-        url: {
-          raw: '{{baseUrl}}/wishlist/toggle',
-          host: ['{{baseUrl}}'],
-          path: ['wishlist', 'toggle']
-        },
-        body: {
-          mode: 'raw',
-          raw: '{\n  "advertisementId": "<ADVERTISEMENT_ID>"\n}',
-          options: {
-            raw: {
-              language: 'json'
-            }
-          }
-        },
-        description: 'Toggle advertisement in user\'s wishlist (adds if not present, removes if already present). Returns { inWishlist: true|false }.'
-      }
-    },
-    {
       name: 'Clear Wishlist',
       request: {
         method: 'DELETE',
@@ -854,9 +773,9 @@ const wishlistFolder = {
           }
         ],
         url: {
-          raw: '{{baseUrl}}/wishlist',
+          raw: '{{baseUrl}}/wishlist/clear',
           host: ['{{baseUrl}}'],
-          path: ['wishlist']
+          path: ['wishlist', 'clear']
         },
         description: 'Removes all advertisements from the user\'s wishlist.'
       }

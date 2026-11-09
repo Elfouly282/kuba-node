@@ -18,8 +18,6 @@ const {
     validateUpdateAdvertisement,
 } = require('../middleware/advertisementMiddleware');
 const {
-    addToWishlist,
-    removeFromWishlist,
     toggleWishlist,
 } = require('../../wishlist/controllers/wishlistController');
 const {
@@ -33,8 +31,7 @@ router.get('/search', search);
 router.post('/search', search);
 router.get('/:id', validateAdvertisementId, getOne);
 
-router.post('/:id/wishlist', protect, validateAdvertisementId, addToWishlist);
-router.delete('/:id/wishlist', protect, validateAdvertisementId, removeFromWishlist);
+router.post('/:id/wishlist', protect, validateAdvertisementId, toggleWishlist);
 router.post('/:id/wishlist/toggle', protect, validateAdvertisementId, toggleWishlist);
 
 // Hotel Rooms

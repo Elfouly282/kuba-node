@@ -74,72 +74,9 @@ exports.getWishlist = async (req, res, next) => {
     });
 };
 
-exports.addToWishlist = async (req, res, next) => {
-    const advertisementId = req.advertisementId || extractAdvertisementId(req);
-
-    if (!advertisementId) {
-        return next(new APIError('validation.advertisementRequired', 400));
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(advertisementId)) {
-        return next(new APIError('errors.invalidAdvertisementId', 400));
-    }
-
-    const advertisement = await Advertisement.findById(advertisementId);
-    if (!advertisement) {
-        return next(new APIError('errors.advertisementNotFound', 404));
-    }
-
-    const user = await User.findByIdAndUpdate(
-        req.user._id,
-        { $addToSet: { wishlist: advertisement._id } },
-        { new: true }
-    );
-
-    if (!user) {
-        return next(new APIError('errors.userNotFound', 404));
-    }
-
-    SuccessResponse.ok(res, {
-        message: req.t('messages.addedToWishlist'),
-        data: {
-            inWishlist: true,
-            advertisementId: advertisement._id,
-            wishlist: user.wishlist,
-        },
-    });
-};
-
-exports.removeFromWishlist = async (req, res, next) => {
-    const advertisementId = req.advertisementId || extractAdvertisementId(req);
-
-    if (!advertisementId) {
-        return exports.clearWishlist(req, res, next);
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(advertisementId)) {
-        return next(new APIError('errors.invalidAdvertisementId', 400));
-    }
-
-    const user = await User.findByIdAndUpdate(
-        req.user._id,
-        { $pull: { wishlist: advertisementId } },
-        { new: true }
-    );
-
-    if (!user) {
-        return next(new APIError('errors.userNotFound', 404));
-    }
-
-    SuccessResponse.ok(res, {
-        message: req.t('messages.removedFromWishlist'),
-        data: {
-            inWishlist: false,
-            advertisementId,
-            wishlist: user.wishlist,
-        },
-    });
-};
+// Toggle handles both adding (if absent) and removing (if present)
+exports.addToWishlist = (req, res, next) => exports.toggleWishlist(req, res, next);
+exports.removeFromWishlist = (req, res, next) => exports.toggleWishlist(req, res, next);
 
 exports.toggleWishlist = async (req, res, next) => {
     const advertisementId = req.advertisementId || extractAdvertisementId(req);

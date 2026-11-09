@@ -97,7 +97,10 @@
         "roomInactive": "This room is currently inactive.",
         "roomDoesNotBelongToHotel": "This room does not belong to the specified hotel.",
         "bookingDateConflict": "The selected dates or times are already booked. Please choose another slot.",
-        "bookingNotFound": "The requested booking was not found."
+        "bookingNotFound": "The requested booking was not found.",
+        "invalidBookingId": "Invalid booking ID provided.",
+        "advertisementInactive": "This listing is currently not available for booking.",
+        "bookingCannotBeCancelled": "Only pending or confirmed bookings can be cancelled."
     },
     "validation": {
         "nameRequired": "Name is required.",
@@ -122,6 +125,9 @@
         "invalidDateRange": "The end date must be after the start date.",
         "invalidDuration": "Duration must be a number greater than zero.",
         "invalidGuests": "Number of guests must be a whole number greater than zero.",
-        "invalidBookingStatus": "Invalid booking status."
+        "invalidBookingStatus": "Invalid booking status.",
+        "startDateInPast": "The start date cannot be in the past.",
+        "roomRequired": "Please choose a room to book in this hotel.",
+        "minDurationNotMet": "Minimum booking duration is {{minDuration}} ({{unit}})."
     }
 }

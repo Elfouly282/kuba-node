@@ -5,225 +5,226 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 dotenv.config({ path: path.join(__dirname, '..', 'config.env') });
 
-const dns = require('dns');
-try {
-    dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
-} catch (_) {}
-
+const express = require('express');
 const mongoose = require('mongoose');
 const Advertisement = require('../src/features/advertisements/models/advertisementModel');
 const Room = require('../src/features/rooms/models/roomModel');
 const Booking = require('../src/features/bookings/models/bookingModel');
 const User = require('../src/features/auth/models/userModel');
+require('../src/features/categories/models/categoryModel');
+require('../src/features/cities/models/cityModel');
+require('../src/features/regions/models/regionModel');
+require('../src/features/unit-types/models/unitTypeModel');
 const { generateToken } = require('../src/utils/generateToken');
-
-// Require the express app from src/server or construct directly
-const express = require('express');
-const cors = require('cors');
 const { i18nMiddleware } = require('../utils/i18n');
 const globalErrorHandler = require('../src/middleware/errorMiddleware');
+const bookingRoutes = require('../src/features/bookings/routes/bookingRoutes');
+const adminBookingRoutes = require('../admin/features/bookings/routes/bookingRoutes');
 
 const app = express();
-app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(i18nMiddleware);
-
-const advertisementRoutes = require('../src/features/advertisements/routes/advertisementRoutes');
-const bookingRoutes = require('../src/features/bookings/routes/bookingRoutes');
-const roomRoutes = require('../src/features/rooms/routes/roomRoutes');
-
-app.use('/api/v1/advertisements', advertisementRoutes);
 app.use('/api/v1/bookings', bookingRoutes);
-app.use('/api/v1/rooms', roomRoutes);
+app.use('/api/v1/admin/bookings', adminBookingRoutes);
 app.use(globalErrorHandler);
 
-let server;
 let baseUrl;
+let passed = 0;
+const created = { users: [], ads: [], rooms: [] };
 
-function request(method, path, body = null, headers = {}) {
-    return new Promise((resolve, reject) => {
-        const url = new URL(baseUrl + path);
-        const options = {
-            hostname: url.hostname,
-            port: url.port,
-            path: url.pathname + url.search,
-            method: method.toUpperCase(),
-            headers: {
-                'Content-Type': 'application/json',
-                ...headers,
-            },
-        };
-
-        const req = http.request(options, (res) => {
-            let data = '';
-            res.on('data', (chunk) => { data += chunk; });
-            res.on('end', () => {
-                try {
-                    const parsed = JSON.parse(data);
-                    resolve({ status: res.statusCode, body: parsed });
-                } catch (_) {
-                    resolve({ status: res.statusCode, raw: data });
-                }
-            });
-        });
-
-        req.on('error', reject);
-        if (body) {
-            req.write(JSON.stringify(body));
-        }
-        req.end();
+const request = (method, urlPath, { body, token } = {}) => new Promise((resolve, reject) => {
+    const url = new URL(baseUrl + urlPath);
+    const req = http.request({
+        hostname: url.hostname,
+        port: url.port,
+        path: url.pathname + url.search,
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+    }, (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => resolve({ status: res.statusCode, body: data ? JSON.parse(data) : null }));
     });
-}
+    req.on('error', reject);
+    if (body) req.write(JSON.stringify(body));
+    req.end();
+});
 
-const runHttpTests = async () => {
-    console.log('================================================================');
-    console.log('🌐 KUBA BOOKING HTTP ENDPOINTS INTEGRATION TEST');
-    console.log('================================================================\n');
+const expect = (condition, message, res) => {
+    if (!condition) {
+        throw new Error(`${message}\n    Response: ${JSON.stringify(res && res.body)}`);
+    }
+    passed++;
+    console.log(`  ✅ ${message}`);
+};
+
+// ISO date `daysAhead` days from today at the given UTC hour
+const at = (daysAhead, hour = 12) => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + daysAhead);
+    d.setUTCHours(hour, 0, 0, 0);
+    return d.toISOString();
+};
+
+const createUser = async (role) => {
+    const user = await User.create({
+        name: `Booking Test ${role}`,
+        email: `booking-test-${role}-${Date.now()}@kuba.test`,
+        password: 'Password@123',
+        role,
+        isEmailVerified: true,
+    });
+    created.users.push(user._id);
+    return { user, token: generateToken({ id: user._id, role }) };
+};
+
+const createAd = async (fields) => {
+    const ad = await Advertisement.create({ active: true, ...fields });
+    created.ads.push(ad._id);
+    return ad;
+};
+
+const run = async () => {
+    await mongoose.connect(process.env.DB_URI || 'mongodb://127.0.0.1:27017/kuba');
+
+    const server = http.createServer(app);
+    await new Promise((resolve) => server.listen(0, resolve));
+    baseUrl = `http://localhost:${server.address().port}`;
 
     try {
-        const targetUri = process.env.DB_URI || 'mongodb://127.0.0.1:27017/kuba';
-        await mongoose.connect(targetUri);
+        const customer = await createUser('user');
+        const otherCustomer = await createUser('user');
+        const owner = await createUser('owner');
 
-        let user = await User.findOne({ email: 'http-tester@kuba.com' });
-        if (!user) {
-            user = await User.create({
-                name: 'HTTP Tester',
-                email: 'http-tester@kuba.com',
-                password: 'Password@123',
-                role: 'user',
-                isEmailVerified: true,
-            });
-        }
-        const userToken = generateToken({ id: user._id, role: user.role });
-        const authHeader = { Authorization: `Bearer ${userToken}` };
-
-        // Start local test server
-        server = http.createServer(app);
-        await new Promise((res) => server.listen(0, res));
-        const port = server.address().port;
-        baseUrl = `http://localhost:${port}`;
-        console.log(`Test server running at ${baseUrl}\n`);
-
-        // 1. Create test hotel and room
-        const testHotel = await Advertisement.create({
-            title: 'فندق شيراتون ريفيرا HTTP',
-            type: 'hotel',
-            isHotel: true,
-            price: 2800,
-            active: true,
+        const chalet = await createAd({
+            title: 'Test Chalet',
+            type: 'chalet',
+            owner: owner.user._id,
+            pricing: { basePrice: 1000, pricingUnit: 'per_night', minDuration: 2 },
         });
-
-        const testRoom = await Room.create({
-            hotel: testHotel._id,
-            roomNumber: '505',
-            title: 'Panoramic Suite',
-            price: 2500,
-            pricing: { basePrice: 2500, finalPrice: 2500, pricingUnit: 'per_night' },
-            active: true,
-        });
-
-        // 2. Test Available Rooms on Hotel endpoint
-        console.log('[1] Testing GET /api/v1/advertisements/:id/available-rooms...');
-        const hotelRoomsRes = await request(
-            'GET',
-            `/api/v1/advertisements/${testHotel._id}/available-rooms?startDate=2026-12-01&endDate=2026-12-05`
-        );
-        console.log(`    Status: ${hotelRoomsRes.status}`);
-        if (hotelRoomsRes.status !== 200 || !hotelRoomsRes.body?.data?.rooms) {
-            throw new Error(`Failed to get available rooms: ${JSON.stringify(hotelRoomsRes.body)}`);
-        }
-        console.log(`    Available rooms found: ${hotelRoomsRes.body.data.availableRoomsCount}`);
-        console.log(`    Stay calculated nights: ${hotelRoomsRes.body.data.nights}, total: ${hotelRoomsRes.body.data.rooms[0].stayCalculation.totalPrice}`);
-
-        // 3. Test Booking Calculate Price endpoint
-        console.log('\n[2] Testing POST /api/v1/bookings/calculate-price (Estimate)...');
-        const estRes = await request('POST', '/api/v1/bookings/calculate-price', {
-            advertisement: String(testHotel._id),
-            room: String(testRoom._id),
-            startDate: '2026-12-01T14:00:00.000Z',
-            endDate: '2026-12-05T12:00:00.000Z',
-        });
-        console.log(`    Status: ${estRes.status}, Available: ${estRes.body?.data?.available}, Total: ${estRes.body?.data?.totalPrice}`);
-        if (estRes.status !== 200 || estRes.body?.data?.totalPrice !== 10000) {
-            throw new Error(`Estimate failed: ${JSON.stringify(estRes.body)}`);
-        }
-
-        // 4. Test Create Hotel Room Booking via POST /api/v1/bookings
-        console.log('\n[3] Testing POST /api/v1/bookings (Create Hotel Room Booking)...');
-        const createRes = await request('POST', '/api/v1/bookings', {
-            advertisement: String(testHotel._id),
-            room: String(testRoom._id),
-            startDate: '2026-12-01T14:00:00.000Z',
-            endDate: '2026-12-05T12:00:00.000Z',
-            guestDetails: { adults: 2, fullName: 'Ahmed Zaki', phone: '01012345678' },
-        }, authHeader);
-        console.log(`    Status: ${createRes.status}`);
-        const bookingId = createRes.body?.data?.booking?.id;
-        if (createRes.status !== 201 || !bookingId) {
-            throw new Error(`Booking creation failed: ${JSON.stringify(createRes.body)}`);
-        }
-        console.log(`    Booking created ID: ${bookingId}, Type: ${createRes.body.data.booking.bookingType}`);
-
-        // 5. Test Available Rooms again -> Should now show 0 available rooms for those dates!
-        console.log('\n[4] Testing GET /api/v1/bookings/hotel/:id/available-rooms after booking...');
-        const recheckRoomsRes = await request(
-            'GET',
-            `/api/v1/bookings/hotel/${testHotel._id}/available-rooms?startDate=2026-12-01&endDate=2026-12-05`
-        );
-        console.log(`    Status: ${recheckRoomsRes.status}, Available rooms count: ${recheckRoomsRes.body?.data?.availableRoomsCount}`);
-        if (recheckRoomsRes.body?.data?.availableRoomsCount !== 0) {
-            throw new Error('Room was booked but still appears available!');
-        }
-
-        // 6. Test Yacht Schedule endpoint
-        console.log('\n[5] Testing Yacht Schedule endpoint GET /api/v1/bookings/yacht/:id/slots...');
-        const testYacht = await Advertisement.create({
-            title: 'يخت لؤلؤة الجونة HTTP',
+        const yacht = await createAd({
+            title: 'Test Yacht',
             type: 'yacht',
-            price: 1800,
-            pricing: { basePrice: 1800, finalPrice: 1800, pricingUnit: 'per_hour', pricePerHour: 1800, fullDayPrice: 14000 },
-            active: true,
+            owner: owner.user._id,
+            pricing: { basePrice: 2000, pricingUnit: 'per_hour', pricePerHour: 500 },
         });
+        const hotel = await createAd({
+            title: 'Test Hotel',
+            type: 'hotel',
+            owner: owner.user._id,
+            pricing: { basePrice: 3000, pricingUnit: 'per_night' },
+        });
+        const roomA = await Room.create({ hotel: hotel._id, title: 'Room A', pricing: { basePrice: 800 } });
+        const roomB = await Room.create({ hotel: hotel._id, title: 'Room B', pricing: { basePrice: 1200 } });
+        created.rooms.push(roomA._id, roomB._id);
 
-        const yachtSlotsRes = await request('GET', `/api/v1/bookings/yacht/${testYacht._id}/slots?date=2026-12-10`);
-        console.log(`    Status: ${yachtSlotsRes.status}, isFullDayAvailable: ${yachtSlotsRes.body?.data?.isFullDayAvailable}`);
-        if (yachtSlotsRes.status !== 200 || !yachtSlotsRes.body?.data?.pricing) {
-            throw new Error(`Failed to get yacht schedule: ${JSON.stringify(yachtSlotsRes.body)}`);
-        }
+        console.log('\n--- Chalet (per night, minimum 2 nights) ---');
+        let res = await request('GET', `/api/v1/bookings/check?advertisement=${chalet._id}&startDate=${at(30, 14)}&endDate=${at(31, 12)}`);
+        expect(res.status === 400, '1 night is rejected because minimum is 2', res);
 
-        // 7. Test Cancel Booking endpoint
-        console.log('\n[6] Testing PATCH /api/v1/bookings/:id/cancel...');
-        const cancelRes = await request('PATCH', `/api/v1/bookings/${bookingId}/cancel`, {
-            reason: 'Customer requested cancellation via mobile app',
-        }, authHeader);
-        console.log(`    Status: ${cancelRes.status}, Booking status: ${cancelRes.body?.data?.booking?.status}`);
-        if (cancelRes.status !== 200 || cancelRes.body?.data?.booking?.status !== 'cancelled') {
-            throw new Error(`Failed to cancel booking: ${JSON.stringify(cancelRes.body)}`);
-        }
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${chalet._id}&startDate=${at(30, 14)}&endDate=${at(33, 12)}`);
+        expect(res.status === 200 && res.body.data.available === true, 'Check: 3 nights are available', res);
+        expect(res.body.data.duration === 3 && res.body.data.totalPrice === 3000, 'Check: price is 3 x 1000 = 3000', res);
 
-        // 8. Re-check Hotel available rooms after cancellation -> Room should be available again!
-        console.log('\n[7] Re-checking hotel rooms after cancellation...');
-        const postCancelCheck = await request(
-            'GET',
-            `/api/v1/advertisements/${testHotel._id}/available-rooms?startDate=2026-12-01&endDate=2026-12-05`
-        );
-        console.log(`    Available rooms after cancel: ${postCancelCheck.body?.data?.availableRoomsCount}`);
-        if (postCancelCheck.body?.data?.availableRoomsCount !== 1) {
-            throw new Error('Cancelled booking did not liberate the hotel room!');
-        }
+        res = await request('POST', '/api/v1/bookings', {
+            token: customer.token,
+            body: { advertisement: chalet._id, startDate: at(30, 14), endDate: at(33, 12), guestDetails: { adults: 2 } },
+        });
+        expect(res.status === 201 && res.body.data.booking.status === 'pending', 'Create: booking saved as pending', res);
+        const chaletBookingId = res.body.data.booking.id;
 
-        console.log('\n================================================================');
-        console.log('🎉 ALL HTTP API INTEGRATION TESTS PASSED 100%!');
-        console.log('================================================================\n');
+        res = await request('POST', '/api/v1/bookings', {
+            token: otherCustomer.token,
+            body: { advertisement: chalet._id, startDate: at(31, 14), endDate: at(34, 12) },
+        });
+        expect(res.status === 400, 'Create: overlapping dates are rejected', res);
 
+        res = await request('GET', `/api/v1/bookings/booked-dates/${chalet._id}`);
+        expect(res.status === 200 && res.body.data.bookedDates.length === 1, 'Booked dates: shows the one taken range', res);
+
+        console.log('\n--- Yacht (per hour) ---');
+        res = await request('POST', '/api/v1/bookings', {
+            token: customer.token,
+            body: { advertisement: yacht._id, startDate: at(40, 10), endDate: at(40, 13) },
+        });
+        expect(res.status === 201 && res.body.data.booking.totalPrice === 1500, 'Create: 3 hours x 500 = 1500', res);
+        expect(res.body.data.booking.rentalType === 'hourly', 'Create: saved as hourly', res);
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${yacht._id}&startDate=${at(40, 12)}&endDate=${at(40, 14)}`);
+        expect(res.status === 200 && res.body.data.available === false, 'Check: overlapping hours are unavailable', res);
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${yacht._id}&startDate=${at(40, 13)}&endDate=${at(40, 15)}`);
+        expect(res.status === 200 && res.body.data.available === true, 'Check: hours right after the booking are available', res);
+
+        console.log('\n--- Hotel (room per night) ---');
+        res = await request('POST', '/api/v1/bookings', {
+            token: customer.token,
+            body: { advertisement: hotel._id, startDate: at(50, 14), endDate: at(52, 12) },
+        });
+        expect(res.status === 400, 'Create: hotel without a room is rejected', res);
+
+        res = await request('POST', '/api/v1/bookings', {
+            token: customer.token,
+            body: { room: roomA._id, startDate: at(50, 14), endDate: at(52, 12) },
+        });
+        expect(res.status === 201 && res.body.data.booking.totalPrice === 1600, 'Create: room only, 2 nights x 800 = 1600', res);
+        expect(res.body.data.booking.bookingType === 'hotel', 'Create: saved as hotel booking', res);
+
+        res = await request('GET', `/api/v1/bookings/check?room=${roomB._id}&startDate=${at(50, 14)}&endDate=${at(52, 12)}`);
+        expect(res.status === 200 && res.body.data.available === true, 'Check: another room on the same dates is still available', res);
+
+        console.log('\n--- Validation ---');
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${chalet._id}&startDate=${at(-3)}&endDate=${at(-1)}`);
+        expect(res.status === 400, 'Dates in the past are rejected', res);
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${chalet._id}&startDate=${at(60)}`);
+        expect(res.status === 400, 'Missing end date is rejected', res);
+
+        res = await request('POST', '/api/v1/bookings', { body: { advertisement: chalet._id, startDate: at(70), endDate: at(73) } });
+        expect(res.status === 401, 'Create without login is rejected', res);
+
+        console.log('\n--- My bookings ---');
+        res = await request('GET', '/api/v1/bookings/my', { token: customer.token });
+        expect(res.status === 200 && res.body.results === 3, 'My bookings: returns my 3 bookings', res);
+
+        res = await request('GET', `/api/v1/bookings/${chaletBookingId}`, { token: otherCustomer.token });
+        expect(res.status === 403, "Another user can't see my booking", res);
+
+        console.log('\n--- Owner (dashboard) ---');
+        res = await request('GET', '/api/v1/admin/bookings', { token: owner.token });
+        expect(res.status === 200 && res.body.results === 3, 'Owner sees the 3 bookings on their listings', res);
+
+        res = await request('PATCH', `/api/v1/admin/bookings/${chaletBookingId}`, { token: owner.token, body: { status: 'confirmed' } });
+        expect(res.status === 200 && res.body.data.booking.status === 'confirmed', 'Owner confirms the chalet booking', res);
+
+        console.log('\n--- Cancel ---');
+        res = await request('PATCH', `/api/v1/bookings/${chaletBookingId}/cancel`, { token: otherCustomer.token, body: {} });
+        expect(res.status === 403, "Another user can't cancel my booking", res);
+
+        res = await request('PATCH', `/api/v1/bookings/${chaletBookingId}/cancel`, { token: customer.token, body: { reason: 'Plans changed' } });
+        expect(res.status === 200 && res.body.data.booking.status === 'cancelled', 'Cancel: confirmed booking is cancelled', res);
+
+        res = await request('PATCH', `/api/v1/bookings/${chaletBookingId}/cancel`, { token: customer.token, body: {} });
+        expect(res.status === 400, 'Cancel: cancelling twice is rejected', res);
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${chalet._id}&startDate=${at(30, 14)}&endDate=${at(33, 12)}`);
+        expect(res.status === 200 && res.body.data.available === true, 'Cancelled dates are available again', res);
+
+        console.log(`\n🎉 All ${passed} booking checks passed.\n`);
+    } finally {
+        await Booking.deleteMany({ user: { $in: created.users } });
+        await Room.deleteMany({ _id: { $in: created.rooms } });
+        await Advertisement.deleteMany({ _id: { $in: created.ads } });
+        await User.deleteMany({ _id: { $in: created.users } });
         server.close();
-        process.exit(0);
-    } catch (err) {
-        console.error('HTTP Test Failure:', err.message, err.stack);
-        if (server) server.close();
-        process.exit(1);
+        await mongoose.disconnect();
     }
 };
 
-runHttpTests();
+run().catch((err) => {
+    console.error(`\n❌ ${err.message}`);
+    process.exit(1);
+});

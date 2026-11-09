@@ -8,53 +8,33 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3000/api/v1",
-      "type": "string"
+      "value": "https://kuba-app.com/api/v1",
+      "type": "string",
+      "description": "API base URL (Production: https://kuba-app.com/api/v1 | Local: http://localhost:3000/api/v1)"
     },
     {
       "key": "token",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "JWT — set automatically after login / signup"
     },
     {
       "key": "resetToken",
       "value": "",
-      "type": "string"
+      "type": "string",
+      "description": "Reset token — set automatically after verify-reset-otp"
     },
     {
       "key": "cityId",
       "value": "6ad616031ddbe497b5dd4416",
-      "type": "string"
-    },
-    {
-      "key": "hotelId",
-      "value": "6ae0680f3616124bfb59ae0a",
-      "type": "string"
-    },
-    {
-      "key": "roomId",
-      "value": "6ae0680f3616124bfb59ae0e",
-      "type": "string"
-    },
-    {
-      "key": "chaletId",
-      "value": "6ad4a387c14bf453e03001dd",
-      "type": "string"
-    },
-    {
-      "key": "yachtId",
-      "value": "6ae0655078a80f4e0abf2220",
-      "type": "string"
-    },
-    {
-      "key": "golfCarId",
-      "value": "6ae0655078a80f4e0abf2223",
-      "type": "string"
+      "type": "string",
+      "description": "City ID (Sahl Hasheesh: 6ad616031ddbe497b5dd4416)"
     },
     {
       "key": "bookingId",
-      "value": "6ad61e834ed9ebba0418020d",
-      "type": "string"
+      "value": "",
+      "type": "string",
+      "description": "Set automatically after Create Booking"
     }
   ],
   "item": [
@@ -717,115 +697,6 @@
       ]
     },
     {
-      "name": "Regions",
-      "description": "Endpoints for sub-regions and areas (e.g. Jamaran, Azzurra, Old Town) belonging to a parent City (e.g. Sahl Hasheesh).",
-      "item": [
-        {
-          "name": "Get All Regions",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/regions?city={{cityId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "regions"
-              ],
-              "query": [
-                {
-                  "key": "active",
-                  "value": "true",
-                  "disabled": true
-                },
-                {
-                  "key": "city",
-                  "value": "{{cityId}}",
-                  "description": "Filter regions by parent City ID (e.g. Sahl Hasheesh)",
-                  "disabled": false
-                }
-              ]
-            },
-            "description": "Returns all regions. Each region includes points [{latitude, longitude}], color (default #2D4F2E), center {latitude, longitude}, and boundaries (GeoJSON Polygon, set when points has at least 3 vertices). Optional: ?active=true|false"
-          }
-        },
-        {
-          "name": "Get Region Data (by query param)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/regions/data?regionId=<REGION_ID>",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "regions",
-                "data"
-              ],
-              "query": [
-                {
-                  "key": "regionId",
-                  "value": "<REGION_ID>"
-                }
-              ]
-            },
-            "description": "Returns the region plus its banners, chalets, advertisements, and categories. Advertisements include listings assigned to this region and listings whose latitude/longitude fall inside the region zone (when the zone has at least 3 points). Pass regionId as a query param."
-          }
-        },
-        {
-          "name": "Get One Region",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/regions/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "regions",
-                ":id"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "<REGION_ID>"
-                }
-              ]
-            },
-            "description": "Returns one region, including points, color, center, and boundaries."
-          }
-        },
-        {
-          "name": "Get Region Data (by path param)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/regions/:id/data",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "regions",
-                ":id",
-                "data"
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "<REGION_ID>"
-                }
-              ]
-            },
-            "description": "Same payload as Get Region Data (by query param). Region id is in the path. Advertisements include listings inside the zone, not only listings whose region field matches."
-          }
-        }
-      ]
-    },
-    {
       "name": "Cities",
       "description": "Endpoints for managing and viewing main destination cities (e.g., Sahl Hasheesh, North Coast, Sharm El Sheikh). Each city can have polygon zone boundaries, center, and contains multiple sub-regions/areas.",
       "item": [
@@ -943,6 +814,115 @@
               ]
             },
             "description": "Returns aggregated data for the City screen: city details, list of sub-regions inside the city, city-specific banners, chalets, all advertisements, and categories."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Regions",
+      "description": "Endpoints for sub-regions and areas (e.g. Jamaran, Azzurra, Old Town) belonging to a parent City (e.g. Sahl Hasheesh).",
+      "item": [
+        {
+          "name": "Get All Regions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/regions?city={{cityId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "regions"
+              ],
+              "query": [
+                {
+                  "key": "active",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "city",
+                  "value": "{{cityId}}",
+                  "description": "Filter regions by parent City ID (e.g. Sahl Hasheesh)",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Returns all regions. Each region includes points [{latitude, longitude}], color (default #2D4F2E), center {latitude, longitude}, and boundaries (GeoJSON Polygon, set when points has at least 3 vertices). Optional: ?active=true|false"
+          }
+        },
+        {
+          "name": "Get Region Data (by query param)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/regions/data?regionId=<REGION_ID>",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "regions",
+                "data"
+              ],
+              "query": [
+                {
+                  "key": "regionId",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            },
+            "description": "Returns the region plus its banners, chalets, advertisements, and categories. Advertisements include listings assigned to this region and listings whose latitude/longitude fall inside the region zone (when the zone has at least 3 points). Pass regionId as a query param."
+          }
+        },
+        {
+          "name": "Get One Region",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/regions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "regions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            },
+            "description": "Returns one region, including points, color, center, and boundaries."
+          }
+        },
+        {
+          "name": "Get Region Data (by path param)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/regions/:id/data",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "regions",
+                ":id",
+                "data"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "<REGION_ID>"
+                }
+              ]
+            },
+            "description": "Same payload as Get Region Data (by query param). Region id is in the path. Advertisements include listings inside the zone, not only listings whose region field matches."
           }
         }
       ]
@@ -1145,139 +1125,8 @@
     },
     {
       "name": "Wishlist",
-      "description": "User saved advertisements (wishlist / favorites). Supports adding, removing, toggling (heart icon), clearing, and retrieving all saved listings.",
+      "description": "User saved advertisements (wishlist / favorites). Supports toggling (heart icon - add/remove), retrieving, and clearing all saved listings.",
       "item": [
-        {
-          "name": "Get User Wishlist",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/wishlist",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "wishlist"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1",
-                  "disabled": true,
-                  "description": "Optional page number"
-                },
-                {
-                  "key": "limit",
-                  "value": "20",
-                  "disabled": true,
-                  "description": "Optional items per page"
-                }
-              ]
-            },
-            "description": "Returns all saved advertisements in the authenticated user's wishlist, fully populated with images, category, city, region, unit type, and pricing."
-          }
-        },
-        {
-          "name": "Add to Wishlist (Body)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/wishlist",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "wishlist"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"advertisementId\": \"<ADVERTISEMENT_ID>\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "description": "Add an advertisement to the authenticated user's wishlist using request body. Automatically prevents duplicates."
-          }
-        },
-        {
-          "name": "Add to Wishlist (URL Param)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/wishlist/:advertisementId",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "wishlist",
-                ":advertisementId"
-              ],
-              "variable": [
-                {
-                  "key": "advertisementId",
-                  "value": "<ADVERTISEMENT_ID>",
-                  "description": "Advertisement ObjectId"
-                }
-              ]
-            },
-            "description": "Add an advertisement to user's wishlist by passing the advertisement ID directly in the URL."
-          }
-        },
-        {
-          "name": "Remove from Wishlist",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/wishlist/:advertisementId",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "wishlist",
-                ":advertisementId"
-              ],
-              "variable": [
-                {
-                  "key": "advertisementId",
-                  "value": "<ADVERTISEMENT_ID>",
-                  "description": "Advertisement ObjectId"
-                }
-              ]
-            },
-            "description": "Remove an advertisement from the authenticated user's wishlist."
-          }
-        },
         {
           "name": "Toggle Wishlist",
           "request": {
@@ -1315,9 +1164,9 @@
           }
         },
         {
-          "name": "Clear Wishlist",
+          "name": "Get User Wishlist",
           "request": {
-            "method": "DELETE",
+            "method": "GET",
             "header": [
               {
                 "key": "Authorization",
@@ -1331,6 +1180,43 @@
               ],
               "path": [
                 "wishlist"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true,
+                  "description": "Optional page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true,
+                  "description": "Optional items per page"
+                }
+              ]
+            },
+            "description": "Returns all saved advertisements in the authenticated user's wishlist, fully populated with images, category, city, region, unit type, and pricing."
+          }
+        },
+        {
+          "name": "Clear Wishlist",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/wishlist/clear",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wishlist",
+                "clear"
               ]
             },
             "description": "Removes all advertisements from the user's wishlist."
@@ -1427,146 +1313,95 @@
     },
     {
       "name": "Bookings",
-      "description": "Booking endpoints — require user authentication.",
+      "description": "نظام حجز واحد لكل الأنواع (شاليه، فيلا، شقة، يخت، جولف كار، أوضة فندق).\n\nالترتيب:\n1) Booked Dates: المواعيد المحجوزة عشان تقفلها في الكالندر.\n2) Check: متاح ولا لأ + السعر (مش بيحفظ حاجة).\n3) Create Booking: يعمل الحجز (pending لحد ما صاحب الإعلان يأكده).\n4) My Bookings / Get One / Cancel.\n\nالتواريخ دايماً startDate و endDate بتاريخ ووقت كامل (ISO).\nالسعر بيتحسب بوحدة تسعير الإعلان: per_hour بالساعات، per_night / per_day بالأيام، per_trip / fixed مرة واحدة.\nللفندق: هات الأوض المتاحة من Advertisements > Get Hotel Available Rooms، وابعت room بدل advertisement.",
       "item": [
         {
-          "name": "1. Create Booking [UNIVERSAL] (إنشاء حجز موحد لكافة الحالات)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"advertisement\": \"{{chaletId}}\",\n  \"startDate\": \"2026-11-10T14:00:00.000Z\",\n  \"endDate\": \"2026-11-13T12:00:00.000Z\",\n  \"notes\": \"عائلات فقط\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/bookings",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "bookings"
-              ]
-            },
-            "description": "**ريكويست الحجز الموحد لتطبيق المستخدم (User Universal Booking):**\n\nنفس هذا الريكويست `POST /api/v1/bookings` ينفذ الحجز لكافة الحالات في التطبيق:\n\n---\n### 1️⃣ حجز شاليه أو فيلا (Chalet / Villa):\n```json\n{\n  \"advertisement\": \"{{chaletId}}\",\n  \"startDate\": \"2026-11-10T14:00:00.000Z\",\n  \"endDate\": \"2026-11-13T12:00:00.000Z\",\n  \"notes\": \"عائلات فقط\"\n}\n```\n\n---\n### 2️⃣ حجز فندق وغرفة فندقية (Hotel & Room):\n```json\n{\n  \"advertisement\": \"{{hotelId}}\",\n  \"room\": \"{{roomId}}\",\n  \"startDate\": \"2026-11-01T14:00:00.000Z\",\n  \"endDate\": \"2026-11-05T12:00:00.000Z\",\n  \"guestDetails\": {\n    \"adults\": 2,\n    \"children\": 1,\n    \"fullName\": \"أحمد زكي\",\n    \"phone\": \"01012345678\"\n  }\n}\n```\n\n---\n### 3️⃣ حجز يخت بالساعة (Yacht - Hourly):\n```json\n{\n  \"advertisement\": \"{{yachtId}}\",\n  \"rentalType\": \"hourly\",\n  \"date\": \"2026-11-20\",\n  \"startTime\": \"14:00\",\n  \"durationHours\": 3,\n  \"notes\": \"رحلة بحرية عائلية\"\n}\n```\n\n---\n### 4️⃣ حجز يخت يوم كامل (Yacht - Full Day):\n```json\n{\n  \"advertisement\": \"{{yachtId}}\",\n  \"rentalType\": \"full_day\",\n  \"date\": \"2026-11-21\"\n}\n```\n\n---\n### 5️⃣ حجز عربة جولف (Golf Car - Hourly or Daily):\n* **بالساعة:**\n```json\n{\n  \"advertisement\": \"{{golfCarId}}\",\n  \"rentalType\": \"hourly\",\n  \"date\": \"2026-11-25\",\n  \"startTime\": \"09:00\",\n  \"durationHours\": 2\n}\n```\n* **باليوم الكامل:**\n```json\n{\n  \"advertisement\": \"{{golfCarId}}\",\n  \"rentalType\": \"full_day\",\n  \"date\": \"2026-11-26\"\n}\n```\n"
-          },
-          "response": [
-            {
-              "name": "Example: Hotel Room Booking Response",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/bookings"
-                },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"advertisement\": \"{{hotelId}}\",\n  \"room\": \"{{roomId}}\",\n  \"startDate\": \"2026-11-01T14:00:00.000Z\",\n  \"endDate\": \"2026-11-05T12:00:00.000Z\"\n}"
-                }
-              },
-              "status": "Created",
-              "code": 201,
-              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم إنشاء طلب الحجز بنجاح.\",\n  \"data\": {\n    \"booking\": {\n      \"id\": \"6ae068938a20f298624daadc\",\n      \"bookingType\": \"hotel\",\n      \"rentalType\": \"per_night\",\n      \"duration\": 4,\n      \"pricingUnit\": \"per_night\",\n      \"unitPrice\": 2500,\n      \"totalPrice\": 10000,\n      \"status\": \"pending\",\n      \"paymentStatus\": \"unpaid\"\n    }\n  }\n}"
-            },
-            {
-              "name": "Example: Chalet Direct Booking Response",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/bookings"
-                },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"advertisement\": \"{{chaletId}}\",\n  \"startDate\": \"2026-11-10T14:00:00.000Z\",\n  \"endDate\": \"2026-11-13T12:00:00.000Z\"\n}"
-                }
-              },
-              "status": "Created",
-              "code": 201,
-              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم إنشاء طلب الحجز بنجاح.\",\n  \"data\": {\n    \"booking\": {\n      \"id\": \"6ae0688a177e70f5addef51c\",\n      \"bookingType\": \"chalet\",\n      \"rentalType\": \"per_night\",\n      \"duration\": 3,\n      \"pricingUnit\": \"per_night\",\n      \"unitPrice\": 3200,\n      \"totalPrice\": 9600,\n      \"status\": \"pending\",\n      \"paymentStatus\": \"unpaid\"\n    }\n  }\n}"
-            },
-            {
-              "name": "Example: Yacht Hourly Booking Response",
-              "originalRequest": {
-                "method": "POST",
-                "url": {
-                  "raw": "{{baseUrl}}/bookings"
-                },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"advertisement\": \"{{yachtId}}\",\n  \"rentalType\": \"hourly\",\n  \"date\": \"2026-11-20\",\n  \"startTime\": \"14:00\",\n  \"durationHours\": 3\n}"
-                }
-              },
-              "status": "Created",
-              "code": 201,
-              "body": "{\n  \"status\": \"success\",\n  \"message\": \"تم إنشاء طلب الحجز بنجاح.\",\n  \"data\": {\n    \"booking\": {\n      \"id\": \"6ae0655078a80f4e0abf2221\",\n      \"bookingType\": \"yacht\",\n      \"rentalType\": \"hourly\",\n      \"duration\": 3,\n      \"pricingUnit\": \"per_hour\",\n      \"unitPrice\": 1500,\n      \"totalPrice\": 4500,\n      \"status\": \"pending\",\n      \"paymentStatus\": \"unpaid\"\n    }\n  }\n}"
-            }
-          ]
-        },
-        {
-          "name": "2. Check Availability & Estimate Price [UNIVERSAL] (فحص التوفر وتقدير السعر الموحد)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"advertisement\": \"{{chaletId}}\",\n  \"startDate\": \"2026-11-10T14:00:00.000Z\",\n  \"endDate\": \"2026-11-13T12:00:00.000Z\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/bookings/calculate-price",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "bookings",
-                "calculate-price"
-              ]
-            },
-            "description": "فحص التوفر وحساب إجمالي السعر بدقة للعميل قبل شاشة الدفع أو تأكيد الحجز."
-          }
-        },
-        {
-          "name": "3. Yacht & Golf Car - Schedule Slots (مواعيد اليخت أو الجولف كار بالساعة واليوم)",
+          "name": "1. Booked Dates (المواعيد المحجوزة)",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/bookings/schedule/{{yachtId}}?date=2026-11-20",
+              "raw": "{{baseUrl}}/bookings/booked-dates/<ADVERTISEMENT_ID>",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "bookings",
-                "schedule",
-                "{{yachtId}}"
+                "booked-dates",
+                "<ADVERTISEMENT_ID>"
               ],
               "query": [
                 {
-                  "key": "date",
-                  "value": "2026-11-20",
-                  "description": "تاريخ اليوم المطلوب معرفة ساعاته"
+                  "key": "room",
+                  "value": "<ROOM_ID>",
+                  "description": "For hotels: booked dates of one room",
+                  "disabled": true
                 }
               ]
             },
-            "description": "يستعلم به المستخدم لاختيار الساعات المتاحة لتأجير اليخت أو عربة الجولف."
+            "description": "Public. Returns upcoming taken slots `[{ startDate, endDate }]` plus the listing `pricingUnit` (so the app knows whether to show a time picker for per_hour)."
           }
         },
         {
-          "name": "4. Get All My Bookings (عرض حجوزاتي)",
+          "name": "2. Check Availability & Price (فحص التوفر والسعر)",
           "request": {
             "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/check?advertisement=<ADVERTISEMENT_ID>&startDate=2026-12-01T14:00:00.000Z&endDate=2026-12-04T12:00:00.000Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "check"
+              ],
+              "query": [
+                {
+                  "key": "advertisement",
+                  "value": "<ADVERTISEMENT_ID>",
+                  "description": "Listing ID (skip it when sending room)"
+                },
+                {
+                  "key": "room",
+                  "value": "<ROOM_ID>",
+                  "description": "Hotel room ID",
+                  "disabled": true
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-12-01T14:00:00.000Z"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-12-04T12:00:00.000Z"
+                }
+              ]
+            },
+            "description": "Public. Runs the same checks as Create Booking without saving. Returns `available`, `duration`, `pricingUnit`, `unitPrice`, `totalPrice`, `currency`, `minDuration`."
+          }
+        },
+        {
+          "name": "3. Create Booking (إنشاء حجز)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const booking = pm.response.json()?.data?.booking;",
+                  "if (booking) pm.collectionVariables.set('bookingId', booking.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
             "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
@@ -1581,7 +1416,47 @@
                 "bookings"
               ]
             },
-            "description": "عرض جميع حجوزات المستخدم الحالية والسابقة في التطبيق."
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"advertisement\": \"<ADVERTISEMENT_ID>\",\n  \"startDate\": \"2026-12-01T14:00:00.000Z\",\n  \"endDate\": \"2026-12-04T12:00:00.000Z\",\n  \"guestDetails\": {\n    \"adults\": 2,\n    \"children\": 0,\n    \"fullName\": \"Ahmed Ali\",\n    \"phone\": \"01012345678\",\n    \"nationalIdOrPassport\": \"\"\n  },\n  \"paymentMethod\": \"cash\",\n  \"notes\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Requires login. For a hotel send `room` instead of `advertisement`. For per_hour listings (yacht / golf car) send the exact hours, e.g. 10:00 to 13:00. Saved as `pending` / `unpaid`. paymentMethod: cash | card | wallet | online."
+          }
+        },
+        {
+          "name": "4. My Bookings (حجوزاتي)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/my",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bookings",
+                "my"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "description": "pending | confirmed | cancelled | completed",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Requires login. Returns the logged-in user bookings, newest first."
           }
         },
         {
@@ -1604,11 +1479,11 @@
                 "{{bookingId}}"
               ]
             },
-            "description": "عرض تفاصيل حجز محدد للمستخدم."
+            "description": "Requires login. Only the user who made the booking can see it."
           }
         },
         {
-          "name": "6. Cancel My Booking (إلغاء حجزي وتحرير الموعد)",
+          "name": "6. Cancel Booking (إلغاء حجز)",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1621,10 +1496,6 @@
                 "value": "Bearer {{token}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reason\": \"تغيير في خطة السفر\"\n}"
-            },
             "url": {
               "raw": "{{baseUrl}}/bookings/{{bookingId}}/cancel",
               "host": [
@@ -1636,7 +1507,16 @@
                 "cancel"
               ]
             },
-            "description": "إلغاء الحجز من قبل العميل وتحرير موعده في التقويم فوراً."
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Plans changed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Requires login. Only pending or confirmed bookings can be cancelled. The slot becomes free again."
           }
         }
       ]

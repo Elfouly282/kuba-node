@@ -54,47 +54,54 @@ async function runTests() {
     let res = await request('GET', '/wishlist');
     if (res.status !== 200 || res.body?.results !== 0) throw new Error('Initial GET /wishlist failed');
 
-    res = await request('POST', '/wishlist', { advertisementId: sampleAd._id.toString() });
-    if (res.status !== 200 || !res.body?.data?.wishlist?.includes(sampleAd._id.toString())) {
-        throw new Error('POST /wishlist failed');
+    // 1. Toggle add (body)
+    res = await request('POST', '/wishlist/toggle', { advertisementId: sampleAd._id.toString() });
+    if (res.status !== 200 || res.body?.data?.inWishlist !== true || !res.body?.data?.wishlist?.includes(sampleAd._id.toString())) {
+        throw new Error('Toggle add failed');
     }
 
-    res = await request('POST', '/wishlist', { advertisementId: sampleAd._id.toString() });
-    if (res.body?.data?.wishlist?.length !== 1) throw new Error('Duplicate item added');
-
+    // 2. Populated GET
     res = await request('GET', '/wishlist');
     if (res.status !== 200 || res.body?.results !== 1 || res.body?.data?.wishlist[0]?.id !== sampleAd._id.toString()) {
         throw new Error('Populated GET /wishlist failed');
     }
 
-    res = await request('DELETE', `/wishlist/${sampleAd._id}`);
-    if (res.status !== 200 || res.body?.data?.wishlist?.length !== 0) throw new Error('DELETE /wishlist/:id failed');
-
-    res = await request('POST', `/wishlist/${sampleAd._id}`);
-    if (res.status !== 200 || res.body?.data?.wishlist?.length !== 1) throw new Error('POST /wishlist/:id failed');
-
+    // 3. Toggle remove (body)
     res = await request('POST', '/wishlist/toggle', { advertisementId: sampleAd._id.toString() });
-    if (res.body?.data?.inWishlist !== false || res.body?.data?.wishlist?.length !== 0) throw new Error('Toggle remove failed');
+    if (res.status !== 200 || res.body?.data?.inWishlist !== false || res.body?.data?.wishlist?.length !== 0) {
+        throw new Error('Toggle remove failed');
+    }
 
+    // 4. Toggle add via URL param: /wishlist/:advertisementId/toggle
+    res = await request('POST', `/wishlist/${sampleAd._id}/toggle`);
+    if (res.status !== 200 || res.body?.data?.inWishlist !== true || res.body?.data?.wishlist?.length !== 1) {
+        throw new Error('Toggle via param failed');
+    }
+
+    // 5. Toggle shortcut via /advertisements/:id/wishlist/toggle
+    res = await request('POST', `/advertisements/${sampleAd._id}/wishlist/toggle`);
+    if (res.status !== 200 || res.body?.data?.inWishlist !== false || res.body?.data?.wishlist?.length !== 0) {
+        throw new Error('Advertisement toggle shortcut failed');
+    }
+
+    // 6. Toggle back on
     res = await request('POST', '/wishlist/toggle', { advertisementId: sampleAd._id.toString() });
-    if (res.body?.data?.inWishlist !== true || res.body?.data?.wishlist?.length !== 1) throw new Error('Toggle add failed');
+    if (res.status !== 200 || res.body?.data?.inWishlist !== true) {
+        throw new Error('Toggle back on failed');
+    }
 
-    res = await request('DELETE', `/advertisements/${sampleAd._id}/wishlist`);
-    if (res.status !== 200 || res.body?.data?.wishlist?.length !== 0) throw new Error('DELETE shortcut failed');
-
-    res = await request('POST', `/advertisements/${sampleAd._id}/wishlist`);
-    if (res.status !== 200 || res.body?.data?.wishlist?.length !== 1) throw new Error('POST shortcut failed');
-
-    res = await request('POST', '/wishlist', { advertisementId: 'invalid-id-123' });
+    // 7. Validation errors
+    res = await request('POST', '/wishlist/toggle', { advertisementId: 'invalid-id-123' });
     if (res.status !== 400) throw new Error('Invalid ID did not return 400');
 
     const fakeId = new mongoose.Types.ObjectId();
-    res = await request('POST', '/wishlist', { advertisementId: fakeId.toString() });
+    res = await request('POST', '/wishlist/toggle', { advertisementId: fakeId.toString() });
     if (res.status !== 404) throw new Error('Non-existent ID did not return 404');
 
     res = await request('GET', '/wishlist', null, false);
     if (res.status !== 401) throw new Error('No token did not return 401');
 
+    // 8. Clear wishlist
     res = await request('DELETE', '/wishlist/clear');
     if (res.status !== 200 || res.body?.data?.wishlist?.length !== 0) throw new Error('Clear failed');
 

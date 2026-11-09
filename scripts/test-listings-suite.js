@@ -18,7 +18,13 @@ const Booking = require('../src/features/bookings/models/bookingModel');
 const User = require('../src/features/auth/models/userModel');
 const { generateToken } = require('../src/utils/generateToken');
 const { validateAttributes, buildPricingData } = require('../src/features/advertisements/controllers/advertisementController');
-const { checkBookingOverlap } = require('../src/features/bookings/controllers/bookingController');
+
+const checkBookingOverlap = async (advertisement, startDate, endDate) => Boolean(await Booking.exists({
+    advertisement,
+    status: { $in: ['pending', 'confirmed'] },
+    startDate: { $lt: endDate },
+    endDate: { $gt: startDate },
+}));
 
 let passedTests = 0;
 let totalTests = 0;

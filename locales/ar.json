@@ -97,7 +97,10 @@
         "roomInactive": "هذه الغرفة غير متاحة حالياً للحجز.",
         "roomDoesNotBelongToHotel": "هذه الغرفة لا تنتمي إلى الفندق المحدد.",
         "bookingDateConflict": "التواريخ أو الأوقات المحددة محجوزة مسبقاً، يرجى اختيار موعد آخر.",
-        "bookingNotFound": "طلب الحجز المحدد غير موجود."
+        "bookingNotFound": "طلب الحجز المحدد غير موجود.",
+        "invalidBookingId": "معرف الحجز المحدد غير صالح.",
+        "advertisementInactive": "هذا الإعلان غير متاح للحجز حالياً.",
+        "bookingCannotBeCancelled": "يمكن إلغاء الحجوزات قيد الانتظار أو المؤكدة فقط."
     },
     "validation": {
         "nameRequired": "الاسم مطلوب.",
@@ -122,6 +125,9 @@
         "invalidDateRange": "تاريخ النهاية لازم يكون بعد تاريخ البداية.",
         "invalidDuration": "المدة لازم تكون رقم أكبر من صفر.",
         "invalidGuests": "عدد الضيوف لازم يكون رقم صحيح أكبر من صفر.",
-        "invalidBookingStatus": "حالة الحجز غير صالحة."
+        "invalidBookingStatus": "حالة الحجز غير صالحة.",
+        "startDateInPast": "تاريخ البداية لا يمكن أن يكون في الماضي.",
+        "roomRequired": "يرجى اختيار غرفة للحجز في هذا الفندق.",
+        "minDurationNotMet": "أقل مدة للحجز هي {{minDuration}} ({{unit}})."
     }
 }

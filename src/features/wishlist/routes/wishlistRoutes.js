@@ -3,8 +3,6 @@ const router = express.Router();
 
 const {
     getWishlist,
-    addToWishlist,
-    removeFromWishlist,
     toggleWishlist,
     clearWishlist,
 } = require('../controllers/wishlistController');
@@ -17,15 +15,17 @@ const {
 
 router.use(protect);
 
-router.get('/', getWishlist);
+// 1. Toggle Wishlist (Add if absent, Remove if present)
 router.post('/toggle', validateWishlistInput, toggleWishlist);
-router.delete('/clear', clearWishlist);
-
 router.post('/:advertisementId/toggle', validateAdvertisementParam, toggleWishlist);
-router.post('/:advertisementId', validateAdvertisementParam, addToWishlist);
-router.delete('/:advertisementId', validateAdvertisementParam, removeFromWishlist);
+router.post('/:advertisementId', validateAdvertisementParam, toggleWishlist);
+router.post('/', validateWishlistInput, toggleWishlist);
 
-router.post('/', validateWishlistInput, addToWishlist);
-router.delete('/', removeFromWishlist);
+// 2. Get User Wishlist
+router.get('/', getWishlist);
+
+// 3. Clear Wishlist
+router.delete('/clear', clearWishlist);
+router.delete('/', clearWishlist);
 
 module.exports = router;
