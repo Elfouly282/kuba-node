@@ -93,6 +93,7 @@
         "ownerNotFound": "The specified owner account was not found.",
         "adNotOwned": "You do not have permission to manage this listing.",
         "roomNotFound": "The requested room was not found.",
+        "roomImagesLimit": "A room can have at most 3 images.",
         "invalidRoomId": "Invalid room ID provided.",
         "roomInactive": "This room is currently inactive.",
         "roomDoesNotBelongToHotel": "This room does not belong to the specified hotel.",
@@ -128,6 +129,7 @@
         "invalidBookingStatus": "Invalid booking status.",
         "startDateInPast": "The start date cannot be in the past.",
         "roomRequired": "Please choose a room to book in this hotel.",
+        "roomImagesLimit": "A room can have at most 3 images.",
         "minDurationNotMet": "Minimum booking duration is {{minDuration}} ({{unit}})."
     }
 }

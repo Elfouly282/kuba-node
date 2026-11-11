@@ -6034,6 +6034,7 @@ function switchHotelRoomsSubTab(tab) {
         if (addForm) {
             addForm.classList.remove('hidden');
             addForm.reset();
+            clearHotelRoomImagePreview();
         }
         if (addBtn) addBtn.className = 'flex-1 py-1.5 rounded-md text-center transition bg-white text-[#2D4F2E] shadow-sm cursor-pointer';
         if (listBtn) listBtn.className = 'flex-1 py-1.5 rounded-md text-center transition text-slate-600 hover:text-slate-900 cursor-pointer';
@@ -6087,7 +6088,10 @@ async function loadHotelRooms(hotelId) {
 
         tbody.innerHTML = rooms.map(r => {
             const rId = r.id || r._id;
-            const rImg = r.image?.startsWith('http') ? r.image : (r.image ? ('/uploads/' + r.image) : 'images/kuba-logo.jpeg');
+            const gallery = (Array.isArray(r.images) && r.images.length ? r.images : (r.image ? [r.image] : [])).slice(0, 3);
+            const thumbs = gallery.length
+                ? gallery.map((img) => `<img src="${roomImageSrc(img)}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0" onerror="this.src='images/kuba-logo.jpeg'">`).join('')
+                : `<span class="w-9 h-9 rounded-lg border border-dashed border-slate-300 text-slate-300 flex items-center justify-center shrink-0"><i class="fas fa-image text-[10px]"></i></span>`;
             const priceVal = r.pricing?.finalPrice || r.price || 0;
             const capAdults = r.capacity?.adults || 2;
             const capChildren = r.capacity?.children || 0;
@@ -6098,10 +6102,10 @@ async function loadHotelRooms(hotelId) {
                 <tr class="hover:bg-slate-50 transition border-b border-slate-100">
                     <td class="p-2.5">
                         <div class="flex items-center gap-2">
-                            <img src="${rImg}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0" onerror="this.src='images/kuba-logo.jpeg'">
+                            <div class="flex items-center gap-1">${thumbs}</div>
                             <div>
                                 <div class="font-bold text-slate-800">${r.title || 'غرفة فندقية'}</div>
-                                <div class="text-[10px] text-slate-400 font-mono">رقم: ${r.roomNumber || '--'}</div>
+                                <div class="text-[10px] text-slate-400 font-mono">رقم: ${r.roomNumber || '--'} · صور ${gallery.length}/3</div>
                             </div>
                         </div>
                     </td>
@@ -6119,9 +6123,15 @@ async function loadHotelRooms(hotelId) {
                         <div class="text-[10px] text-slate-400">لكل ليلة</div>
                     </td>
                     <td class="p-2.5 text-center">
-                        <button type="button" onclick="deleteHotelRoom('${rId}')" class="text-slate-400 hover:text-red-600 p-1.5 transition rounded hover:bg-red-50 cursor-pointer" title="حذف الغرفة">
-                            <i class="fas fa-trash-alt text-xs"></i>
-                        </button>
+                        <div class="inline-flex items-center justify-center gap-1">
+                            <label class="text-slate-400 hover:text-purple-700 p-1.5 transition rounded hover:bg-purple-50 cursor-pointer" title="رفع صور الغرفة (حتى 3)">
+                                <i class="fas fa-images text-xs"></i>
+                                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple class="hidden" onchange="uploadHotelRoomImages('${rId}', this)">
+                            </label>
+                            <button type="button" onclick="deleteHotelRoom('${rId}')" class="text-slate-400 hover:text-red-600 p-1.5 transition rounded hover:bg-red-50 cursor-pointer" title="حذف الغرفة">
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -6159,44 +6169,126 @@ async function handleCreateHotelRoomSubmit(e) {
     }
 
     const amenities = amenitiesStr ? amenitiesStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const imageInput = document.getElementById('hroom-images');
+    const imageFiles = Array.from(imageInput?.files || []);
 
-    const payload = {
-        hotel: state.activeHotelId,
-        title,
-        roomNumber,
-        roomType,
-        price,
-        pricing: {
-            basePrice: price,
-            finalPrice: price,
-            pricingUnit: 'per_night',
-            currency: 'EGP',
-        },
-        capacity: {
-            adults,
-            children,
-            maxGuests: adults + children,
-        },
-        beds: {
-            count: bedsCount,
-            bedType,
-        },
-        amenities,
-        active: true,
-    };
+    if (imageFiles.length > 3) {
+        showToast('يمكن إضافة 3 صور كحد أقصى للغرفة', 'error');
+        return;
+    }
+
+    const payload = new FormData();
+    payload.append('hotel', state.activeHotelId);
+    payload.append('title', title);
+    payload.append('roomNumber', roomNumber || '');
+    payload.append('roomType', roomType);
+    payload.append('price', String(price));
+    payload.append('pricing', JSON.stringify({
+        basePrice: price,
+        finalPrice: price,
+        pricingUnit: 'per_night',
+        currency: 'EGP',
+    }));
+    payload.append('capacity', JSON.stringify({
+        adults,
+        children,
+        maxGuests: adults + children,
+    }));
+    payload.append('beds', JSON.stringify({
+        count: bedsCount,
+        bedType,
+    }));
+    payload.append('amenities', JSON.stringify(amenities));
+    payload.append('active', 'true');
+    imageFiles.forEach((file) => payload.append('images', file));
+
+    const submitBtn = document.getElementById('hroom-submit-btn');
+    const originalBtnHtml = submitBtn?.innerHTML;
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i><span>جاري الحفظ...</span>';
+    }
 
     try {
         await apiFetch('/api/v1/advertisements/' + state.activeHotelId + '/rooms', {
             method: 'POST',
-            body: JSON.stringify(payload),
+            body: payload,
         });
 
         showToast('تمت إضافة الغرفة الفندقية بنجاح!', 'success');
         document.getElementById('hotel-room-add-form')?.reset();
+        clearHotelRoomImagePreview();
         switchHotelRoomsSubTab('list');
         loadHotelRooms(state.activeHotelId);
     } catch (err) {
         // apiFetch shows error toast
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnHtml;
+        }
+    }
+}
+
+function roomImageSrc(img) {
+    if (!img) return 'images/kuba-logo.jpeg';
+    if (img.startsWith('http')) return img;
+    const path = img.startsWith('/uploads/') ? img : ('/uploads/' + String(img).replace(/^\/+/, ''));
+    const base = typeof getApiBaseUrl === 'function' ? getApiBaseUrl() : '';
+    return base ? (base + path) : path;
+}
+
+function clearHotelRoomImagePreview() {
+    const preview = document.getElementById('hroom-images-preview');
+    if (preview) preview.innerHTML = '';
+}
+
+function previewHotelRoomImages(input) {
+    const preview = document.getElementById('hroom-images-preview');
+    if (!input || !preview) return;
+
+    let files = Array.from(input.files || []);
+    if (files.length > 3) {
+        showToast('يمكن إضافة 3 صور كحد أقصى للغرفة', 'warning');
+        const dt = new DataTransfer();
+        files.slice(0, 3).forEach((file) => dt.items.add(file));
+        input.files = dt.files;
+        files = Array.from(input.files);
+    }
+
+    preview.innerHTML = files.map((file, index) => {
+        const url = URL.createObjectURL(file);
+        const cover = index === 0
+            ? '<span class="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] text-center py-0.5">غلاف</span>'
+            : '';
+        return `<div class="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200"><img src="${url}" class="w-full h-full object-cover" alt="">${cover}</div>`;
+    }).join('');
+}
+
+async function uploadHotelRoomImages(roomId, input) {
+    const files = Array.from(input?.files || []);
+    if (!files.length) return;
+    if (files.length > 3) {
+        showToast('يمكن إضافة 3 صور كحد أقصى للغرفة', 'error');
+        input.value = '';
+        return;
+    }
+
+    const payload = new FormData();
+    payload.append('replaceImages', 'true');
+    files.forEach((file) => payload.append('images', file));
+
+    try {
+        await apiFetch('/api/v1/rooms/' + roomId, {
+            method: 'PATCH',
+            body: payload,
+        });
+        showToast('تم تحديث صور الغرفة', 'success');
+        if (state.activeHotelId) loadHotelRooms(state.activeHotelId);
+    } catch (err) {
+        // apiFetch shows error toast
+    } finally {
+        if (input) input.value = '';
     }
 }
 
@@ -6226,6 +6318,8 @@ window.openHotelRoomsManagementModal = openHotelRoomsManagementModal;
 window.switchHotelRoomsSubTab = switchHotelRoomsSubTab;
 window.loadHotelRooms = loadHotelRooms;
 window.handleCreateHotelRoomSubmit = handleCreateHotelRoomSubmit;
+window.previewHotelRoomImages = previewHotelRoomImages;
+window.uploadHotelRoomImages = uploadHotelRoomImages;
 window.deleteHotelRoom = deleteHotelRoom;
 function openOwnerHotelRoomsModal() {
     const ad = getActiveOwnerAd();

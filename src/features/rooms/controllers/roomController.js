@@ -6,20 +6,104 @@ const APIError = require('../../../utils/apiError');
 const { SuccessResponse } = require('../../../utils/apiResponse');
 const { getImageUrl, getRelativeImagePath, deleteImageFile } = require('../../../utils/imageUrl');
 
+const ROOM_MAX_IMAGES = 3;
+
 const formatRoom = (doc) => {
     if (!doc) return null;
     const obj = typeof doc.toJSON === 'function' ? doc.toJSON() : { ...doc };
 
-    if (obj.image) obj.image = getImageUrl(obj.image);
-    if (Array.isArray(obj.images)) {
-        obj.images = obj.images.map((img) => getImageUrl(img)).filter(Boolean);
-    }
+    const rawImages = Array.isArray(obj.images) ? obj.images : [];
+    const merged = [];
+    const seen = new Set();
+    [...rawImages, obj.image].forEach((item) => {
+        if (!item || seen.has(String(item)) || merged.length >= ROOM_MAX_IMAGES) return;
+        seen.add(String(item));
+        const url = getImageUrl(item);
+        if (url) merged.push(url);
+    });
+
+    obj.images = merged;
+    obj.image = merged[0] || '';
 
     if (obj.hotel && typeof obj.hotel === 'object' && obj.hotel.image) {
         obj.hotel.image = getImageUrl(obj.hotel.image);
     }
 
     return obj;
+};
+
+const parseImageList = (value) => {
+    if (value === undefined || value === null || value === '') return null;
+    let list = value;
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) return null;
+        try {
+            const parsed = JSON.parse(trimmed);
+            list = Array.isArray(parsed) ? parsed : [parsed];
+        } catch (_) {
+            list = trimmed.split(',').map((item) => item.trim()).filter(Boolean);
+        }
+    }
+    if (!Array.isArray(list)) list = [list];
+    return [...new Set(list.map((item) => getRelativeImagePath(String(item).trim())).filter(Boolean))];
+};
+
+const collectUploadedRoomFiles = (req) => {
+    const files = [];
+    if (req.file) files.push(req.file);
+    if (Array.isArray(req.files)) {
+        files.push(...req.files);
+    } else if (req.files && typeof req.files === 'object') {
+        ['images', 'image'].forEach((key) => {
+            if (Array.isArray(req.files[key])) files.push(...req.files[key]);
+        });
+    }
+    return files.map((file) => `rooms/${file.filename}`);
+};
+
+const resolveRoomImages = (req, existing = []) => {
+    const uploaded = collectUploadedRoomFiles(req);
+    const fromBody = parseImageList(req.body?.images);
+    const replaceImages = req.body?.replaceImages === true || req.body?.replaceImages === 'true';
+    const single = parseImageList(req.body?.image);
+    const touched = fromBody !== null
+        || replaceImages
+        || uploaded.length > 0
+        || (Boolean(single) && existing.length === 0);
+
+    if (!touched) return [...existing];
+
+    let images;
+    if (fromBody) {
+        images = [...fromBody];
+    } else if (replaceImages || existing.length === 0) {
+        images = single ? [...single] : [];
+    } else {
+        images = [...existing];
+    }
+
+    uploaded.forEach((img) => {
+        if (img && !images.includes(img)) images.push(img);
+    });
+
+    images = [...new Set(images)];
+
+    if (images.length > ROOM_MAX_IMAGES) {
+        const kept = new Set(existing);
+        uploaded.forEach((img) => {
+            if (!kept.has(img)) deleteImageFile(img);
+        });
+        throw new APIError('errors.roomImagesLimit', 400);
+    }
+
+    return images;
+};
+
+const existingRoomImages = (room) => {
+    const stored = Array.isArray(room?.images) ? room.images : [];
+    const list = stored.length ? stored : (room?.image ? [room.image] : []);
+    return list.map((img) => getRelativeImagePath(img)).filter(Boolean);
 };
 
 // Check if user has permission to manage hotel rooms
@@ -55,10 +139,10 @@ exports.createRoom = async (req, res, next) => {
             hotel: hotel._id,
         };
 
-        if (req.file) {
-            roomData.image = getRelativeImagePath(req.file.path.replace(/\\/g, '/'));
-            roomData.images = [roomData.image];
-        }
+        const images = resolveRoomImages(req, []);
+        roomData.images = images;
+        roomData.image = images[0] || '';
+        delete roomData.replaceImages;
 
         if (req.body.pricing && typeof req.body.pricing === 'string') {
             try {
@@ -262,13 +346,11 @@ exports.updateRoom = async (req, res, next) => {
         await assertHotelOwnership(req, room.hotel);
 
         const updates = { ...req.body };
-
-        if (req.file) {
-            updates.image = getRelativeImagePath(req.file.path.replace(/\\/g, '/'));
-            if (!room.images || room.images.length === 0) {
-                updates.images = [updates.image];
-            }
-        }
+        const previousImages = existingRoomImages(room);
+        const images = resolveRoomImages(req, previousImages);
+        updates.images = images;
+        updates.image = images[0] || '';
+        delete updates.replaceImages;
 
         if (req.body.pricing && typeof req.body.pricing === 'string') {
             try { updates.pricing = JSON.parse(req.body.pricing); } catch (_) {}
@@ -289,6 +371,10 @@ exports.updateRoom = async (req, res, next) => {
 
         Object.assign(room, updates);
         await room.save();
+
+        previousImages.forEach((img) => {
+            if (img && !images.includes(img)) deleteImageFile(img);
+        });
 
         SuccessResponse.ok(res, {
             message: req.t ? req.t('messages.roomUpdated') : 'Room updated successfully.',

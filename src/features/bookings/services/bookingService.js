@@ -162,7 +162,10 @@ const formatBooking = (doc) => {
         const ref = obj[field];
         if (!ref || typeof ref !== 'object') return;
         if (ref.image) ref.image = getImageUrl(ref.image);
-        if (Array.isArray(ref.images)) ref.images = ref.images.map(getImageUrl).filter(Boolean);
+        if (Array.isArray(ref.images)) {
+            ref.images = ref.images.map(getImageUrl).filter(Boolean);
+            if (field === 'room') ref.images = ref.images.slice(0, 3);
+        }
     });
 
     return obj;

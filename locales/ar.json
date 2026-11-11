@@ -93,6 +93,7 @@
         "ownerNotFound": "لم يتم العثور على حساب المالك المحدد.",
         "adNotOwned": "ليس لديك صلاحية لإدارة هذا الإعلان.",
         "roomNotFound": "الغرفة المطلوبة غير موجودة.",
+        "roomImagesLimit": "يمكن إضافة 3 صور كحد أقصى لكل غرفة.",
         "invalidRoomId": "معرف الغرفة المحدد غير صالح.",
         "roomInactive": "هذه الغرفة غير متاحة حالياً للحجز.",
         "roomDoesNotBelongToHotel": "هذه الغرفة لا تنتمي إلى الفندق المحدد.",
@@ -128,6 +129,7 @@
         "invalidBookingStatus": "حالة الحجز غير صالحة.",
         "startDateInPast": "تاريخ البداية لا يمكن أن يكون في الماضي.",
         "roomRequired": "يرجى اختيار غرفة للحجز في هذا الفندق.",
+        "roomImagesLimit": "يمكن إضافة 3 صور كحد أقصى لكل غرفة.",
         "minDurationNotMet": "أقل مدة للحجز هي {{minDuration}} ({{unit}})."
     }
 }

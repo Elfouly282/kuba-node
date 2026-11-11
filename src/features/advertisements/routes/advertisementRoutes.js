@@ -10,7 +10,7 @@ const {
     remove,
 } = require('../controllers/advertisementController');
 
-const { uploadSingle } = require('../../../middleware/uploadMiddleware');
+const { uploadSingle, uploadFields } = require('../../../middleware/uploadMiddleware');
 const { protect, restrictTo } = require('../../auth/middleware/authMiddleware');
 const {
     validateAdvertisementId,
@@ -37,7 +37,10 @@ router.post('/:id/wishlist/toggle', protect, validateAdvertisementId, toggleWish
 // Hotel Rooms
 router.get('/:id/rooms', validateAdvertisementId, getRoomsByHotel);
 router.get('/:id/available-rooms', validateAdvertisementId, getAvailableRoomsForHotel);
-router.post('/:id/rooms', protect, validateAdvertisementId, ...uploadSingle('image', 'rooms'), createRoom);
+router.post('/:id/rooms', protect, validateAdvertisementId, ...uploadFields([
+    { name: 'images', maxCount: 3 },
+    { name: 'image', maxCount: 1 },
+], 'rooms'), createRoom);
 
 router.post('/', protect, restrictTo('admin'), ...uploadSingle('image', 'advertisements'), validateCreateAdvertisement, create);
 router.patch('/:id', protect, restrictTo('admin'), validateAdvertisementId, ...uploadSingle('image', 'advertisements'), validateUpdateAdvertisement, update);

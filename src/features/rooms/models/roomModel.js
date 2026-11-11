@@ -125,6 +125,12 @@ const roomSchema = new mongoose.Schema(
         images: {
             type: [String],
             default: [],
+            validate: {
+                validator(value) {
+                    return !value || value.length <= 3;
+                },
+                message: 'validation.roomImagesLimit',
+            },
         },
         unitType: {
             type: mongoose.Schema.Types.ObjectId,
