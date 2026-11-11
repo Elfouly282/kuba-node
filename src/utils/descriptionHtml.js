@@ -42,6 +42,9 @@ const sanitizeHtml = (html) => {
         if (!ALLOWED_TAGS.has(name)) return '';
         if (match.startsWith('</')) return `</${name}>`;
         if (name === 'br') return '<br>';
+        if (name === 'div' && /class\s*=\s*["']ad-auto-specs["']/i.test(attrs)) {
+            return '<div class="ad-auto-specs">';
+        }
         if (name === 'a') {
             const hrefMatch = String(attrs).match(/href\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
             const href = hrefMatch ? (hrefMatch[1] || hrefMatch[2] || hrefMatch[3] || '') : '';
@@ -52,8 +55,12 @@ const sanitizeHtml = (html) => {
     }).trim();
 };
 
+const stripAutoSpecs = (html) => String(html || '')
+    .replace(/<div class="ad-auto-specs">[\s\S]*?<\/div>/gi, '')
+    .trim();
+
 const normalizeDescriptionHtml = (value) => {
-    const raw = String(value || '').replace(/\u00a0/g, ' ').trim();
+    const raw = stripAutoSpecs(value).replace(/\u00a0/g, ' ').trim();
     if (!raw) return '';
     const html = looksLikeHtml(raw) ? sanitizeHtml(raw) : plainTextToHtml(raw);
     return stripHtml(html) ? html : '';
@@ -76,15 +83,14 @@ const formatAttributeValue = (value, def) => {
     }
     if (typeof value === 'boolean' || def?.dataType === 'boolean') {
         if (value === true || value === 'true' || value === 1 || value === '1') return 'نعم';
-        if (value === false || value === 'false' || value === 0 || value === '0') return 'لا';
+        return '';
     }
     const text = String(value).trim();
     if (!text) return '';
     return def?.unit ? `${text} ${def.unit}` : text;
 };
 
-const buildDetailsHtml = ({ description, location, address, attributes, attributeDefs } = {}) => {
-    const descriptionHtml = styleDescription(normalizeDescriptionHtml(description));
+const collectSpecItems = (attributes, attributeDefs) => {
     const allDefs = (Array.isArray(attributeDefs) ? attributeDefs : []).filter((def) => def && def.key);
     const hidden = new Set(allDefs.filter((def) => def.showInDetails === false || def.active === false).map((def) => def.key));
     const defs = allDefs
@@ -93,28 +99,43 @@ const buildDetailsHtml = ({ description, location, address, attributes, attribut
         .sort((a, b) => (a.order || 0) - (b.order || 0));
     const attrs = attributes && typeof attributes === 'object' ? attributes : {};
     const used = new Set();
-    const rows = [];
+    const items = [];
 
-    const pushRow = (label, value) => {
+    const pushItem = (label, value) => {
         if (!label || !value) return;
-        rows.push(
-            `<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:14px;">`
-            + `<span style="color:#64748b;font-weight:600;">${escapeHtml(label)}</span>`
-            + `<span style="color:#0f172a;font-weight:700;">${escapeHtml(value)}</span>`
-            + `</div>`
-        );
+        items.push({ label, value });
     };
 
     defs.forEach((def) => {
-        if (!def.key) return;
         used.add(def.key);
-        pushRow(def.nameAr || def.name || def.key, formatAttributeValue(attrs[def.key], def));
+        pushItem(def.nameAr || def.name || def.key, formatAttributeValue(attrs[def.key], def));
     });
 
     Object.keys(attrs).forEach((key) => {
         if (used.has(key) || hidden.has(key)) return;
-        pushRow(String(key).replace(/_/g, ' '), formatAttributeValue(attrs[key]));
+        pushItem(String(key).replace(/_/g, ' '), formatAttributeValue(attrs[key]));
     });
+
+    return items;
+};
+
+const buildAttributeSpecsHtml = (attributes, attributeDefs) => {
+    const items = collectSpecItems(attributes, attributeDefs);
+    if (!items.length) return '';
+    const lis = items.map((item) => (
+        `<li style="margin:0 0 4px;line-height:1.7;color:#334155;"><strong>${escapeHtml(item.label)}:</strong> ${escapeHtml(item.value)}</li>`
+    )).join('');
+    return `<div class="ad-auto-specs"><h3 style="margin:14px 0 6px;font-size:15px;font-weight:700;color:#2D4F2E;">المواصفات</h3><ul style="margin:0 18px 8px 0;padding:0;">${lis}</ul></div>`;
+};
+
+const buildDetailsHtml = ({ description, location, address, attributes, attributeDefs } = {}) => {
+    const descriptionHtml = styleDescription(normalizeDescriptionHtml(description));
+    const rows = collectSpecItems(attributes, attributeDefs).map((item) => (
+        `<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:14px;">`
+        + `<span style="color:#64748b;font-weight:600;">${escapeHtml(item.label)}</span>`
+        + `<span style="color:#0f172a;font-weight:700;">${escapeHtml(item.value)}</span>`
+        + `</div>`
+    ));
 
     const sections = [];
     if (descriptionHtml) {
@@ -153,5 +174,6 @@ module.exports = {
     escapeHtml,
     stripHtml,
     normalizeDescriptionHtml,
+    buildAttributeSpecsHtml,
     buildDetailsHtml,
 };

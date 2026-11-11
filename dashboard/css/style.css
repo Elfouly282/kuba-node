@@ -811,6 +811,13 @@ input:checked + .slider:before { transform: translateX(20px); }
     padding: 0;
 }
 
+.html-editor-preview h3 {
+    margin: 0.75rem 0 0.35rem;
+    font-size: 13px;
+    font-weight: 700;
+    color: #2D4F2E;
+}
+
 .html-editor-preview {
     background: #f8fafc;
     border: 1px solid #e2e8f0;

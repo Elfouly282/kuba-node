@@ -4224,6 +4224,7 @@ async function onAdUnitTypeChanged(existingAttributes = {}) {
     if (!select || !select.value) {
         if (wrapper) wrapper.classList.add('hidden');
         if (container) container.innerHTML = '';
+        paintHtmlPreview('ad-modal-description', readHtmlEditor('ad-modal-description'));
         return;
     }
 
@@ -4254,6 +4255,7 @@ async function onAdUnitTypeChanged(existingAttributes = {}) {
         if (attrs.length === 0) {
             if (wrapper) wrapper.classList.add('hidden');
             if (container) container.innerHTML = '';
+            paintHtmlPreview('ad-modal-description', readHtmlEditor('ad-modal-description'));
             return;
         }
 
@@ -4274,7 +4276,7 @@ async function onAdUnitTypeChanged(existingAttributes = {}) {
                     inputHtml = `
                         <div class="flex items-center pt-5">
                             <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-800">
-                                <input type="checkbox" name="attr_${key}" ${isChecked ? 'checked' : ''} class="rounded text-[#2D4F2E] focus:ring-[#2D4F2E]">
+                                <input type="checkbox" name="attr_${key}" ${specFieldAttrs(attr)} ${isChecked ? 'checked' : ''} class="rounded text-[#2D4F2E] focus:ring-[#2D4F2E]">
                                 <span>${label}</span>
                             </label>
                         </div>
@@ -4286,7 +4288,7 @@ async function onAdUnitTypeChanged(existingAttributes = {}) {
                     inputHtml = `
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">${label}</label>
-                            <input type="number" name="attr_${key}" value="${currentVal}" ${isReq ? 'required' : ''} class="form-input text-xs" placeholder="مثال: 4">
+                            <input type="number" name="attr_${key}" ${specFieldAttrs(attr)} value="${currentVal}" ${isReq ? 'required' : ''} class="form-input text-xs" placeholder="مثال: 4">
                         </div>
                     `;
                     break;
@@ -4297,7 +4299,7 @@ async function onAdUnitTypeChanged(existingAttributes = {}) {
                     inputHtml = `
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">${label}</label>
-                            <select name="attr_${key}" ${isReq ? 'required' : ''} class="form-select text-xs">
+                            <select name="attr_${key}" ${specFieldAttrs(attr)} ${isReq ? 'required' : ''} class="form-select text-xs">
                                 <option value="">-- اختر --</option>
                                 ${opts.map(o => `<option value="${o}" ${o === currentVal ? 'selected' : ''}>${o}</option>`).join('')}
                             </select>
@@ -4315,7 +4317,7 @@ async function onAdUnitTypeChanged(existingAttributes = {}) {
                             <div class="flex flex-wrap gap-2 bg-white p-2 rounded border border-slate-200">
                                 ${opts.map(o => `
                                     <label class="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer">
-                                        <input type="checkbox" name="attr_${key}[]" value="${o}" ${selectedArr.includes(o) ? 'checked' : ''} class="rounded text-[#2D4F2E]">
+                                        <input type="checkbox" name="attr_${key}[]" value="${o}" ${specFieldAttrs(attr)} ${selectedArr.includes(o) ? 'checked' : ''} class="rounded text-[#2D4F2E]">
                                         <span>${o}</span>
                                     </label>
                                 `).join('')}
@@ -4330,7 +4332,7 @@ async function onAdUnitTypeChanged(existingAttributes = {}) {
                     inputHtml = `
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">${label}</label>
-                            <input type="date" name="attr_${key}" value="${dateStr}" ${isReq ? 'required' : ''} class="form-input text-xs">
+                            <input type="date" name="attr_${key}" ${specFieldAttrs(attr)} value="${dateStr}" ${isReq ? 'required' : ''} class="form-input text-xs">
                         </div>
                     `;
                     break;
@@ -4341,7 +4343,7 @@ async function onAdUnitTypeChanged(existingAttributes = {}) {
                     inputHtml = `
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1">${label}</label>
-                            <input type="text" name="attr_${key}" value="${currentVal}" ${isReq ? 'required' : ''} class="form-input text-xs" placeholder="${attr.nameAr || attr.name}">
+                            <input type="text" name="attr_${key}" ${specFieldAttrs(attr)} value="${currentVal}" ${isReq ? 'required' : ''} class="form-input text-xs" placeholder="${attr.nameAr || attr.name}">
                         </div>
                     `;
                     break;
@@ -4350,6 +4352,7 @@ async function onAdUnitTypeChanged(existingAttributes = {}) {
 
             return inputHtml;
         }).join('');
+        paintHtmlPreview('ad-modal-description', readHtmlEditor('ad-modal-description'));
     } catch (err) {
         console.error('Error fetching unit attributes:', err);
     }
@@ -4876,16 +4879,74 @@ function htmlEditorIsEmpty(area) {
     return !String(area?.textContent || '').replace(/\u00a0/g, '').trim();
 }
 
+const DESCRIPTION_SPEC_SOURCES = {
+    'ad-modal-description': 'ad-dynamic-attributes-container',
+    'owner-form-description': 'owner-dynamic-attributes-container',
+};
+
+function specFieldAttrs(attr) {
+    const key = attr.key || attr.name || '';
+    const label = attr.nameAr || attr.labelAr || attr.label || attr.name || key;
+    const unit = attr.unit || '';
+    const type = attr.dataType || attr.type || 'string';
+    const show = attr.showInDetails === false ? '0' : '1';
+    return `data-spec-key="${escapeHtmlText(key)}" data-spec-label="${escapeHtmlText(label)}" data-spec-unit="${escapeHtmlText(unit)}" data-spec-type="${escapeHtmlText(type)}" data-spec-show="${show}"`;
+}
+
+function descriptionForEditor(ad) {
+    if (!ad) return '';
+    if (ad.descriptionSource != null) return ad.descriptionSource;
+    return String(ad.description || '').replace(/<div class="ad-auto-specs">[\s\S]*?<\/div>/gi, '').trim();
+}
+
+function buildLiveSpecsHtml(container) {
+    if (!container) return '';
+    const groups = new Map();
+    container.querySelectorAll('[data-spec-key]').forEach((el) => {
+        if (el.getAttribute('data-spec-show') === '0') return;
+        const key = el.getAttribute('data-spec-key');
+        if (!groups.has(key)) {
+            groups.set(key, {
+                label: el.getAttribute('data-spec-label') || key,
+                unit: el.getAttribute('data-spec-unit') || '',
+                type: el.getAttribute('data-spec-type') || 'string',
+                els: [],
+            });
+        }
+        groups.get(key).els.push(el);
+    });
+
+    const items = [];
+    groups.forEach((group) => {
+        let value = '';
+        if (group.type === 'boolean') {
+            value = group.els.some((el) => el.checked) ? 'نعم' : '';
+        } else if (group.type === 'multi_select') {
+            value = group.els.filter((el) => el.checked).map((el) => el.value).filter(Boolean).join('، ');
+        } else {
+            const raw = String(group.els[0]?.value || '').trim();
+            if (raw) value = group.unit ? `${raw} ${group.unit}` : raw;
+        }
+        if (!value) return;
+        items.push(`<li><strong>${escapeHtmlText(group.label)}:</strong> ${escapeHtmlText(value)}</li>`);
+    });
+
+    if (!items.length) return '';
+    return `<h3>المواصفات</h3><ul>${items.join('')}</ul>`;
+}
+
 function paintHtmlPreview(id, html) {
     const field = document.getElementById(id);
     const preview = document.getElementById(`${id}-preview`);
     const value = html || '';
     if (field) field.value = value;
-    if (preview) {
-        preview.innerHTML = value.trim()
-            ? value
-            : '<span class="text-slate-400 text-xs">ستظهر التفاصيل هنا بشكل منظم...</span>';
-    }
+    if (!preview) return;
+    const sourceId = DESCRIPTION_SPEC_SOURCES[id];
+    const specs = buildLiveSpecsHtml(sourceId ? document.getElementById(sourceId) : null);
+    const combined = [value, specs].filter(Boolean).join('');
+    preview.innerHTML = combined.trim()
+        ? combined
+        : '<span class="text-slate-400 text-xs">ستظهر التفاصيل هنا بشكل منظم...</span>';
 }
 
 function readHtmlEditor(id) {
@@ -4925,6 +4986,15 @@ function initHtmlEditors() {
             });
         });
         area.addEventListener('input', sync);
+    });
+
+    Object.entries(DESCRIPTION_SPEC_SOURCES).forEach(([editorId, containerId]) => {
+        const container = document.getElementById(containerId);
+        if (!container || container.dataset.specBound === '1') return;
+        container.dataset.specBound = '1';
+        const sync = () => paintHtmlPreview(editorId, readHtmlEditor(editorId));
+        container.addEventListener('input', sync);
+        container.addEventListener('change', sync);
     });
 }
 
@@ -4997,7 +5067,7 @@ async function openEditAdvertisementModal(adId) {
     document.getElementById('ad-modal-title').value = ad.title || '';
     document.getElementById('ad-modal-location').value = ad.location || '';
     document.getElementById('ad-modal-address').value = ad.address || '';
-    setHtmlEditor('ad-modal-description', ad.description || '');
+    setHtmlEditor('ad-modal-description', descriptionForEditor(ad));
     document.getElementById('ad-modal-active').checked = ad.active !== false;
     const flashInput = document.getElementById('ad-modal-flashsale');
     if (flashInput) flashInput.checked = ad.isFlashSale === true;
@@ -6399,7 +6469,7 @@ async function loadOwnerListingTab() {
 
     const titleInput = document.getElementById('owner-form-title');
     if (titleInput) titleInput.value = ad.title || '';
-    setHtmlEditor('owner-form-description', ad.description || '');
+    setHtmlEditor('owner-form-description', descriptionForEditor(ad));
 
     const p = ad.pricing || {};
     const basePrice = document.getElementById('owner-form-base-price');
@@ -6521,6 +6591,7 @@ async function onOwnerUnitTypeChanged(existingAttributes = null) {
 
     if (!select || !select.value) {
         if (container) container.innerHTML = '';
+        paintHtmlPreview('owner-form-description', readHtmlEditor('owner-form-description'));
         return;
     }
 
@@ -6545,10 +6616,11 @@ async function onOwnerUnitTypeChanged(existingAttributes = null) {
 
     try {
         const res = await apiFetch(`/api/v1/admin/unit-types/${unitTypeId}/attributes`, { silent: true });
-        const attributes = res.data || [];
+        const attributes = res.data?.attributes || [];
 
         if (attributes.length === 0) {
             container.innerHTML = '<div class="col-span-full text-slate-400 text-xs py-2">لا توجد خصائص إضافية مخصصة لنوع الوحدة هذا.</div>';
+            paintHtmlPreview('owner-form-description', readHtmlEditor('owner-form-description'));
             return;
         }
 
@@ -6556,44 +6628,65 @@ async function onOwnerUnitTypeChanged(existingAttributes = null) {
         const currentVals = existingAttributes || ad?.attributes || {};
 
         container.innerHTML = attributes.map(attr => {
-            const key = attr.name;
-            const label = attr.labelAr || attr.label || attr.name;
+            const key = attr.key || attr.name;
+            const label = attr.nameAr || attr.labelAr || attr.label || attr.name || key;
+            const dataType = attr.dataType || attr.type || 'string';
             const val = currentVals[key] !== undefined ? currentVals[key] : (attr.defaultValue ?? '');
+            const spec = specFieldAttrs(attr);
+            const required = attr.required ? 'required' : '';
 
-            if (attr.type === 'boolean') {
-                const isChecked = val === true || val === 'true';
+            if (dataType === 'boolean') {
+                const isChecked = val === true || val === 'true' || val === 1;
                 return `
                     <div class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 bg-slate-50">
-                        <input type="checkbox" id="owner-attr-${key}" name="owner_attr_${key}" data-attr-key="${key}" data-attr-type="boolean" ${isChecked ? 'checked' : ''} class="rounded border-slate-300 text-[#2D4F2E] focus:ring-[#2D4F2E]">
+                        <input type="checkbox" id="owner-attr-${key}" name="owner_attr_${key}" data-attr-key="${key}" data-attr-type="boolean" ${spec} ${isChecked ? 'checked' : ''} class="rounded border-slate-300 text-[#2D4F2E] focus:ring-[#2D4F2E]">
                         <label for="owner-attr-${key}" class="text-xs font-semibold text-slate-700 cursor-pointer">${label}</label>
                     </div>
                 `;
-            } else if (attr.type === 'number') {
+            }
+            if (dataType === 'number') {
                 return `
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">${label} ${attr.required ? '*' : ''}</label>
-                        <input type="number" id="owner-attr-${key}" name="owner_attr_${key}" data-attr-key="${key}" data-attr-type="number" value="${val}" ${attr.required ? 'required' : ''} class="form-input text-xs" placeholder="${label}">
+                        <input type="number" id="owner-attr-${key}" name="owner_attr_${key}" data-attr-key="${key}" data-attr-type="number" ${spec} value="${val}" ${required} class="form-input text-xs" placeholder="${label}">
                     </div>
                 `;
-            } else if (attr.type === 'select' && Array.isArray(attr.options)) {
+            }
+            if (dataType === 'single_select' && Array.isArray(attr.options)) {
                 return `
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">${label} ${attr.required ? '*' : ''}</label>
-                        <select id="owner-attr-${key}" name="owner_attr_${key}" data-attr-key="${key}" data-attr-type="select" ${attr.required ? 'required' : ''} class="form-select text-xs">
+                        <select id="owner-attr-${key}" name="owner_attr_${key}" data-attr-key="${key}" data-attr-type="select" ${spec} ${required} class="form-select text-xs">
                             <option value="">-- اختر --</option>
                             ${attr.options.map(opt => `<option value="${opt}" ${String(val) === String(opt) ? 'selected' : ''}>${opt}</option>`).join('')}
                         </select>
                     </div>
                 `;
-            } else {
+            }
+            if (dataType === 'multi_select' && Array.isArray(attr.options)) {
+                const selectedArr = Array.isArray(val) ? val : (val ? String(val).split(',') : []);
                 return `
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">${label} ${attr.required ? '*' : ''}</label>
-                        <input type="text" id="owner-attr-${key}" name="owner_attr_${key}" data-attr-key="${key}" data-attr-type="text" value="${val}" ${attr.required ? 'required' : ''} class="form-input text-xs" placeholder="${label}">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">${label}</label>
+                        <div class="flex flex-wrap gap-2">
+                            ${attr.options.map(opt => `
+                                <label class="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer">
+                                    <input type="checkbox" data-attr-key="${key}" data-attr-type="multi" ${spec} value="${opt}" ${selectedArr.includes(opt) ? 'checked' : ''} class="rounded text-[#2D4F2E]">
+                                    <span>${opt}</span>
+                                </label>
+                            `).join('')}
+                        </div>
                     </div>
                 `;
             }
+            return `
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">${label} ${attr.required ? '*' : ''}</label>
+                    <input type="text" id="owner-attr-${key}" name="owner_attr_${key}" data-attr-key="${key}" data-attr-type="text" ${spec} value="${val}" ${required} class="form-input text-xs" placeholder="${label}">
+                </div>
+            `;
         }).join('');
+        paintHtmlPreview('owner-form-description', readHtmlEditor('owner-form-description'));
     } catch (err) {
         console.warn('Failed to load attributes for owner form:', err);
     }
@@ -6746,6 +6839,9 @@ async function handleOwnerListingSubmit(e) {
             attributes[key] = el.checked;
         } else if (type === 'number') {
             attributes[key] = el.value !== '' ? Number(el.value) : null;
+        } else if (type === 'multi') {
+            if (!Array.isArray(attributes[key])) attributes[key] = [];
+            if (el.checked) attributes[key].push(el.value);
         } else {
             attributes[key] = el.value;
         }
@@ -6789,7 +6885,7 @@ async function handleOwnerListingSubmit(e) {
             if (idx !== -1) {
                 state.ownerAds[idx] = { ...state.ownerAds[idx], ...updated };
             }
-            if (updated?.description) setHtmlEditor('owner-form-description', updated.description);
+            if (updated) setHtmlEditor('owner-form-description', descriptionForEditor(updated));
         }
 
         loadOwnerOverviewTab();

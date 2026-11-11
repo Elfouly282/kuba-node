@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 const UnitTypeAttribute = require('../unit-types/models/unitTypeAttributeModel');
-const { normalizeDescriptionHtml, stripHtml, buildDetailsHtml } = require('../../utils/descriptionHtml');
+const {
+    normalizeDescriptionHtml,
+    stripHtml,
+    buildAttributeSpecsHtml,
+    buildDetailsHtml,
+} = require('../../utils/descriptionHtml');
 
 const unitTypeIdOf = (ad) => {
     const unitType = ad?.unitType;
@@ -28,15 +33,18 @@ const attachDetailsHtml = async (items) => {
     }
 
     list.forEach((ad) => {
-        const descriptionHtml = normalizeDescriptionHtml(ad.description);
-        ad.description = descriptionHtml;
-        ad.descriptionText = stripHtml(descriptionHtml);
+        const written = normalizeDescriptionHtml(ad.description);
+        const defs = grouped.get(unitTypeIdOf(ad)) || [];
+        const specs = buildAttributeSpecsHtml(ad.attributes, defs);
+        ad.descriptionSource = written;
+        ad.description = [written, specs].filter(Boolean).join('');
+        ad.descriptionText = stripHtml(ad.description);
         ad.detailsHtml = buildDetailsHtml({
-            description: descriptionHtml,
+            description: written,
             location: ad.location,
             address: ad.address,
             attributes: ad.attributes,
-            attributeDefs: grouped.get(unitTypeIdOf(ad)) || [],
+            attributeDefs: defs,
         });
     });
 
