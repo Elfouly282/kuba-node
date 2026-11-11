@@ -4086,6 +4086,7 @@ function renderAdvertisementsGrid() {
 
                     <div class="space-y-1 text-xs">
                         <div class="font-bold text-slate-900 line-clamp-1 text-sm mb-1">${ad.title}</div>
+                        ${ad.descriptionText ? `<p class="text-[11px] text-slate-500 line-clamp-2">${escapeHtmlText(ad.descriptionText)}</p>` : ''}
                         
                         <!-- Price display -->
                         <div class="flex items-center justify-between">
@@ -4162,6 +4163,9 @@ function renderAdvertisementsGrid() {
                         ` : ''}
                     </div>
                     <div class="flex items-center gap-1.5">
+                        <button onclick="openAdDetailsPreview('${adId}')" class="btn-secondary text-xs py-1 px-2.5 cursor-pointer">
+                            <i class="fas fa-align-right text-[#2D4F2E] me-1"></i> التفاصيل
+                        </button>
                         <button onclick="openEditAdvertisementModal('${adId}')" class="btn-secondary text-xs py-1 px-2.5 cursor-pointer">
                             <i class="fas fa-edit text-blue-600 me-1"></i> ${t('edit')}
                         </button>
@@ -4860,11 +4864,95 @@ function toggleMapHeight(type) {
     }, 280);
 }
 
+function escapeHtmlText(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function htmlEditorIsEmpty(area) {
+    return !String(area?.textContent || '').replace(/\u00a0/g, '').trim();
+}
+
+function paintHtmlPreview(id, html) {
+    const field = document.getElementById(id);
+    const preview = document.getElementById(`${id}-preview`);
+    const value = html || '';
+    if (field) field.value = value;
+    if (preview) {
+        preview.innerHTML = value.trim()
+            ? value
+            : '<span class="text-slate-400 text-xs">ستظهر التفاصيل هنا بشكل منظم...</span>';
+    }
+}
+
+function readHtmlEditor(id) {
+    const root = document.querySelector(`[data-html-editor="${id}"]`);
+    const area = root?.querySelector('.html-editor-area');
+    if (!area) return (document.getElementById(id)?.value || '').trim();
+    return htmlEditorIsEmpty(area) ? '' : area.innerHTML.trim();
+}
+
+function setHtmlEditor(id, html) {
+    const root = document.querySelector(`[data-html-editor="${id}"]`);
+    const area = root?.querySelector('.html-editor-area');
+    const value = html || '';
+    if (area) area.innerHTML = value;
+    paintHtmlPreview(id, value);
+}
+
+function initHtmlEditors() {
+    document.querySelectorAll('[data-html-editor]').forEach((root) => {
+        if (root.dataset.bound === '1') return;
+        root.dataset.bound = '1';
+        const id = root.getAttribute('data-html-editor');
+        const area = root.querySelector('.html-editor-area');
+        if (!area) return;
+
+        const sync = () => paintHtmlPreview(id, htmlEditorIsEmpty(area) ? '' : area.innerHTML.trim());
+
+        root.querySelectorAll('[data-cmd]').forEach((btn) => {
+            btn.addEventListener('mousedown', (event) => event.preventDefault());
+            btn.addEventListener('click', () => {
+                let command = btn.getAttribute('data-cmd');
+                let value = btn.getAttribute('data-value');
+                if (command === 'formatBlock' && value && value.charAt(0) !== '<') value = `<${value}>`;
+                area.focus();
+                document.execCommand(command, false, value);
+                sync();
+            });
+        });
+        area.addEventListener('input', sync);
+    });
+}
+
+function openAdDetailsPreview(adId) {
+    const pools = [state.advertisements, state.ownerAds];
+    let ad = null;
+    pools.forEach((list) => {
+        if (ad || !Array.isArray(list)) return;
+        ad = list.find((item) => (item.id || item._id) === adId) || null;
+    });
+    if (!ad) return;
+
+    const title = document.getElementById('ad-details-preview-title');
+    const body = document.getElementById('ad-details-preview-body');
+    if (title) title.textContent = ad.title || 'تفاصيل الإعلان';
+    if (body) {
+        body.innerHTML = ad.detailsHtml
+            || '<p class="text-xs text-slate-400">لا توجد تفاصيل مكتوبة لهذا الإعلان بعد.</p>';
+    }
+    document.getElementById('ad-details-preview-modal')?.classList.add('active');
+}
+
 function openAddAdvertisementModal() {
     exitMapFullscreen();
     state.editingAdvertisementId = null;
     document.getElementById('advertisement-modal-title').textContent = t('addAdvertisement');
     document.getElementById('advertisement-form').reset();
+    setHtmlEditor('ad-modal-description', '');
     document.getElementById('ad-modal-active').checked = true;
     const flashInput = document.getElementById('ad-modal-flashsale');
     if (flashInput) flashInput.checked = false;
@@ -4909,7 +4997,7 @@ async function openEditAdvertisementModal(adId) {
     document.getElementById('ad-modal-title').value = ad.title || '';
     document.getElementById('ad-modal-location').value = ad.location || '';
     document.getElementById('ad-modal-address').value = ad.address || '';
-    document.getElementById('ad-modal-description').value = ad.description || '';
+    setHtmlEditor('ad-modal-description', ad.description || '');
     document.getElementById('ad-modal-active').checked = ad.active !== false;
     const flashInput = document.getElementById('ad-modal-flashsale');
     if (flashInput) flashInput.checked = ad.isFlashSale === true;
@@ -5010,7 +5098,7 @@ async function handleAdvertisementFormSubmit(e) {
     const latitude = (latVal !== '' && latVal !== undefined && !isNaN(Number(latVal))) ? Number(latVal) : null;
     const longitude = (lngVal !== '' && lngVal !== undefined && !isNaN(Number(lngVal))) ? Number(lngVal) : null;
 
-    const description = document.getElementById('ad-modal-description').value.trim();
+    const description = readHtmlEditor('ad-modal-description');
     const active = document.getElementById('ad-modal-active').checked;
     const isFlashSale = document.getElementById('ad-modal-flashsale')?.checked === true;
     const owner = document.getElementById('ad-modal-owner')?.value || null;
@@ -6310,9 +6398,8 @@ async function loadOwnerListingTab() {
     }
 
     const titleInput = document.getElementById('owner-form-title');
-    const descInput = document.getElementById('owner-form-description');
     if (titleInput) titleInput.value = ad.title || '';
-    if (descInput) descInput.value = ad.description || '';
+    setHtmlEditor('owner-form-description', ad.description || '');
 
     const p = ad.pricing || {};
     const basePrice = document.getElementById('owner-form-base-price');
@@ -6636,7 +6723,7 @@ async function handleOwnerListingSubmit(e) {
     const unitType = document.getElementById('owner-form-unit-type')?.value || null;
     const city = document.getElementById('owner-form-city')?.value || null;
     const region = document.getElementById('owner-form-region')?.value || null;
-    const description = document.getElementById('owner-form-description')?.value.trim() || '';
+    const description = readHtmlEditor('owner-form-description');
 
     const basePrice = parseFloat(document.getElementById('owner-form-base-price')?.value) || 0;
     const pricingUnit = document.getElementById('owner-form-pricing-unit')?.value || 'per_night';
@@ -6702,6 +6789,7 @@ async function handleOwnerListingSubmit(e) {
             if (idx !== -1) {
                 state.ownerAds[idx] = { ...state.ownerAds[idx], ...updated };
             }
+            if (updated?.description) setHtmlEditor('owner-form-description', updated.description);
         }
 
         loadOwnerOverviewTab();
@@ -7207,6 +7295,7 @@ async function handleOwnerPasswordUpdate(e) {
 // ─── INITIALIZATION ───────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
+    initHtmlEditors();
     applyLanguage();
     checkAuth();
 

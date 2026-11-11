@@ -10,6 +10,8 @@ const { SuccessResponse, FailResponse } = require('../../../utils/apiResponse');
 const { getImageUrl, getRelativeImagePath, deleteImageFile } = require('../../../utils/imageUrl');
 const { findRegionForCoordinates } = require('../../../utils/geospatial');
 const { searchAdvertisements } = require('../../search/listingSearch');
+const { attachDetailsHtml } = require('../presentDetails');
+const { normalizeDescriptionHtml } = require('../../../utils/descriptionHtml');
 
 const formatAdvertisement = (doc) => {
     if (!doc) return null;
@@ -62,12 +64,23 @@ const mergeSearchInput = (req) => {
     return { ...req.query, ...body };
 };
 
-const presentAdvertisements = (advertisements, availability) => advertisements.map((ad) => {
-    const obj = formatAdvertisement(ad);
-    const slot = availability && availability[String(ad._id)];
-    if (slot) obj.availability = slot;
+const presentAdvertisements = async (advertisements, availability) => {
+    const list = advertisements.map((ad) => {
+        const obj = formatAdvertisement(ad);
+        const slot = availability && availability[String(ad._id)];
+        if (slot) obj.availability = slot;
+        return obj;
+    });
+    await attachDetailsHtml(list);
+    return list;
+};
+
+const presentOne = async (doc) => {
+    const obj = formatAdvertisement(doc);
+    if (!obj) return null;
+    await attachDetailsHtml([obj]);
     return obj;
-});
+};
 
 exports.getAll = async (req, res) => {
     if (mongoose.connection.readyState !== 1) {
@@ -95,7 +108,7 @@ exports.getAll = async (req, res) => {
         page: result.page,
         totalPages: result.totalPages,
         data: {
-            advertisements: presentAdvertisements(result.advertisements, result.availability),
+            advertisements: await presentAdvertisements(result.advertisements, result.availability),
         },
     });
 };
@@ -126,7 +139,7 @@ exports.search = async (req, res) => {
         totalPages: result.totalPages,
         data: {
             filters: result.applied,
-            advertisements: presentAdvertisements(result.advertisements, result.availability),
+            advertisements: await presentAdvertisements(result.advertisements, result.availability),
         },
     });
 };
@@ -155,7 +168,7 @@ exports.getOne = async (req, res, next) => {
     }
 
     SuccessResponse.ok(res, {
-        data: { advertisement: formatAdvertisement(advertisement) },
+        data: { advertisement: await presentOne(advertisement) },
     });
 };
 
@@ -289,7 +302,7 @@ exports.create = async (req, res, next) => {
 
     const advertisement = await Advertisement.create({
         title: title.trim(),
-        description: description ? description.trim() : '',
+        description: normalizeDescriptionHtml(description),
         type: resolvedType,
         unitType: validUnitType,
         price: pricing.finalPrice,
@@ -319,7 +332,7 @@ exports.create = async (req, res, next) => {
 
     SuccessResponse.created(res, {
         message: req.t ? req.t('messages.advertisementCreated') : 'Listing created successfully.',
-        data: { advertisement: formatAdvertisement(populated) },
+        data: { advertisement: await presentOne(populated) },
     });
 };
 
@@ -344,12 +357,15 @@ exports.update = async (req, res, next) => {
         advertisement.owner = (req.body.owner && mongoose.Types.ObjectId.isValid(req.body.owner)) ? req.body.owner : null;
     }
 
-    const stringFields = ['title', 'description', 'type', 'location', 'address', 'status'];
+    const stringFields = ['title', 'type', 'location', 'address', 'status'];
     stringFields.forEach((field) => {
         if (req.body[field] !== undefined) {
             advertisement[field] = req.body[field];
         }
     });
+    if (req.body.description !== undefined) {
+        advertisement.description = normalizeDescriptionHtml(req.body.description);
+    }
 
     if (req.body.latitude !== undefined) {
         advertisement.latitude = (req.body.latitude !== '' && req.body.latitude !== null && !isNaN(Number(req.body.latitude))) ? Number(req.body.latitude) : null;
@@ -509,7 +525,7 @@ exports.update = async (req, res, next) => {
 
     SuccessResponse.ok(res, {
         message: req.t ? req.t('messages.advertisementUpdated') : 'Listing updated successfully.',
-        data: { advertisement: formatAdvertisement(populated) },
+        data: { advertisement: await presentOne(populated) },
     });
 };
 
@@ -606,7 +622,7 @@ exports.assignOwner = async (req, res, next) => {
     SuccessResponse.ok(res, {
         message: 'تم تعيين وربط حساب صاحب الإعلان بنجاح.',
         data: {
-            advertisement: formatAdvertisement(populated),
+            advertisement: await presentOne(populated),
             owner: {
                 id: ownerUser._id,
                 name: ownerUser.name,
@@ -699,7 +715,7 @@ exports.addImages = async (req, res, next) => {
 
     SuccessResponse.ok(res, {
         message: 'تم إضافة الصور بنجاح.',
-        data: { advertisement: formatAdvertisement(populated) },
+        data: { advertisement: await presentOne(populated) },
     });
 };
 
@@ -745,7 +761,7 @@ exports.deleteImage = async (req, res, next) => {
 
     SuccessResponse.ok(res, {
         message: 'تم حذف الصورة بنجاح.',
-        data: { advertisement: formatAdvertisement(populated) },
+        data: { advertisement: await presentOne(populated) },
     });
 };
 
@@ -787,11 +803,12 @@ exports.setMainImage = async (req, res, next) => {
 
     SuccessResponse.ok(res, {
         message: 'تم تعيين الصورة الرئيسية بنجاح.',
-        data: { advertisement: formatAdvertisement(populated) },
+        data: { advertisement: await presentOne(populated) },
     });
 };
 
 exports.deleteImageFile = deleteImageFile;
 exports.formatAdvertisement = formatAdvertisement;
+exports.attachDetailsHtml = attachDetailsHtml;
 exports.validateAttributes = validateAttributes;
 exports.buildPricingData = buildPricingData;

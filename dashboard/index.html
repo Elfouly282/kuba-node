@@ -1374,7 +1374,29 @@
 
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-700 mb-1">الوصف والتفاصيل</label>
-                                    <textarea id="owner-form-description" rows="3" class="form-textarea text-xs" placeholder="اكتب وصفاً مفصلاً يبرز مميزات الوحدة والخدمات المتوفرة..."></textarea>
+                                    <div class="html-editor" data-html-editor="owner-form-description">
+                                        <div class="html-editor-toolbar">
+                                            <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                            <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                            <button type="button" data-cmd="underline" title="تحته خط"><i class="fas fa-underline"></i></button>
+                                            <span class="html-editor-sep"></span>
+                                            <button type="button" data-cmd="formatBlock" data-value="h3" title="عنوان">عنوان</button>
+                                            <button type="button" data-cmd="formatBlock" data-value="p" title="فقرة">فقرة</button>
+                                            <span class="html-editor-sep"></span>
+                                            <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                            <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                            <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                        </div>
+                                        <div class="html-editor-area" contenteditable="true" dir="rtl" data-placeholder="اكتب التفاصيل في فقرات وقوائم عشان تظهر منظمة في التطبيق..."></div>
+                                        <textarea id="owner-form-description" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-1">التنسيق يتحفظ HTML ويرجع منظم في تفاصيل الإعلان.</p>
+                                    <div class="mt-2">
+                                        <div class="text-[11px] font-bold text-slate-500 mb-1">معاينة الوصف</div>
+                                        <div id="owner-form-description-preview" class="html-editor-preview" dir="rtl">
+                                            <span class="text-slate-400 text-xs">ستظهر التفاصيل هنا بشكل منظم...</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -2662,7 +2684,29 @@
                 <!-- 5. Description -->
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adDescription">الوصف والتفاصيل</label>
-                    <textarea id="ad-modal-description" rows="2" class="form-textarea text-xs" placeholder="اكتب تفاصيل الوحدة والخدمات والمرافق المتوفرة..."></textarea>
+                    <div class="html-editor" data-html-editor="ad-modal-description">
+                        <div class="html-editor-toolbar">
+                            <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                            <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                            <button type="button" data-cmd="underline" title="تحته خط"><i class="fas fa-underline"></i></button>
+                            <span class="html-editor-sep"></span>
+                            <button type="button" data-cmd="formatBlock" data-value="h3" title="عنوان">عنوان</button>
+                            <button type="button" data-cmd="formatBlock" data-value="p" title="فقرة">فقرة</button>
+                            <span class="html-editor-sep"></span>
+                            <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                            <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                            <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                        </div>
+                        <div class="html-editor-area" contenteditable="true" dir="rtl" data-placeholder="اكتب تفاصيل الوحدة والخدمات والمرافق في فقرات وقوائم..."></div>
+                        <textarea id="ad-modal-description" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1">التنسيق يتحفظ HTML ويرجع في حقل التفاصيل منظم للتطبيق.</p>
+                    <div class="mt-2">
+                        <div class="text-[11px] font-bold text-slate-500 mb-1">معاينة الوصف</div>
+                        <div id="ad-modal-description-preview" class="html-editor-preview" dir="rtl">
+                            <span class="text-slate-400 text-xs">ستظهر التفاصيل هنا بشكل منظم...</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 6. Images Upload -->
@@ -2790,6 +2834,23 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ADVERTISEMENT DETAILS HTML PREVIEW -->
+    <div id="ad-details-preview-modal" class="modal-overlay">
+        <div class="modal-content p-6 bg-white max-w-2xl">
+            <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base">تفاصيل الإعلان</h3>
+                    <p class="text-xs text-slate-500 mt-0.5" id="ad-details-preview-title">—</p>
+                </div>
+                <button onclick="closeModal('ad-details-preview-modal')" class="text-slate-400 hover:text-slate-700 text-xl font-bold cursor-pointer">&times;</button>
+            </div>
+            <div id="ad-details-preview-body" class="html-editor-preview max-h-[70vh] overflow-y-auto" dir="rtl"></div>
+            <div class="flex justify-end pt-4 border-t border-slate-100 mt-4">
+                <button type="button" onclick="closeModal('ad-details-preview-modal')" class="btn-secondary text-xs">إغلاق</button>
+            </div>
         </div>
     </div>
 

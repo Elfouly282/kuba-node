@@ -8,6 +8,7 @@ const APIError = require('../../../utils/apiError');
 const { SuccessResponse } = require('../../../utils/apiResponse');
 const { getImageUrl, getRelativeImagePath, deleteImageFile } = require('../../../utils/imageUrl');
 const { isPointInPolygon, getPolygonBoundingBox } = require('../../../utils/geospatial');
+const { attachDetailsHtml } = require('../../advertisements/presentDetails');
 
 const parsePoints = (raw) => {
     if (!raw) return [];
@@ -261,6 +262,9 @@ exports.getCityData = async (req, res, next) => {
         .sort({ createdAt: -1 });
 
     const rawCategories = await Category.find().sort({ createdAt: -1 });
+    const chalets = rawChalets.map(formatAdvertisement);
+    const advertisements = rawAdvertisements.map(formatAdvertisement);
+    await attachDetailsHtml(chalets.concat(advertisements));
 
     const formattedCity = formatCity(city, regions.length);
 
@@ -270,8 +274,8 @@ exports.getCityData = async (req, res, next) => {
             region: formattedCity,
             regions: regions.map(formatRegion),
             banners: rawBanners.map(formatBanner),
-            chalets: rawChalets.map(formatAdvertisement),
-            advertisements: rawAdvertisements.map(formatAdvertisement),
+            chalets,
+            advertisements,
             categories: rawCategories.map((c) => {
                 const obj = c.toJSON();
                 obj.image = getImageUrl(obj.image);
