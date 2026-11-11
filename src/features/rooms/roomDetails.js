@@ -37,15 +37,29 @@ const amenityIcon = (name) => {
     return match ? match.icon : 'fa-check';
 };
 
+const escapeHtml = (value) => String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+const iconClass = (icon) => {
+    const name = String(icon || 'fa-check').replace(/^fas\s+/i, '').trim();
+    if (name.startsWith('fa-')) return `fas ${name}`;
+    return `fas fa-${name}`;
+};
+
 const detail = ({ key, label, value, unit = '', icon }) => {
     const text = unit ? `${value} ${unit}` : String(value);
+    const resolvedIcon = icon || 'fa-check';
     return {
         key,
         label,
         value,
         unit,
         text,
-        icon,
+        icon: resolvedIcon,
+        iconClass: iconClass(resolvedIcon),
     };
 };
 
@@ -149,7 +163,22 @@ const buildRoomDetails = (room) => {
     return items;
 };
 
+const detailLine = (item) => {
+    if (item.key === 'amenity') return item.label;
+    return `${item.label}: ${item.text}`;
+};
+
+const buildRoomDetailsHtml = (items) => {
+    const list = Array.isArray(items) ? items : [];
+    if (!list.length) return '';
+    const lines = list.map((item) => (
+        `• <i class="${escapeHtml(item.iconClass || iconClass(item.icon))}" style="color:#2D4F2E;margin-left:6px;"></i> ${escapeHtml(detailLine(item))}`
+    )).join('<br>');
+    return `<div class="room-auto-details" dir="rtl"><p style="display:block;margin:14px 0 8px;font-size:15px;font-weight:700;color:#2D4F2E;">تفاصيل الغرفة</p><p style="display:block;margin:0;line-height:2;font-size:14px;color:#334155;">${lines}</p></div>`;
+};
+
 module.exports = {
     buildRoomDetails,
+    buildRoomDetailsHtml,
     amenityIcon,
 };

@@ -809,6 +809,24 @@ input:checked + .slider:before { transform: translateX(20px); }
     margin: 0 0 0.35rem;
 }
 
+.room-details-preview {
+    margin-top: 0.35rem;
+    max-width: 16rem;
+    font-size: 11px;
+    line-height: 1.9;
+    color: #334155;
+}
+
+.room-details-preview p {
+    margin: 0;
+}
+
+.room-details-preview i {
+    color: #2D4F2E;
+    width: 14px;
+    text-align: center;
+}
+
 .html-editor-area ul,
 .html-editor-area ol,
 .html-editor-preview ul,

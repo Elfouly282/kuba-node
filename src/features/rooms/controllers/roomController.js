@@ -5,7 +5,8 @@ const Booking = require('../../bookings/models/bookingModel');
 const APIError = require('../../../utils/apiError');
 const { SuccessResponse } = require('../../../utils/apiResponse');
 const { getImageUrl, getRelativeImagePath, deleteImageFile } = require('../../../utils/imageUrl');
-const { buildRoomDetails } = require('../roomDetails');
+const { buildRoomDetails, buildRoomDetailsHtml } = require('../roomDetails');
+const { normalizeDescriptionHtml, stripHtml } = require('../../../utils/descriptionHtml');
 
 const ROOM_MAX_IMAGES = 3;
 
@@ -26,6 +27,11 @@ const formatRoom = (doc) => {
     obj.images = merged;
     obj.image = merged[0] || '';
     obj.details = buildRoomDetails(obj);
+    obj.detailsHtml = buildRoomDetailsHtml(obj.details);
+    const written = normalizeDescriptionHtml(obj.description || obj.descriptionAr || '');
+    obj.descriptionSource = written;
+    obj.description = [written, obj.detailsHtml].filter(Boolean).join('<br>');
+    obj.descriptionText = stripHtml(obj.description);
 
     if (obj.hotel && typeof obj.hotel === 'object' && obj.hotel.image) {
         obj.hotel.image = getImageUrl(obj.hotel.image);

@@ -57,6 +57,7 @@ const sanitizeHtml = (html) => {
 
 const stripAutoSpecs = (html) => String(html || '')
     .replace(/<div class="ad-auto-specs">[\s\S]*?<\/div>/gi, '')
+    .replace(/<div class="room-auto-details">[\s\S]*?<\/div>/gi, '')
     .trim();
 
 const normalizeDescriptionHtml = (value) => {

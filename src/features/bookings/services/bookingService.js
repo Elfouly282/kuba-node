@@ -4,7 +4,7 @@ const Advertisement = require('../../advertisements/models/advertisementModel');
 const Room = require('../../rooms/models/roomModel');
 const APIError = require('../../../utils/apiError');
 const { getImageUrl } = require('../../../utils/imageUrl');
-const { buildRoomDetails } = require('../../rooms/roomDetails');
+const { buildRoomDetails, buildRoomDetailsHtml } = require('../../rooms/roomDetails');
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -167,7 +167,10 @@ const formatBooking = (doc) => {
             ref.images = ref.images.map(getImageUrl).filter(Boolean);
             if (field === 'room') ref.images = ref.images.slice(0, 3);
         }
-        if (field === 'room') ref.details = buildRoomDetails(ref);
+        if (field === 'room') {
+            ref.details = buildRoomDetails(ref);
+            ref.detailsHtml = buildRoomDetailsHtml(ref.details);
+        }
     });
 
     return obj;
