@@ -5868,10 +5868,15 @@ async function openBookingDetailsModal(bookingId) {
                         ${room.roomNumber ? ('<span class="badge bg-purple-200 text-purple-800 font-mono text-[10px] font-bold">غرفة رقم: ' + room.roomNumber + '</span>') : ''}
                     </div>
                     <div class="font-bold text-slate-800 text-xs">${room.title || 'غرفة فندقية'}</div>
-                    <div class="text-[11px] text-slate-600 flex flex-wrap gap-x-4 gap-y-1 pt-0.5">
-                        <span><i class="fas fa-tag text-purple-600 me-1"></i>نوع الغرفة: <b>${room.roomType || 'standard'}</b></span>
-                        <span><i class="fas fa-bed text-purple-600 me-1"></i>الأسرّة: <b>${room.beds?.count || 1} (${room.beds?.bedType || 'مزدوج'})</b></span>
-                        <span><i class="fas fa-user-friends text-purple-600 me-1"></i>السعة: <b>${room.capacity?.adults || 2} بالغين ${room.capacity?.children ? ('+ ' + room.capacity.children + ' أطفال') : ''}</b></span>
+                    <div class="text-[11px] text-slate-600 flex flex-wrap gap-1.5 pt-0.5">
+                        ${(Array.isArray(room.details) ? room.details : []).map((item) => `
+                            <span class="inline-flex items-center gap-1 bg-white border border-purple-100 rounded px-1.5 py-0.5">
+                                <i class="fas ${item.icon || 'fa-check'} text-purple-600"></i>
+                                <b>${escapeHtmlText(item.key === 'amenity' ? item.label : (item.text || item.value))}</b>
+                            </span>
+                        `).join('') || `
+                            <span><i class="fas fa-bed text-purple-600 me-1"></i>الأسرّة: <b>${room.beds?.count || 1} (${room.beds?.bedType || 'مزدوج'})</b></span>
+                        `}
                     </div>
                 </div>
             ` : ''}
@@ -6106,6 +6111,16 @@ async function loadHotelRooms(hotelId) {
                             <div>
                                 <div class="font-bold text-slate-800">${r.title || 'غرفة فندقية'}</div>
                                 <div class="text-[10px] text-slate-400 font-mono">رقم: ${r.roomNumber || '--'} · صور ${gallery.length}/3</div>
+                                ${(Array.isArray(r.details) && r.details.length) ? `
+                                    <div class="flex flex-wrap gap-1 mt-1 max-w-xs">
+                                        ${r.details.map((item) => `
+                                            <span class="inline-flex items-center gap-1 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[10px] text-slate-700">
+                                                <i class="fas ${item.icon || 'fa-check'} text-[#2D4F2E]"></i>
+                                                <span>${escapeHtmlText(item.key === 'amenity' ? item.label : (item.text || item.value))}</span>
+                                            </span>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                     </td>

@@ -4,6 +4,7 @@ const Advertisement = require('../../advertisements/models/advertisementModel');
 const Room = require('../../rooms/models/roomModel');
 const APIError = require('../../../utils/apiError');
 const { getImageUrl } = require('../../../utils/imageUrl');
+const { buildRoomDetails } = require('../../rooms/roomDetails');
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -151,7 +152,7 @@ const prepareBooking = async (input) => {
 
 const populateBooking = (query) => query
     .populate('advertisement', 'title price pricing image images location category region unitType owner isHotel type')
-    .populate('room', 'title roomNumber roomType price pricing capacity beds image images')
+    .populate('room', 'title roomNumber roomType price pricing capacity beds bathrooms area amenities image images')
     .populate('user', 'name email phone');
 
 const formatBooking = (doc) => {
@@ -166,6 +167,7 @@ const formatBooking = (doc) => {
             ref.images = ref.images.map(getImageUrl).filter(Boolean);
             if (field === 'room') ref.images = ref.images.slice(0, 3);
         }
+        if (field === 'room') ref.details = buildRoomDetails(ref);
     });
 
     return obj;

@@ -5,6 +5,7 @@ const Booking = require('../../bookings/models/bookingModel');
 const APIError = require('../../../utils/apiError');
 const { SuccessResponse } = require('../../../utils/apiResponse');
 const { getImageUrl, getRelativeImagePath, deleteImageFile } = require('../../../utils/imageUrl');
+const { buildRoomDetails } = require('../roomDetails');
 
 const ROOM_MAX_IMAGES = 3;
 
@@ -24,6 +25,7 @@ const formatRoom = (doc) => {
 
     obj.images = merged;
     obj.image = merged[0] || '';
+    obj.details = buildRoomDetails(obj);
 
     if (obj.hotel && typeof obj.hotel === 'object' && obj.hotel.image) {
         obj.hotel.image = getImageUrl(obj.hotel.image);
