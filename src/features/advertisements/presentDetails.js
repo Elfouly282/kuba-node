@@ -37,7 +37,7 @@ const attachDetailsHtml = async (items) => {
         const defs = grouped.get(unitTypeIdOf(ad)) || [];
         const specs = buildAttributeSpecsHtml(ad.attributes, defs);
         ad.descriptionSource = written;
-        ad.description = [written, specs].filter(Boolean).join('');
+        ad.description = [written, specs].filter(Boolean).join('<br>');
         ad.descriptionText = stripHtml(ad.description);
         ad.detailsHtml = buildDetailsHtml({
             description: written,

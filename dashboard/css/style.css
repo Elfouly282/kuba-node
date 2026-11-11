@@ -800,7 +800,13 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 .html-editor-area p,
 .html-editor-preview p {
-    margin: 0 0 0.4rem;
+    display: block;
+    margin: 0 0 0.45rem;
+    line-height: 1.9;
+}
+
+.html-editor-preview p.spec-line {
+    margin: 0 0 0.35rem;
 }
 
 .html-editor-area ul,

@@ -119,23 +119,23 @@ const collectSpecItems = (attributes, attributeDefs) => {
     return items;
 };
 
+const formatSpecLinesHtml = (items) => {
+    if (!items.length) return '';
+    const lines = items
+        .map((item) => `• ${escapeHtml(item.label)}: ${escapeHtml(item.value)}`)
+        .join('<br>');
+    return `<p style="display:block;margin:0;line-height:2;font-size:14px;color:#334155;">${lines}</p>`;
+};
+
 const buildAttributeSpecsHtml = (attributes, attributeDefs) => {
     const items = collectSpecItems(attributes, attributeDefs);
     if (!items.length) return '';
-    const lis = items.map((item) => (
-        `<li style="margin:0 0 4px;line-height:1.7;color:#334155;"><strong>${escapeHtml(item.label)}:</strong> ${escapeHtml(item.value)}</li>`
-    )).join('');
-    return `<div class="ad-auto-specs"><h3 style="margin:14px 0 6px;font-size:15px;font-weight:700;color:#2D4F2E;">المواصفات</h3><ul style="margin:0 18px 8px 0;padding:0;">${lis}</ul></div>`;
+    return `<div class="ad-auto-specs"><p style="display:block;margin:14px 0 8px;font-size:15px;font-weight:700;color:#2D4F2E;">المواصفات</p>${formatSpecLinesHtml(items)}</div>`;
 };
 
 const buildDetailsHtml = ({ description, location, address, attributes, attributeDefs } = {}) => {
     const descriptionHtml = styleDescription(normalizeDescriptionHtml(description));
-    const rows = collectSpecItems(attributes, attributeDefs).map((item) => (
-        `<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #e2e8f0;font-size:14px;">`
-        + `<span style="color:#64748b;font-weight:600;">${escapeHtml(item.label)}</span>`
-        + `<span style="color:#0f172a;font-weight:700;">${escapeHtml(item.value)}</span>`
-        + `</div>`
-    ));
+    const rows = formatSpecLinesHtml(collectSpecItems(attributes, attributeDefs));
 
     const sections = [];
     if (descriptionHtml) {
@@ -146,11 +146,11 @@ const buildDetailsHtml = ({ description, location, address, attributes, attribut
             + `</section>`
         );
     }
-    if (rows.length) {
+    if (rows) {
         sections.push(
             `<section style="margin:0 0 16px;">`
             + `<h2 style="margin:0 0 8px;font-size:16px;font-weight:700;color:#2D4F2E;">المواصفات</h2>`
-            + `<div>${rows.join('')}</div>`
+            + `<div>${rows}</div>`
             + `</section>`
         );
     }

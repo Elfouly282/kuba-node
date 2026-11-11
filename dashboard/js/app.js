@@ -4928,11 +4928,11 @@ function buildLiveSpecsHtml(container) {
             if (raw) value = group.unit ? `${raw} ${group.unit}` : raw;
         }
         if (!value) return;
-        items.push(`<li><strong>${escapeHtmlText(group.label)}:</strong> ${escapeHtmlText(value)}</li>`);
+        items.push(`<p class="spec-line">• ${escapeHtmlText(group.label)}: ${escapeHtmlText(value)}</p>`);
     });
 
     if (!items.length) return '';
-    return `<h3>المواصفات</h3><ul>${items.join('')}</ul>`;
+    return `<h3>المواصفات</h3>${items.join('')}`;
 }
 
 function paintHtmlPreview(id, html) {
