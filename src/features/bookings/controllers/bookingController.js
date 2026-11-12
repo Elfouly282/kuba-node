@@ -1,5 +1,6 @@
 const Booking = require('../models/bookingModel');
 const Advertisement = require('../../advertisements/models/advertisementModel');
+const Room = require('../../rooms/models/roomModel');
 const APIError = require('../../../utils/apiError');
 const { SuccessResponse } = require('../../../utils/apiResponse');
 const {
@@ -9,6 +10,7 @@ const {
     populateBooking,
     formatBooking,
 } = require('../services/bookingService');
+const { resolveBooking } = require('../bookingMode');
 
 const findMyBooking = async (req) => {
     if (!isValidId(req.params.id)) throw new APIError('errors.invalidBookingId', 400);
@@ -31,8 +33,16 @@ exports.getBookedDates = async (req, res) => {
     if (!isValidId(advertisementId)) throw new APIError('errors.invalidAdvertisementId', 400);
     if (roomId && !isValidId(roomId)) throw new APIError('errors.invalidRoomId', 400);
 
-    const ad = await Advertisement.findById(advertisementId).select('pricing');
+    const ad = await Advertisement.findById(advertisementId).select('pricing isHotel');
     if (!ad) throw new APIError('errors.advertisementNotFound', 404);
+
+    const room = roomId ? await Room.findById(roomId).select('pricing hotel') : null;
+    if (roomId && !room) throw new APIError('errors.roomNotFound', 404);
+    if (room && String(room.hotel) !== String(ad._id)) {
+        throw new APIError('errors.roomDoesNotBelongToHotel', 400);
+    }
+
+    const booking = resolveBooking(room || ad, { requiresRoom: Boolean(ad.isHotel) && !room });
 
     const bookings = await Booking.find({
         advertisement: ad._id,
@@ -47,7 +57,8 @@ exports.getBookedDates = async (req, res) => {
         data: {
             advertisementId: ad._id,
             roomId,
-            pricingUnit: ad.pricing?.pricingUnit || 'per_night',
+            pricingUnit: booking.pricingUnit,
+            booking,
             bookedDates: bookings.map((b) => ({ startDate: b.startDate, endDate: b.endDate })),
         },
     });

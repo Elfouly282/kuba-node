@@ -12,6 +12,7 @@ const { findRegionForCoordinates } = require('../../../utils/geospatial');
 const { searchAdvertisements } = require('../../search/listingSearch');
 const { attachDetailsHtml } = require('../presentDetails');
 const { normalizeDescriptionHtml } = require('../../../utils/descriptionHtml');
+const { resolveBooking } = require('../../bookings/bookingMode');
 
 const formatAdvertisement = (doc) => {
     if (!doc) return null;
@@ -53,6 +54,8 @@ const formatAdvertisement = (doc) => {
             minDuration: 1,
         };
     }
+
+    obj.booking = resolveBooking(obj, { requiresRoom: Boolean(obj.isHotel) });
 
     return obj;
 };

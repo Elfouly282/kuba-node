@@ -6,6 +6,7 @@ const APIError = require('../../../utils/apiError');
 const { SuccessResponse } = require('../../../utils/apiResponse');
 const { getImageUrl, getRelativeImagePath, deleteImageFile } = require('../../../utils/imageUrl');
 const { buildRoomDetails, buildRoomDetailsHtml } = require('../roomDetails');
+const { resolveBooking } = require('../../bookings/bookingMode');
 const { normalizeDescriptionHtml, stripHtml } = require('../../../utils/descriptionHtml');
 
 const ROOM_MAX_IMAGES = 3;
@@ -28,6 +29,7 @@ const formatRoom = (doc) => {
     obj.image = merged[0] || '';
     obj.details = buildRoomDetails(obj);
     obj.detailsHtml = buildRoomDetailsHtml(obj.details);
+    obj.booking = resolveBooking(obj);
     const written = normalizeDescriptionHtml(obj.description || obj.descriptionAr || '');
     obj.descriptionSource = written;
     obj.description = [written, obj.detailsHtml].filter(Boolean).join('<br>');
