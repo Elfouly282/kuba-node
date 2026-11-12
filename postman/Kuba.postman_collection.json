@@ -1351,7 +1351,7 @@
     },
     {
       "name": "Bookings",
-      "description": "نظام حجز واحد لكل الأنواع (شاليه، فيلا، شقة، يخت، جولف كار، أوضة فندق).\n\nالتطبيق يقرأ advertisement.booking (ونفس الحقل على الغرفة) عشان يفتح الشاشة:\n- mode=stay: تاريخ وصول وتاريخ مغادرة (per_night / per_day). فندق، غرفة، شاليه، شقة، أو يخت/جولف كار سعره باليوم.\n- mode=hourly: يوم + ساعة بداية وساعة نهاية (per_hour).\n- mode=trip: حجز واحد من غير مدة (per_trip / fixed).\n- requiresRoom=true: على الفندق بس. اختار غرفة، وبعدين نفس شاشة stay.\n\nالترتيب:\n1) Booked Dates: المواعيد المحجوزة عشان تقفلها في الكالندر.\n2) Check: راجع الإقامة. quote.lines و quote.total هما سعر المراجعة والوجبات والدفع والتأكيد. ابعت adults و addOns عشان تشوف الإجمالي بعد الإضافة من غير ما تتحفظ.\n3) Create Booking: السيرفر يعيد الحساب. totalPrice و priceBreakdown.total و confirmation.price.total و confirmation.payment.amount رقم واحد. guestDetails فيها صاحب الحجز والإيميل والموبايل ووقت الوصول. addOns نفس المعرفات اللي رجعت من Check. instapay و fawry و meeza لازم acceptedTerms=true.\n4) My Bookings / Get One: confirmation هي شاشة التأكيد (reference و guest و stay و price و cancellation).\n5) Cancel.\n\nرسوم الإقامة والإضافات على advertisement.stay، والغرفة تورثها إلا لو ليها stay خاص. التواريخ دايماً startDate و endDate بتاريخ ووقت كامل (ISO).\nللفندق: هات الأوض المتاحة من Advertisements > Get Hotel Available Rooms، وابعت room بدل advertisement.",
+      "description": "نظام حجز واحد لكل الأنواع (شاليه، فيلا، شقة، يخت، جولف كار، أوضة فندق).\n\nالتطبيق يقرأ advertisement.booking (ونفس الحقل على الغرفة) عشان يفتح الشاشة:\n- mode=stay: تاريخ وصول وتاريخ مغادرة (per_night / per_day). فندق، غرفة، شاليه، شقة، أو يخت/جولف كار سعره باليوم.\n- mode=hourly: نفس اليوم + ساعة بداية وساعة نهاية (per_hour). booking.sameDay=true، فيوم البداية هو يوم النهاية. جولف كار بكرة من 5 لـ 7: date=2026-11-13&startTime=17:00&endTime=19:00 (توقيت القاهرة). ينفع كمان startDate و endDate وفيهم الوقت حتى لو اليوم واحد.\n- mode=trip: حجز واحد من غير مدة (per_trip / fixed).\n- requiresRoom=true: على الفندق بس. اختار غرفة، وبعدين نفس شاشة stay.\n\nالترتيب:\n1) Booked Dates: المواعيد المحجوزة عشان تقفلها في الكالندر.\n2) Check: راجع الإقامة. quote.lines و quote.total هما سعر المراجعة والوجبات والدفع والتأكيد. ابعت adults و addOns عشان تشوف الإجمالي بعد الإضافة من غير ما تتحفظ.\n3) Create Booking: السيرفر يعيد الحساب. totalPrice و priceBreakdown.total و confirmation.price.total و confirmation.payment.amount رقم واحد. guestDetails فيها صاحب الحجز والإيميل والموبايل ووقت الوصول. addOns نفس المعرفات اللي رجعت من Check. instapay و fawry و meeza لازم acceptedTerms=true.\n4) My Bookings / Get One: confirmation هي شاشة التأكيد (reference و guest و stay و price و cancellation).\n5) Cancel.\n\nرسوم الإقامة والإضافات على advertisement.stay، والغرفة تورثها إلا لو ليها stay خاص. للإقامة: startDate و endDate بتاريخ ووقت كامل (ISO). للحجز بالساعة: date + startTime + endTime في نفس اليوم، أو startDate و endDate وفيهم الوقت.\nللفندق: هات الأوض المتاحة من Advertisements > Get Hotel Available Rooms، وابعت room بدل advertisement.",
       "item": [
         {
           "name": "1. Booked Dates (المواعيد المحجوزة)",
@@ -1413,6 +1413,24 @@
                 {
                   "key": "endDate",
                   "value": "2026-12-04T12:00:00.000Z"
+                },
+                {
+                  "key": "date",
+                  "value": "2026-11-13",
+                  "description": "Hourly only. The single day. Start and end are this same day. Times are Africa/Cairo.",
+                  "disabled": true
+                },
+                {
+                  "key": "startTime",
+                  "value": "17:00",
+                  "description": "Hourly only. Start time on that day, 24h or 5:00 PM.",
+                  "disabled": true
+                },
+                {
+                  "key": "endTime",
+                  "value": "19:00",
+                  "description": "Hourly only. End time on the same day, after startTime.",
+                  "disabled": true
                 },
                 {
                   "key": "adults",

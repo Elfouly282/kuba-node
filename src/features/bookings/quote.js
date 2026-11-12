@@ -22,6 +22,20 @@ const normalizeTime = (value) => {
     return `${String(hours).padStart(2, '0')}:${minutes}`;
 };
 
+const clockInZone = (date, timeZone = 'Africa/Cairo') => {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+    const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+    }).formatToParts(date);
+    const hour = parts.find((part) => part.type === 'hour')?.value || '';
+    const minute = parts.find((part) => part.type === 'minute')?.value || '';
+    if (!hour || !minute) return '';
+    return `${hour === '24' ? '00' : hour}:${minute}`;
+};
+
 const PAYMENT_LABELS = {
     cash: 'Cash',
     card: 'Card',
@@ -225,6 +239,7 @@ const buildQuote = ({
     addOnIds = [],
     guests = { adults: 1, children: 0, rooms: 1 },
     start,
+    end,
 }) => {
     const stay = mergeStay(ad, room);
     const roomSubtotal = money(chargedUnit * duration);
@@ -298,6 +313,7 @@ const buildQuote = ({
     const addOnsTotal = money(selectedAddOns.reduce((sum, item) => sum + item.price, 0));
     const taxesAndService = money(serviceFee + taxes);
     const beforeAddOns = money(total - addOnsTotal);
+    const hourly = pricingUnit === 'per_hour';
     const stayMode = pricingUnit === 'per_night' || pricingUnit === 'per_day';
 
     return {
@@ -338,8 +354,8 @@ const buildQuote = ({
         guests,
         breakfastIncluded: stay.breakfastIncluded,
         schedule: {
-            checkInTime: stay.checkInTime || (stayMode ? '15:00' : ''),
-            checkOutTime: stay.checkOutTime || (stayMode ? '12:00' : ''),
+            checkInTime: hourly ? clockInZone(start) : (stay.checkInTime || (stayMode ? '15:00' : '')),
+            checkOutTime: hourly ? clockInZone(end) : (stay.checkOutTime || (stayMode ? '12:00' : '')),
         },
         cancellation: stay.freeCancellationDays === null ? null : {
             daysBefore: stay.freeCancellationDays,
@@ -455,6 +471,7 @@ const presentConfirmation = (booking) => {
 module.exports = {
     PAYMENT_METHODS,
     paymentMethodOptions,
+    normalizeTime,
     readGuests,
     parseAddOnIds,
     assertCapacity,

@@ -160,6 +160,47 @@ const run = async () => {
         res = await request('GET', `/api/v1/bookings/check?advertisement=${yacht._id}&startDate=${at(40, 13)}&endDate=${at(40, 15)}`);
         expect(res.status === 200 && res.body.data.available === true, 'Check: hours right after the booking are available', res);
 
+        console.log('\n--- Golf car (same day, 17:00 to 19:00) ---');
+        const golf = await createAd({
+            title: 'Test Golf Car',
+            type: 'golf_car',
+            owner: owner.user._id,
+            pricing: { basePrice: 400, pricingUnit: 'per_hour', pricePerHour: 500 },
+        });
+
+        res = await request('GET', `/api/v1/bookings/booked-dates/${golf._id}`);
+        expect(res.status === 200 && res.body.data.booking.mode === 'hourly' && res.body.data.booking.sameDay === true, 'Booked dates: hourly booking is same-day', res);
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${golf._id}&startDate=2026-12-20&endDate=2026-12-20`);
+        expect(res.status === 400, 'Check: same day without hours is rejected', res);
+
+        res = await request('POST', '/api/v1/bookings', {
+            token: customer.token,
+            body: {
+                advertisement: golf._id,
+                date: '2026-12-20',
+                startTime: '17:00',
+                endTime: '19:00',
+            },
+        });
+        expect(res.status === 201 && res.body.data.booking.totalPrice === 1000, 'Create: same day 17:00-19:00 is 2 hours x 500', res);
+        expect(res.body.data.booking.rentalType === 'hourly' && res.body.data.booking.duration === 2, 'Create: saved as a 2 hour same-day rental', res);
+        expect(new Date(res.body.data.booking.startDate).toISOString() === '2026-12-20T15:00:00.000Z', 'Create: 17:00 Cairo is 15:00 UTC', res);
+        expect(new Date(res.body.data.booking.endDate).toISOString() === '2026-12-20T17:00:00.000Z', 'Create: 19:00 Cairo is 17:00 UTC, same day', res);
+        expect(res.body.data.booking.confirmation.stay.checkInTime === '17:00' && res.body.data.booking.confirmation.stay.checkOutTime === '19:00', 'Create: confirmation shows 17:00 to 19:00', res);
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${golf._id}&date=2026-12-20&startTime=6:00%20PM&endTime=8:00%20PM`);
+        expect(res.status === 200 && res.body.data.available === false && res.body.data.duration === 2, 'Check: 6pm-8pm overlaps the same-day booking', res);
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${golf._id}&date=2026-12-20&startTime=19:00&endTime=21:00`);
+        expect(res.status === 200 && res.body.data.available === true && res.body.data.totalPrice === 1000, 'Check: 19:00-21:00 the same day is free', res);
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${golf._id}&date=2026-12-21&startTime=19:00&endTime=17:00`);
+        expect(res.status === 400, 'Check: end time before start time on the same day is rejected', res);
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${golf._id}&date=2026-12-21&startTime=22:00&durationHours=4`);
+        expect(res.status === 400, 'Check: hours that run into the next day are rejected', res);
+
         console.log('\n--- Hotel (room per night) ---');
         res = await request('POST', '/api/v1/bookings', {
             token: customer.token,

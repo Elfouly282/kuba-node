@@ -12,10 +12,13 @@ const {
     assertCapacity,
     buildQuote,
     presentConfirmation,
+    normalizeTime,
 } = require('../quote');
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+const CAIRO = 'Africa/Cairo';
 
 // Bookings in these statuses block their time slot
 const ACTIVE_STATUSES = ['pending', 'confirmed'];
@@ -32,22 +35,106 @@ const BOOKING_TYPES = ['hotel', 'chalet', 'yacht', 'golf_car', 'apartment', 'vil
 
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-const parseDates = ({ startDate, endDate } = {}) => {
-    if (!startDate || !endDate) {
-        throw new APIError('validation.datesRequired', 400);
-    }
+const text = (value) => (value === undefined || value === null ? '' : String(value).trim());
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+const isDateOnly = (value) => DATE_ONLY.test(text(value));
 
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
+const cairoDay = (date) => new Intl.DateTimeFormat('en-CA', {
+    timeZone: CAIRO,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+}).format(date);
+
+// Wall-clock time in Africa/Cairo, so 17:00 is 5pm in Egypt.
+const zonedDate = (day, time) => {
+    const datePart = text(day).slice(0, 10);
+    const clock = normalizeTime(text(time).replace(/^(\d{1,2}:\d{2}):\d{2}$/, '$1'));
+    if (!DATE_ONLY.test(datePart) || !clock) return null;
+
+    const utcGuess = new Date(`${datePart}T${clock}:00Z`);
+    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+        timeZone: CAIRO,
+        hourCycle: 'h23',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+    }).formatToParts(utcGuess).map((part) => [part.type, part.value]));
+
+    const hour = parts.hour === '24' ? 0 : Number(parts.hour);
+    const asUtc = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), hour, Number(parts.minute), Number(parts.second));
+    const parsed = new Date(utcGuess.getTime() - (asUtc - utcGuess.getTime()));
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const assertFutureRange = (start, end) => {
+    if (!(start instanceof Date) || !(end instanceof Date) || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
         throw new APIError('validation.invalidDateRange', 400);
     }
     if (start < new Date()) {
         throw new APIError('validation.startDateInPast', 400);
     }
-
     return { start, end };
+};
+
+/**
+ * Hourly rentals (golf car, yacht per hour) are one day.
+ * Tomorrow 17:00–19:00 is date + startTime + endTime, and that day is both the start and the end.
+ */
+const parseHourlySameDay = ({ day, startTime, endTime, durationRaw, hasDuration }) => {
+    if (!startTime || (!endTime && !hasDuration)) {
+        throw new APIError('validation.hourlyTimesRequired', 400);
+    }
+
+    const start = zonedDate(day, startTime);
+    if (!start) throw new APIError('validation.hourlyTimesRequired', 400);
+
+    let end = null;
+    if (endTime) {
+        end = zonedDate(day, endTime);
+        if (!end) throw new APIError('validation.hourlyTimesRequired', 400);
+        if (end <= start) throw new APIError('validation.sameDayEndAfterStart', 400);
+    } else {
+        const hours = Number(durationRaw);
+        if (!Number.isFinite(hours) || hours <= 0) throw new APIError('validation.invalidDuration', 400);
+        end = new Date(start.getTime() + (hours * HOUR_MS));
+        if (cairoDay(start) !== cairoDay(end)) throw new APIError('validation.hourlySameDay', 400);
+    }
+
+    return assertFutureRange(start, end);
+};
+
+const parseDates = (input = {}, pricingUnit) => {
+    const hourly = pricingUnit === 'per_hour';
+    const startTime = text(input.startTime);
+    const endTime = text(input.endTime);
+    const day = text(input.date || input.bookingDate);
+    const durationRaw = input.durationHours ?? input.hours;
+    const hasDuration = text(durationRaw) !== '';
+    const startDate = text(input.startDate);
+    const endDate = text(input.endDate);
+    const timedRange = startDate && !isDateOnly(startDate) && endDate && !isDateOnly(endDate);
+    const sameCalendarDay = isDateOnly(startDate) && isDateOnly(endDate) && startDate === endDate;
+    const wantsSameDayHours = hourly && !timedRange && (day || startTime || endTime || hasDuration || sameCalendarDay);
+
+    if (wantsSameDayHours) {
+        return parseHourlySameDay({
+            day: day || startDate || endDate,
+            startTime,
+            endTime,
+            durationRaw,
+            hasDuration,
+        });
+    }
+
+    if (!startDate || !endDate) {
+        throw new APIError('validation.datesRequired', 400);
+    }
+
+    return assertFutureRange(new Date(startDate), new Date(endDate));
 };
 
 /**
@@ -127,6 +214,7 @@ const calculatePrice = ({ ad, room, start, end, addOnIds = [], guests = { adults
         addOnIds,
         guests,
         start,
+        end,
     });
 
     return {
@@ -163,8 +251,9 @@ const isSlotTaken = async ({ ad, room, start, end }) => {
  * Used by both the "check" endpoint and the "create" endpoint so they always agree.
  */
 const prepareBooking = async (input) => {
-    const { start, end } = parseDates(input);
     const { ad, room } = await findBookable(input);
+    const pricingUnit = (room || ad).pricing?.pricingUnit || 'per_night';
+    const { start, end } = parseDates(input, pricingUnit);
     const guests = readGuests(input);
     assertCapacity(room, guests);
     const price = calculatePrice({

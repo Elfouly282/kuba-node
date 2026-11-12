@@ -71,6 +71,7 @@ exports.getBookedDates = async (req, res) => {
 
 /**
  * GET /bookings/check?advertisement=&room=&startDate=&endDate=
+ * Hourly (same day): ?date=2026-11-13&startTime=17:00&endTime=19:00
  * Tells whether the slot is free and what it would cost. Saves nothing.
  */
 exports.checkBooking = async (req, res) => {
