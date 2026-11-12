@@ -1107,7 +1107,7 @@
                         <!-- Filter bar for bookings -->
                         <div class="card p-4 bg-white grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                             <div class="relative">
-                                <input type="text" id="admin-booking-search" oninput="filterAdminBookings()" class="form-input text-xs ps-9" placeholder="ابحث باسم العميل أو الإعلان أو الهاتف...">
+                                <input type="text" id="admin-booking-search" oninput="filterAdminBookings()" class="form-input text-xs ps-9" placeholder="ابحث بالاسم أو رقم الحجز أو الهاتف...">
                                 <i class="fas fa-search absolute top-3 start-3 text-slate-400 text-xs"></i>
                             </div>
                             <div>
@@ -1447,6 +1447,53 @@
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">السعر النهائي للعميل</label>
                                         <input type="number" id="owner-form-final-price" readonly class="form-input text-xs bg-slate-100 font-bold text-[#2D4F2E]">
+                                    </div>
+                                </div>
+
+                                <div class="pt-3 border-t border-slate-100 space-y-3">
+                                    <div class="text-xs font-bold text-slate-900">رسوم الإقامة والإضافات</div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-700 mb-1">رسوم النظافة</label>
+                                            <input type="number" id="owner-form-cleaning-fee" min="0" step="any" class="form-input text-xs" placeholder="0">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-700 mb-1">رسوم الخدمة %</label>
+                                            <input type="number" id="owner-form-service-percent" min="0" max="100" step="any" class="form-input text-xs" placeholder="5">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-700 mb-1">الضريبة %</label>
+                                            <input type="number" id="owner-form-tax-percent" min="0" max="100" step="any" class="form-input text-xs" placeholder="10">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-700 mb-1">اسم الضريبة</label>
+                                            <input type="text" id="owner-form-tax-label" class="form-input text-xs" placeholder="VAT">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-700 mb-1">وقت الدخول</label>
+                                            <input type="time" id="owner-form-checkin" class="form-input text-xs">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-700 mb-1">وقت الخروج</label>
+                                            <input type="time" id="owner-form-checkout" class="form-input text-xs">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-700 mb-1">إلغاء مجاني قبل (أيام)</label>
+                                            <input type="number" id="owner-form-cancel-days" min="0" step="1" class="form-input text-xs" placeholder="5">
+                                        </div>
+                                        <label class="flex items-end gap-2 text-xs font-semibold text-slate-700 pb-2">
+                                            <input type="checkbox" id="owner-form-breakfast" class="rounded border-slate-300">
+                                            <span>الإفطار مشمول</span>
+                                        </label>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs font-semibold text-slate-700">وجبات وإضافات اختيارية</span>
+                                            <button type="button" onclick="addStayAddonRow('owner-form')" class="btn-secondary text-[11px] py-1 px-2">إضافة</button>
+                                        </div>
+                                        <div id="owner-form-stay-addons" class="space-y-2"></div>
                                     </div>
                                 </div>
                             </div>
@@ -2595,6 +2642,53 @@
                             <input type="number" id="ad-modal-final-price" readonly class="form-input text-xs bg-slate-100 font-bold text-[#2D4F2E]" placeholder="يُحسب تلقائياً">
                         </div>
                     </div>
+
+                    <div class="pt-3 border-t border-slate-200 space-y-3">
+                        <div class="text-xs font-bold text-slate-900">رسوم الإقامة والإضافات</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">رسوم النظافة</label>
+                                <input type="number" id="ad-modal-cleaning-fee" min="0" step="any" class="form-input text-xs" placeholder="0">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">رسوم الخدمة %</label>
+                                <input type="number" id="ad-modal-service-percent" min="0" max="100" step="any" class="form-input text-xs" placeholder="5">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">الضريبة %</label>
+                                <input type="number" id="ad-modal-tax-percent" min="0" max="100" step="any" class="form-input text-xs" placeholder="10">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">اسم الضريبة</label>
+                                <input type="text" id="ad-modal-tax-label" class="form-input text-xs" placeholder="VAT">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">وقت الدخول</label>
+                                <input type="time" id="ad-modal-checkin" class="form-input text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">وقت الخروج</label>
+                                <input type="time" id="ad-modal-checkout" class="form-input text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">إلغاء مجاني قبل (أيام)</label>
+                                <input type="number" id="ad-modal-cancel-days" min="0" step="1" class="form-input text-xs" placeholder="5">
+                            </div>
+                            <label class="flex items-end gap-2 text-xs font-semibold text-slate-700 pb-2">
+                                <input type="checkbox" id="ad-modal-breakfast" class="rounded border-slate-300">
+                                <span>الإفطار مشمول</span>
+                            </label>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-semibold text-slate-700">وجبات وإضافات اختيارية</span>
+                                <button type="button" onclick="addStayAddonRow('ad-modal')" class="btn-secondary text-[11px] py-1 px-2">إضافة</button>
+                            </div>
+                            <div id="ad-modal-stay-addons" class="space-y-2"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 4. Location & Address -->
@@ -2978,6 +3072,13 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">نوع السرير (Bed Type)</label>
                         <input type="text" id="hroom-bed-type" class="form-input text-xs" placeholder="مثال: King Bed أو 2 Twin Beds">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">المساحة (م²)</label>
+                        <input type="number" id="hroom-area" min="0" step="any" class="form-input text-xs" placeholder="42">
                     </div>
                 </div>
 

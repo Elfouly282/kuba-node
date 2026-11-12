@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { staySchema } = require('../stayOptions');
 
 const advertisementSchema = new mongoose.Schema(
     {
@@ -97,6 +98,10 @@ const advertisementSchema = new mongoose.Schema(
                 default: null,
                 min: [0, 'validation.invalidPrice'],
             },
+        },
+        stay: {
+            type: staySchema,
+            default: undefined,
         },
         location: {
             type: String,

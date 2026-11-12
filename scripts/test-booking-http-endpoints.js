@@ -128,6 +128,7 @@ const run = async () => {
         res = await request('GET', `/api/v1/bookings/check?advertisement=${chalet._id}&startDate=${at(30, 14)}&endDate=${at(33, 12)}`);
         expect(res.status === 200 && res.body.data.available === true, 'Check: 3 nights are available', res);
         expect(res.body.data.duration === 3 && res.body.data.totalPrice === 3000, 'Check: price is 3 x 1000 = 3000', res);
+        expect(res.body.data.quote.total === res.body.data.totalPrice, 'Check: quote total matches totalPrice', res);
 
         res = await request('POST', '/api/v1/bookings', {
             token: customer.token,
@@ -186,16 +187,139 @@ const run = async () => {
         res = await request('POST', '/api/v1/bookings', { body: { advertisement: chalet._id, startDate: at(70), endDate: at(73) } });
         expect(res.status === 401, 'Create without login is rejected', res);
 
+        console.log('\n--- Checkout quote stays the same on every step ---');
+        const resort = await createAd({
+            title: 'Azure Bay Resort',
+            type: 'hotel',
+            owner: owner.user._id,
+            pricing: { basePrice: 7800, pricingUnit: 'per_night' },
+            stay: {
+                cleaningFee: 600,
+                serviceFeePercent: 5,
+                taxPercent: 10,
+                taxLabel: 'VAT',
+                checkInTime: '15:00',
+                checkOutTime: '12:00',
+                freeCancellationDays: 5,
+                breakfastIncluded: true,
+                addOns: [{
+                    title: 'Breakfast in bed',
+                    description: 'Breakfast in bed for 2 guests.',
+                    price: 420,
+                    category: 'meal',
+                }],
+            },
+        });
+        const seaView = await Room.create({
+            hotel: resort._id,
+            title: 'Deluxe Sea-View',
+            pricing: { basePrice: 7800 },
+            beds: { count: 1, bedType: 'King Bed' },
+            area: 42,
+            capacity: { adults: 2, children: 0, maxGuests: 2 },
+            amenities: ['Sea view'],
+        });
+        created.rooms.push(seaView._id);
+        const breakfastId = String(resort.stay.addOns[0]._id);
+        const stayStart = at(80, 15);
+        const stayEnd = at(83, 12);
+
+        res = await request('GET', `/api/v1/bookings/check?room=${seaView._id}&startDate=${stayStart}&endDate=${stayEnd}&adults=2`);
+        expect(res.status === 200 && res.body.data.totalPrice === 27510, 'Review: 7800 x 3 + cleaning 600 + 5% + VAT 10% = 27510', res);
+        expect(res.body.data.quote.total === 27510 && res.body.data.quote.summary.beforeAddOns === 27510, 'Review: footer total matches the breakdown before meals', res);
+
+        res = await request('GET', `/api/v1/bookings/check?room=${seaView._id}&startDate=${stayStart}&endDate=${stayEnd}&adults=2&addOns=${breakfastId}`);
+        const quoted = res.body.data.quote;
+        const lineSum = quoted.lines.reduce((sum, line) => sum + line.amount, 0);
+        expect(res.status === 200 && quoted.total === 27930 && quoted.addOnsTotal === 420, 'Meals: adding breakfast updates the same total to 27930', res);
+        expect(lineSum === quoted.total && quoted.summary.total === quoted.total, 'Meals: every line adds up to the footer total', res);
+
+        res = await request('GET', `/api/v1/bookings/check?room=${seaView._id}&startDate=${stayStart}&endDate=${stayEnd}&adults=5`);
+        expect(res.status === 400, 'Review: more guests than the room allows is rejected', res);
+
+        res = await request('POST', '/api/v1/bookings', {
+            token: customer.token,
+            body: {
+                room: seaView._id,
+                startDate: stayStart,
+                endDate: stayEnd,
+                addOns: [breakfastId],
+                paymentMethod: 'instapay',
+                guestDetails: {
+                    adults: 2,
+                    bookingFor: 'me',
+                    email: 'nadia.hassan@example.com',
+                    phoneCountryCode: '+20',
+                    phone: '1258966',
+                    firstName: 'Nadia',
+                    lastName: 'Hassan',
+                    arrivalFrom: '3:00 PM',
+                    arrivalTo: '4:00 PM',
+                },
+            },
+        });
+        expect(res.status === 400, 'Payment: InstaPay without accepting the terms is rejected', res);
+
+        res = await request('POST', '/api/v1/bookings', {
+            token: customer.token,
+            body: {
+                room: seaView._id,
+                startDate: stayStart,
+                endDate: stayEnd,
+                addOns: [breakfastId],
+                paymentMethod: 'instapay',
+                acceptedTerms: true,
+                guestDetails: {
+                    adults: 2,
+                    bookingFor: 'me',
+                    email: 'nadia.hassan@example.com',
+                    phoneCountryCode: '+20',
+                    phone: '1258966',
+                    firstName: 'Nadia',
+                    lastName: 'Hassan',
+                    arrivalFrom: '3:00 PM',
+                    arrivalTo: '4:00 PM',
+                },
+            },
+        });
+        const stayed = res.body.data && res.body.data.booking;
+        const confirmation = stayed && stayed.confirmation;
+        expect(res.status === 201 && stayed.totalPrice === 27930, 'Create: saved total matches the meals and payment total', res);
+        expect(confirmation.price.total === stayed.totalPrice && confirmation.payment.amount === stayed.totalPrice, 'Confirmation: price and amount paid match the saved total', res);
+        expect(confirmation.guest.name === 'Nadia Hassan' && confirmation.guest.email === 'nadia.hassan@example.com', 'Confirmation: primary guest and receipt email are the ones entered', res);
+        expect(confirmation.guest.phoneCountryCode === '+20' && confirmation.guest.arrivalFrom === '15:00' && confirmation.guest.arrivalTo === '16:00', 'Confirmation: phone and arrival window are stored', res);
+        expect(confirmation.stay.title === 'Deluxe Sea-View' && confirmation.stay.propertyTitle === 'Azure Bay Resort', 'Confirmation: stay name matches the room that was booked', res);
+        expect(confirmation.stay.breakfastIncluded === true && confirmation.stay.area === 42 && confirmation.stay.bedType === 'King Bed', 'Confirmation: room facts match the review step', res);
+        expect(confirmation.payment.method === 'instapay' && confirmation.payment.methodLabel === 'InstaPay', 'Confirmation: payment method is InstaPay', res);
+        expect(String(stayed.reference).startsWith('AZR-') && confirmation.reference === stayed.reference, 'Confirmation: booking reference is saved', res);
+        const expectedFreeUntil = new Date(stayStart);
+        expectedFreeUntil.setUTCDate(expectedFreeUntil.getUTCDate() - 5);
+        expectedFreeUntil.setUTCHours(21, 59, 0, 0);
+        expect(new Date(confirmation.cancellation.freeUntil).getTime() === expectedFreeUntil.getTime(), 'Confirmation: free cancellation is 5 days before check-in at 11:59 PM', res);
+
+        res = await request('GET', `/api/v1/bookings/${stayed.id}`, { token: customer.token });
+        expect(res.status === 200 && res.body.data.booking.confirmation.price.total === 27930, 'Get booking: confirmation total is unchanged', res);
+
+        const discounted = await createAd({
+            title: 'Discount Chalet',
+            type: 'chalet',
+            owner: owner.user._id,
+            pricing: { basePrice: 1000, discountType: 'percentage', discountValue: 10, pricingUnit: 'per_night', minDuration: 1 },
+        });
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${discounted._id}&startDate=${at(90, 14)}&endDate=${at(92, 12)}`);
+        const discountLine = res.body.data.quote.lines.find((line) => line.key === 'discount');
+        expect(res.status === 200 && res.body.data.totalPrice === 1800 && discountLine.amount === -200, 'Discount is a line on the quote and is not charged twice', res);
+
         console.log('\n--- My bookings ---');
         res = await request('GET', '/api/v1/bookings/my', { token: customer.token });
-        expect(res.status === 200 && res.body.results === 3, 'My bookings: returns my 3 bookings', res);
+        expect(res.status === 200 && res.body.results === 4, 'My bookings: returns my 4 bookings', res);
 
         res = await request('GET', `/api/v1/bookings/${chaletBookingId}`, { token: otherCustomer.token });
         expect(res.status === 403, "Another user can't see my booking", res);
 
         console.log('\n--- Owner (dashboard) ---');
         res = await request('GET', '/api/v1/admin/bookings', { token: owner.token });
-        expect(res.status === 200 && res.body.results === 3, 'Owner sees the 3 bookings on their listings', res);
+        expect(res.status === 200 && res.body.results === 4, 'Owner sees the 4 bookings on their listings', res);
 
         res = await request('PATCH', `/api/v1/admin/bookings/${chaletBookingId}`, { token: owner.token, body: { status: 'confirmed' } });
         expect(res.status === 200 && res.body.data.booking.status === 'confirmed', 'Owner confirms the chalet booking', res);

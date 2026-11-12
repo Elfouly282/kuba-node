@@ -1119,7 +1119,8 @@
                   "value": "<ADVERTISEMENT_ID>"
                 }
               ]
-            }
+            },
+            "description": "Returns the listing. `booking` tells the app which screen to open: mode stay | hourly | trip, requiresRoom (true only for a hotel), pricingUnit, minDuration. Same field is on list, search, and each room. `stay` is the checkout setup used by the booking quote: cleaningFee, serviceFeePercent, taxPercent, taxLabel, checkInTime, checkOutTime, freeCancellationDays, breakfastIncluded, and addOns (meals and extras). A room without its own stay inherits the hotel stay."
           }
         },
         {
@@ -1155,7 +1156,7 @@
                 }
               ]
             },
-            "description": "يستعلم به المستخدم عن الغرف الفندقية الشاغرة فقط داخل الفندق للفترة المحددة مع حساب التكلفة."
+            "description": "الغرف الشاغرة داخل الفندق للفترة المحددة مع التكلفة. كل غرفة فيها booking.mode=stay و requiresRoom=false، لأن الغرفة هي اللي بتتحجز. stayCalculation.totalPrice و stayCalculation.quote.total هما نفس إجمالي Check لنفس التواريخ قبل أي إضافة. quote.lines فيها تفصيلة السعر، و quote.availableAddOns وجبات وإضافات الفندق."
           }
         }
       ]
@@ -1350,7 +1351,7 @@
     },
     {
       "name": "Bookings",
-      "description": "نظام حجز واحد لكل الأنواع (شاليه، فيلا، شقة، يخت، جولف كار، أوضة فندق).\n\nالترتيب:\n1) Booked Dates: المواعيد المحجوزة عشان تقفلها في الكالندر.\n2) Check: متاح ولا لأ + السعر (مش بيحفظ حاجة).\n3) Create Booking: يعمل الحجز (pending لحد ما صاحب الإعلان يأكده).\n4) My Bookings / Get One / Cancel.\n\nالتواريخ دايماً startDate و endDate بتاريخ ووقت كامل (ISO).\nالسعر بيتحسب بوحدة تسعير الإعلان: per_hour بالساعات، per_night / per_day بالأيام، per_trip / fixed مرة واحدة.\nللفندق: هات الأوض المتاحة من Advertisements > Get Hotel Available Rooms، وابعت room بدل advertisement.",
+      "description": "نظام حجز واحد لكل الأنواع (شاليه، فيلا، شقة، يخت، جولف كار، أوضة فندق).\n\nالتطبيق يقرأ advertisement.booking (ونفس الحقل على الغرفة) عشان يفتح الشاشة:\n- mode=stay: تاريخ وصول وتاريخ مغادرة (per_night / per_day). فندق، غرفة، شاليه، شقة، أو يخت/جولف كار سعره باليوم.\n- mode=hourly: يوم + ساعة بداية وساعة نهاية (per_hour).\n- mode=trip: حجز واحد من غير مدة (per_trip / fixed).\n- requiresRoom=true: على الفندق بس. اختار غرفة، وبعدين نفس شاشة stay.\n\nالترتيب:\n1) Booked Dates: المواعيد المحجوزة عشان تقفلها في الكالندر.\n2) Check: راجع الإقامة. quote.lines و quote.total هما سعر المراجعة والوجبات والدفع والتأكيد. ابعت adults و addOns عشان تشوف الإجمالي بعد الإضافة من غير ما تتحفظ.\n3) Create Booking: السيرفر يعيد الحساب. totalPrice و priceBreakdown.total و confirmation.price.total و confirmation.payment.amount رقم واحد. guestDetails فيها صاحب الحجز والإيميل والموبايل ووقت الوصول. addOns نفس المعرفات اللي رجعت من Check. instapay و fawry و meeza لازم acceptedTerms=true.\n4) My Bookings / Get One: confirmation هي شاشة التأكيد (reference و guest و stay و price و cancellation).\n5) Cancel.\n\nرسوم الإقامة والإضافات على advertisement.stay، والغرفة تورثها إلا لو ليها stay خاص. التواريخ دايماً startDate و endDate بتاريخ ووقت كامل (ISO).\nللفندق: هات الأوض المتاحة من Advertisements > Get Hotel Available Rooms، وابعت room بدل advertisement.",
       "item": [
         {
           "name": "1. Booked Dates (المواعيد المحجوزة)",
@@ -1376,7 +1377,7 @@
                 }
               ]
             },
-            "description": "Public. Returns upcoming taken slots `[{ startDate, endDate }]` plus the listing `pricingUnit` (so the app knows whether to show a time picker for per_hour)."
+            "description": "Public. Returns upcoming taken slots `[{ startDate, endDate }]`, `pricingUnit`, and `booking` `{ mode, requiresRoom, pricingUnit, minDuration }`. mode is stay | hourly | trip. Pass ?room= for one hotel room; then booking.requiresRoom is false and pricingUnit comes from the room."
           }
         },
         {
@@ -1412,10 +1413,22 @@
                 {
                   "key": "endDate",
                   "value": "2026-12-04T12:00:00.000Z"
+                },
+                {
+                  "key": "adults",
+                  "value": "2",
+                  "description": "Guests for the review step. Rejected when over the room capacity.",
+                  "disabled": true
+                },
+                {
+                  "key": "addOns",
+                  "value": "<ADDON_ID>",
+                  "description": "Comma-separated add-on ids from quote.availableAddOns. Same ids must be sent to Create.",
+                  "disabled": true
                 }
               ]
             },
-            "description": "Public. Runs the same checks as Create Booking without saving. Returns `available`, `duration`, `pricingUnit`, `unitPrice`, `totalPrice`, `currency`, `minDuration`."
+            "description": "Public. Same pricing as Create Booking, without saving. `totalPrice` and `quote.total` are the amount every step must show (review, meals, payment, confirmation). `quote.lines` is the breakdown: room, discount, cleaning, service fee, VAT, selected add-ons. Pass `adults` and `addOns` (comma-separated ids) to preview the meals step. `paymentMethods` lists InstaPay, Fawry and Meeza."
           }
         },
         {
@@ -1455,14 +1468,14 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"advertisement\": \"<ADVERTISEMENT_ID>\",\n  \"startDate\": \"2026-12-01T14:00:00.000Z\",\n  \"endDate\": \"2026-12-04T12:00:00.000Z\",\n  \"guestDetails\": {\n    \"adults\": 2,\n    \"children\": 0,\n    \"fullName\": \"Ahmed Ali\",\n    \"phone\": \"01012345678\",\n    \"nationalIdOrPassport\": \"\"\n  },\n  \"paymentMethod\": \"cash\",\n  \"notes\": \"\"\n}",
+              "raw": "{\n  \"room\": \"<ROOM_ID>\",\n  \"startDate\": \"2026-09-25T12:00:00.000Z\",\n  \"endDate\": \"2026-09-28T09:00:00.000Z\",\n  \"guestDetails\": {\n    \"adults\": 2,\n    \"children\": 0,\n    \"bookingFor\": \"me\",\n    \"email\": \"nadia.hassan@example.com\",\n    \"phoneCountryCode\": \"+20\",\n    \"phone\": \"1258966\",\n    \"firstName\": \"Nadia\",\n    \"lastName\": \"Hassan\",\n    \"arrivalFrom\": \"15:00\",\n    \"arrivalTo\": \"16:00\"\n  },\n  \"addOns\": [\"<ADDON_ID>\"],\n  \"paymentMethod\": \"instapay\",\n  \"acceptedTerms\": true,\n  \"notes\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "Requires login. For a hotel send `room` instead of `advertisement`. For per_hour listings (yacht / golf car) send the exact hours, e.g. 10:00 to 13:00. Saved as `pending` / `unpaid`. paymentMethod: cash | card | wallet | online."
+            "description": "Requires login. For a hotel send `room` instead of `advertisement`. The server recalculates the quote, so the saved `totalPrice`, `priceBreakdown.total` and `confirmation.price.total` match Check for the same dates, guests and add-ons. `confirmation` is the confirmation screen: reference, guest, stay, payment amount and the same lines. paymentMethod: instapay | fawry | meeza (these require acceptedTerms) | cash | card | wallet | online. Saved as pending / unpaid until the owner confirms."
           }
         },
         {
@@ -1493,7 +1506,7 @@
                 }
               ]
             },
-            "description": "Requires login. Returns the logged-in user bookings, newest first."
+            "description": "Requires login. Returns the logged-in user bookings, newest first. Every booking includes confirmation with the saved quote, guest, stay snapshot, payment method and amount. confirmation.price.total stays equal to totalPrice."
           }
         },
         {
@@ -1516,7 +1529,7 @@
                 "{{bookingId}}"
               ]
             },
-            "description": "Requires login. Only the user who made the booking can see it."
+            "description": "Requires login. Only the user who made the booking can see it. confirmation is the confirmation screen: reference, guest, stay, cancellation, and price.lines. confirmation.payment.amount equals totalPrice and does not change if the listing price changes later."
           }
         },
         {

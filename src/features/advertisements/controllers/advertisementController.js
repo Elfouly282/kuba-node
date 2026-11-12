@@ -61,6 +61,7 @@ const formatAdvertisement = (doc) => {
 };
 
 const { validateAttributes, buildPricingData } = require('../middleware/advertisementMiddleware');
+const { normalizeStay } = require('../stayOptions');
 
 const mergeSearchInput = (req) => {
     const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
@@ -324,6 +325,7 @@ exports.create = async (req, res, next) => {
         owner: (req.user?.role === 'admin' && req.body.owner && mongoose.Types.ObjectId.isValid(req.body.owner)) ? req.body.owner : (req.user?._id || null),
         active: active !== undefined ? (String(active) === 'true' || active === true) : true,
         isFlashSale: req.body.isFlashSale === true || req.body.isFlashSale === 'true',
+        stay: normalizeStay(req.body.stay),
     });
 
     const populated = await Advertisement.findById(advertisement._id)
@@ -379,6 +381,17 @@ exports.update = async (req, res, next) => {
     if (req.body.active !== undefined) advertisement.active = String(req.body.active) === 'true' || req.body.active === true;
     if (req.body.isFlashSale !== undefined) {
         advertisement.isFlashSale = req.body.isFlashSale === true || req.body.isFlashSale === 'true';
+    }
+
+    if (req.body.stay !== undefined) {
+        const nextStay = normalizeStay(req.body.stay);
+        if (nextStay) {
+            const current = typeof advertisement.stay?.toObject === 'function'
+                ? advertisement.stay.toObject()
+                : (advertisement.stay || {});
+            advertisement.stay = { ...current, ...nextStay };
+            advertisement.markModified('stay');
+        }
     }
 
     if (req.body.category !== undefined) {

@@ -59,6 +59,30 @@ const bookingSchema = new mongoose.Schema(
             required: true,
             min: [0, 'validation.invalidPrice'],
         },
+        reference: {
+            type: String,
+            unique: true,
+            sparse: true,
+        },
+        priceBreakdown: {
+            type: mongoose.Schema.Types.Mixed,
+        },
+        staySnapshot: {
+            type: mongoose.Schema.Types.Mixed,
+        },
+        addOns: [
+            {
+                addOn: { type: mongoose.Schema.Types.ObjectId },
+                title: { type: String, trim: true, default: '' },
+                description: { type: String, trim: true, default: '' },
+                price: { type: Number, default: 0, min: 0 },
+                category: { type: String, trim: true, default: 'extra' },
+            },
+        ],
+        acceptedTerms: {
+            type: Boolean,
+            default: false,
+        },
         guestDetails: {
             adults: {
                 type: Number,
@@ -68,7 +92,22 @@ const bookingSchema = new mongoose.Schema(
                 type: Number,
                 default: 0,
             },
-            fullName: {
+            rooms: {
+                type: Number,
+                default: 1,
+            },
+            bookingFor: {
+                type: String,
+                enum: ['me', 'someone_else'],
+                default: 'me',
+            },
+            email: {
+                type: String,
+                trim: true,
+                lowercase: true,
+                default: '',
+            },
+            phoneCountryCode: {
                 type: String,
                 trim: true,
                 default: '',
@@ -78,7 +117,32 @@ const bookingSchema = new mongoose.Schema(
                 trim: true,
                 default: '',
             },
+            firstName: {
+                type: String,
+                trim: true,
+                default: '',
+            },
+            lastName: {
+                type: String,
+                trim: true,
+                default: '',
+            },
+            fullName: {
+                type: String,
+                trim: true,
+                default: '',
+            },
             nationalIdOrPassport: {
+                type: String,
+                trim: true,
+                default: '',
+            },
+            arrivalFrom: {
+                type: String,
+                trim: true,
+                default: '',
+            },
+            arrivalTo: {
                 type: String,
                 trim: true,
                 default: '',
@@ -97,7 +161,7 @@ const bookingSchema = new mongoose.Schema(
         },
         paymentMethod: {
             type: String,
-            enum: ['cash', 'card', 'wallet', 'online'],
+            enum: ['cash', 'card', 'wallet', 'online', 'instapay', 'fawry', 'meeza'],
             default: 'cash',
         },
         notes: {

@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const Booking = require('../models/bookingModel');
 const Advertisement = require('../../advertisements/models/advertisementModel');
@@ -5,6 +6,13 @@ const Room = require('../../rooms/models/roomModel');
 const APIError = require('../../../utils/apiError');
 const { getImageUrl } = require('../../../utils/imageUrl');
 const { buildRoomDetails, buildRoomDetailsHtml } = require('../../rooms/roomDetails');
+const {
+    readGuests,
+    parseAddOnIds,
+    assertCapacity,
+    buildQuote,
+    presentConfirmation,
+} = require('../quote');
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -87,19 +95,39 @@ const getBookingType = (ad) => {
  * One pricing rule for everything: duration is counted in the listing's own
  * pricing unit (hours, days or nights), then multiplied by the unit price.
  */
-const calculatePrice = ({ ad, room, start, end }) => {
+const chargedRate = (source, pricingUnit) => {
+    const pricing = source.pricing || {};
+    const finalPrice = Number(pricing.finalPrice || source.price || 0);
+    if (pricingUnit === 'per_hour') return Number(pricing.pricePerHour || finalPrice);
+    if (pricingUnit === 'per_day') return Number(pricing.pricePerDay || finalPrice);
+    return finalPrice;
+};
+
+const calculatePrice = ({ ad, room, start, end, addOnIds = [], guests = { adults: 1, children: 0, rooms: 1 } }) => {
     const source = room || ad;
     const pricingUnit = source.pricing?.pricingUnit || 'per_night';
-    const finalPrice = source.pricing?.finalPrice || source.price || 0;
-
-    let unitPrice = finalPrice;
-    if (!room && pricingUnit === 'per_hour') unitPrice = ad.pricing?.pricePerHour || finalPrice;
-    if (!room && pricingUnit === 'per_day') unitPrice = ad.pricing?.pricePerDay || finalPrice;
+    const unitPrice = chargedRate(source, pricingUnit);
+    const basePrice = Number(source.pricing?.basePrice || unitPrice);
+    const discounted = source.pricing?.discountType === 'percentage' || source.pricing?.discountType === 'fixed';
+    const listUnit = discounted && basePrice > unitPrice ? basePrice : unitPrice;
 
     const diffMs = end.getTime() - start.getTime();
     let duration = 1;
     if (pricingUnit === 'per_hour') duration = Math.ceil(diffMs / HOUR_MS);
     if (pricingUnit === 'per_day' || pricingUnit === 'per_night') duration = Math.ceil(diffMs / DAY_MS);
+
+    const quote = buildQuote({
+        ad,
+        room,
+        duration,
+        pricingUnit,
+        chargedUnit: unitPrice,
+        listUnit,
+        currency: source.pricing?.currency || 'EGP',
+        addOnIds,
+        guests,
+        start,
+    });
 
     return {
         bookingType: getBookingType(ad),
@@ -107,9 +135,10 @@ const calculatePrice = ({ ad, room, start, end }) => {
         pricingUnit,
         duration,
         minDuration: room ? 1 : Number(ad.pricing?.minDuration) || 1,
-        unitPrice,
-        totalPrice: Math.round(unitPrice * duration * 100) / 100,
-        currency: source.pricing?.currency || 'EGP',
+        unitPrice: quote.unitPrice,
+        totalPrice: quote.total,
+        currency: quote.currency,
+        quote,
     };
 };
 
@@ -136,7 +165,16 @@ const isSlotTaken = async ({ ad, room, start, end }) => {
 const prepareBooking = async (input) => {
     const { start, end } = parseDates(input);
     const { ad, room } = await findBookable(input);
-    const price = calculatePrice({ ad, room, start, end });
+    const guests = readGuests(input);
+    assertCapacity(room, guests);
+    const price = calculatePrice({
+        ad,
+        room,
+        start,
+        end,
+        addOnIds: parseAddOnIds(input),
+        guests,
+    });
 
     if (price.duration < price.minDuration) {
         throw new APIError('validation.minDurationNotMet', 400, {
@@ -173,8 +211,33 @@ const formatBooking = (doc) => {
         }
     });
 
+    if (obj.staySnapshot?.image) obj.staySnapshot.image = getImageUrl(obj.staySnapshot.image) || '';
+    obj.confirmation = presentConfirmation(obj);
+
     return obj;
 };
+
+const nextReference = async () => {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+        const reference = `AZR-${crypto.randomInt(100000, 1000000)}`;
+        const taken = await Booking.exists({ reference });
+        if (!taken) return reference;
+    }
+    throw new APIError('errors.somethingWentWrong', 500);
+};
+
+const staySnapshotFor = ({ ad, room, quote }) => ({
+    propertyTitle: ad.title || '',
+    title: room?.title || ad.title || '',
+    image: (room && (room.image || room.images?.[0])) || ad.image || '',
+    bedType: room?.beds?.bedType || '',
+    bedCount: room?.beds?.count ?? null,
+    area: room?.area ?? null,
+    amenities: Array.isArray(room?.amenities) ? [...room.amenities] : [],
+    breakfastIncluded: Boolean(quote.breakfastIncluded),
+    checkInTime: quote.schedule?.checkInTime || '',
+    checkOutTime: quote.schedule?.checkOutTime || '',
+});
 
 module.exports = {
     ACTIVE_STATUSES,
@@ -182,4 +245,7 @@ module.exports = {
     prepareBooking,
     populateBooking,
     formatBooking,
+    priceStay: calculatePrice,
+    nextReference,
+    staySnapshotFor,
 };

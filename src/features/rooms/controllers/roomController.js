@@ -7,6 +7,8 @@ const { SuccessResponse } = require('../../../utils/apiResponse');
 const { getImageUrl, getRelativeImagePath, deleteImageFile } = require('../../../utils/imageUrl');
 const { buildRoomDetails, buildRoomDetailsHtml } = require('../roomDetails');
 const { resolveBooking } = require('../../bookings/bookingMode');
+const { priceStay } = require('../../bookings/services/bookingService');
+const { normalizeStay } = require('../../advertisements/stayOptions');
 const { normalizeDescriptionHtml, stripHtml } = require('../../../utils/descriptionHtml');
 
 const ROOM_MAX_IMAGES = 3;
@@ -176,6 +178,10 @@ exports.createRoom = async (req, res, next) => {
                 roomData.amenities = req.body.amenities.split(',').map((s) => s.trim()).filter(Boolean);
             }
         }
+        if (req.body.stay && typeof req.body.stay === 'string') {
+            try { roomData.stay = JSON.parse(req.body.stay); } catch (_) {}
+        }
+        if (roomData.stay) roomData.stay = normalizeStay(roomData.stay);
 
         // Mark hotel as isHotel
         if (!hotel.isHotel) {
@@ -286,17 +292,17 @@ exports.getAvailableRoomsForHotel = async (req, res, next) => {
         // Format and enrich rooms with calculated pricing for this specific stay
         const enrichedRooms = availableRooms.map((room) => {
             const formatted = formatRoom(room);
-            const pricePerNight = room.pricing?.finalPrice || room.price || 0;
-            const totalPrice = Math.round(pricePerNight * nights * 100) / 100;
+            const price = priceStay({ ad: hotel, room, start, end });
 
             return {
                 ...formatted,
                 available: true,
                 stayCalculation: {
-                    nights,
-                    pricePerNight,
-                    totalPrice,
-                    currency: room.pricing?.currency || 'EGP',
+                    nights: price.duration,
+                    pricePerNight: price.unitPrice,
+                    totalPrice: price.totalPrice,
+                    currency: price.currency,
+                    quote: price.quote,
                 },
             };
         });
@@ -378,6 +384,10 @@ exports.updateRoom = async (req, res, next) => {
                 updates.amenities = req.body.amenities.split(',').map((s) => s.trim()).filter(Boolean);
             }
         }
+        if (req.body.stay && typeof req.body.stay === 'string') {
+            try { updates.stay = JSON.parse(req.body.stay); } catch (_) {}
+        }
+        if (updates.stay) updates.stay = normalizeStay(updates.stay);
 
         Object.assign(room, updates);
         await room.save();

@@ -130,6 +130,11 @@
         "startDateInPast": "The start date cannot be in the past.",
         "roomRequired": "Please choose a room to book in this hotel.",
         "roomImagesLimit": "A room can have at most 3 images.",
-        "minDurationNotMet": "Minimum booking duration is {{minDuration}} ({{unit}})."
+        "minDurationNotMet": "Minimum booking duration is {{minDuration}} ({{unit}}).",
+        "tooManyGuests": "This room allows up to {{maxGuests}} guests.",
+        "invalidAddOn": "One of the selected add-ons is not available for this stay.",
+        "invalidPaymentMethod": "Invalid payment method.",
+        "termsRequired": "Please agree to the booking conditions and cancellation policy before paying.",
+        "invalidArrivalTime": "Please provide a valid estimated arrival window."
     }
 }

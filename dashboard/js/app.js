@@ -4875,6 +4875,136 @@ function escapeHtmlText(value) {
         .replace(/"/g, '&quot;');
 }
 
+const PAYMENT_METHOD_LABELS = {
+    cash: 'كاش عند الوصول',
+    card: 'بطاقة',
+    wallet: 'محفظة',
+    online: 'دفع أونلاين',
+    instapay: 'InstaPay',
+    fawry: 'Fawry',
+    meeza: 'Meeza',
+};
+
+function paymentMethodLabel(method) {
+    return PAYMENT_METHOD_LABELS[method] || method || 'كاش عند الوصول';
+}
+
+function bookingMoney(amount) {
+    const value = Number(amount) || 0;
+    const sign = value < 0 ? '−' : '';
+    return `${sign}${Math.abs(value).toLocaleString()} ج.م`;
+}
+
+function formatClock(value) {
+    if (!/^\d{2}:\d{2}$/.test(String(value || ''))) return '';
+    const [hours, minutes] = String(value).split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' });
+}
+
+function bookingContactPhone(guest = {}, customer = {}) {
+    const raw = String(guest.phone || customer.phone || '').trim();
+    if (!raw) return '';
+    if (raw.startsWith('+') || raw.startsWith('00')) return raw;
+    const code = String(guest.phoneCountryCode || '').replace(/[^\d]/g, '');
+    const digits = raw.replace(/[^\d]/g, '');
+    return code ? `+${code}${digits}` : raw;
+}
+
+function bookingLinesHtml(quote) {
+    if (!quote || !Array.isArray(quote.lines) || !quote.lines.length) return '';
+    const rows = quote.lines.map((line) => `
+        <div class="flex items-center justify-between gap-3 text-xs">
+            <span class="text-slate-600">${escapeHtmlText(line.label || '')}</span>
+            <span class="font-bold ${Number(line.amount) < 0 ? 'text-emerald-700' : 'text-slate-800'}">${bookingMoney(line.amount)}</span>
+        </div>
+    `).join('');
+    return `${rows}
+        <div class="flex items-center justify-between gap-3 text-sm pt-1 border-t border-slate-200">
+            <span class="font-bold text-slate-900">الإجمالي</span>
+            <span class="font-black text-[#2D4F2E]">${bookingMoney(quote.total)}</span>
+        </div>`;
+}
+
+function addStayAddonRow(prefix, addon = {}) {
+    const box = document.getElementById(`${prefix}-stay-addons`);
+    if (!box) return;
+    const row = document.createElement('div');
+    row.className = 'stay-addon-row grid grid-cols-1 sm:grid-cols-12 gap-2';
+    row.innerHTML = `
+        <input data-addon="title" class="form-input text-xs sm:col-span-3" placeholder="اسم الإضافة" value="${escapeHtmlText(addon.title || '')}">
+        <input data-addon="description" class="form-input text-xs sm:col-span-4" placeholder="الوصف" value="${escapeHtmlText(addon.description || '')}">
+        <input data-addon="price" type="number" min="0" step="any" class="form-input text-xs sm:col-span-2" placeholder="السعر" value="${addon.price ?? ''}">
+        <select data-addon="category" class="form-select text-xs sm:col-span-2">
+            <option value="meal" ${addon.category === 'meal' ? 'selected' : ''}>وجبة</option>
+            <option value="extra" ${addon.category !== 'meal' ? 'selected' : ''}>إضافة</option>
+        </select>
+        <input type="hidden" data-addon="id" value="${escapeHtmlText(addon.id || addon._id || '')}">
+        <button type="button" class="btn-secondary text-[11px] sm:col-span-1" onclick="this.closest('.stay-addon-row').remove()">حذف</button>
+    `;
+    box.appendChild(row);
+}
+
+function fillStayFields(prefix, stay = {}) {
+    const setValue = (name, value) => {
+        const el = document.getElementById(`${prefix}-${name}`);
+        if (el) el.value = value ?? '';
+    };
+    setValue('cleaning-fee', stay.cleaningFee ?? '');
+    setValue('service-percent', stay.serviceFeePercent ?? '');
+    setValue('tax-percent', stay.taxPercent ?? '');
+    setValue('tax-label', stay.taxLabel || '');
+    setValue('checkin', stay.checkInTime || '');
+    setValue('checkout', stay.checkOutTime || '');
+    setValue('cancel-days', stay.freeCancellationDays ?? '');
+    const breakfast = document.getElementById(`${prefix}-breakfast`);
+    if (breakfast) breakfast.checked = stay.breakfastIncluded === true;
+    const box = document.getElementById(`${prefix}-stay-addons`);
+    if (box) box.innerHTML = '';
+    (stay.addOns || []).forEach((addon) => addStayAddonRow(prefix, addon));
+}
+
+function readStayFields(prefix) {
+    const numberValue = (name) => {
+        const el = document.getElementById(`${prefix}-${name}`);
+        if (!el || el.value === '') return undefined;
+        const value = Number(el.value);
+        return Number.isFinite(value) ? value : undefined;
+    };
+    const textValue = (name) => document.getElementById(`${prefix}-${name}`)?.value?.trim() || '';
+    const stay = {
+        cleaningFee: numberValue('cleaning-fee') ?? 0,
+        serviceFeePercent: numberValue('service-percent') ?? 0,
+        taxPercent: numberValue('tax-percent') ?? 0,
+        taxLabel: textValue('tax-label') || 'VAT',
+        breakfastIncluded: document.getElementById(`${prefix}-breakfast`)?.checked === true,
+        addOns: [],
+    };
+    const cancelDays = numberValue('cancel-days');
+    if (cancelDays !== undefined) stay.freeCancellationDays = cancelDays;
+    if (textValue('checkin')) stay.checkInTime = textValue('checkin');
+    if (textValue('checkout')) stay.checkOutTime = textValue('checkout');
+
+    document.querySelectorAll(`#${prefix}-stay-addons .stay-addon-row`).forEach((row) => {
+        const title = row.querySelector('[data-addon="title"]')?.value.trim() || '';
+        const price = Number(row.querySelector('[data-addon="price"]')?.value);
+        if (!title || !Number.isFinite(price) || price < 0) return;
+        const addon = {
+            title,
+            description: row.querySelector('[data-addon="description"]')?.value.trim() || '',
+            price,
+            category: row.querySelector('[data-addon="category"]')?.value === 'meal' ? 'meal' : 'extra',
+            active: true,
+        };
+        const id = row.querySelector('[data-addon="id"]')?.value;
+        if (id) addon.id = id;
+        stay.addOns.push(addon);
+    });
+
+    return stay;
+}
+
 function htmlEditorIsEmpty(area) {
     return !String(area?.textContent || '').replace(/\u00a0/g, '').trim();
 }
@@ -5036,6 +5166,7 @@ function openAddAdvertisementModal() {
     // Reset dynamic attributes
     document.getElementById('ad-attributes-wrapper')?.classList.add('hidden');
     document.getElementById('ad-dynamic-attributes-container').innerHTML = '';
+    fillStayFields('ad-modal', {});
     calculateAdFinalPrice();
 
     // Reset coordinates and map picker
@@ -5126,6 +5257,7 @@ async function openEditAdvertisementModal(adId) {
     document.getElementById('ad-modal-discount-value').value = p.discountValue || 0;
     document.getElementById('ad-modal-pricing-unit').value = p.pricingUnit || 'per_night';
     document.getElementById('ad-modal-min-duration').value = p.minDuration || 1;
+    fillStayFields('ad-modal', ad.stay || {});
     calculateAdFinalPrice();
 
     // Trigger dynamic attributes with existing values
@@ -5214,6 +5346,7 @@ async function handleAdvertisementFormSubmit(e) {
         pricingUnit,
         minDuration: Number(minDuration),
     };
+    const stay = readStayFields('ad-modal');
 
     let payload;
 
@@ -5229,6 +5362,7 @@ async function handleAdvertisementFormSubmit(e) {
         payload.append('pricing[discountValue]', discountValue);
         payload.append('pricing[pricingUnit]', pricingUnit);
         payload.append('pricing[minDuration]', minDuration);
+        payload.append('stay', JSON.stringify(stay));
         payload.append('location', location);
         payload.append('address', address);
         if (latitude !== null) payload.append('latitude', latitude);
@@ -5249,6 +5383,7 @@ async function handleAdvertisementFormSubmit(e) {
             region: region || null,
             region: region || null,
             pricing,
+            stay,
             location,
             address,
             latitude,
@@ -5601,8 +5736,11 @@ function filterAdminBookings() {
             const adTitle = b.advertisement?.title?.toLowerCase() || '';
             const roomTitle = b.room?.title?.toLowerCase() || '';
             const guestName = b.guestDetails?.fullName?.toLowerCase() || '';
+            const guestEmail = b.guestDetails?.email?.toLowerCase() || '';
+            const guestPhone = b.guestDetails?.phone?.toLowerCase() || '';
+            const reference = (b.reference || '').toLowerCase();
             const bookingId = (b.id || b._id || '').toLowerCase();
-            return userName.includes(search) || userEmail.includes(search) || userPhone.includes(search) || adTitle.includes(search) || roomTitle.includes(search) || guestName.includes(search) || bookingId.includes(search);
+            return userName.includes(search) || userEmail.includes(search) || userPhone.includes(search) || adTitle.includes(search) || roomTitle.includes(search) || guestName.includes(search) || guestEmail.includes(search) || guestPhone.includes(search) || reference.includes(search) || bookingId.includes(search);
         });
     }
 
@@ -5657,6 +5795,7 @@ function renderAdminBookingsTable(list) {
     tbody.innerHTML = list.map(b => {
         const bId = b.id || b._id;
         const shortId = bId ? bId.substring(bId.length - 6) : '--';
+        const reference = b.reference || ('#' + shortId);
         const ad = b.advertisement || {};
         const room = b.room || null;
         const customer = b.user || {};
@@ -5669,7 +5808,7 @@ function renderAdminBookingsTable(list) {
         return `
             <tr class="hover:bg-slate-50 transition border-b border-slate-100 text-xs">
                 <td class="p-3 font-mono font-bold text-slate-600">
-                    <span title="${bId}">#${shortId}</span>
+                    <span title="${escapeHtmlText(bId)}">${escapeHtmlText(reference)}</span>
                     <div class="text-[10px] text-slate-400 font-sans">${b.createdAt ? new Date(b.createdAt).toLocaleDateString('ar-EG') : ''}</div>
                 </td>
                 <td class="p-3">
@@ -5730,6 +5869,35 @@ function renderAdminBookingsTable(list) {
             </tr>
         `;
     }).join('');
+}
+
+async function changeBookingPayment(bookingId, paymentStatus) {
+    if (!bookingId || !paymentStatus) return;
+
+    try {
+        await apiFetch(`/api/v1/admin/bookings/${bookingId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ paymentStatus }),
+        });
+
+        const apply = (list) => {
+            const item = (list || []).find(b => (b.id || b._id) === bookingId);
+            if (item) item.paymentStatus = paymentStatus;
+        };
+        apply(state.bookings);
+        apply(state.ownerBookings);
+        showToast(paymentStatus === 'paid' ? 'تم تسجيل الدفع' : 'تم تحديث حالة الدفع', 'success');
+        if (document.getElementById('admin-bookings-table-body')) filterAdminBookings();
+        if (Array.isArray(state.ownerBookings)) {
+            renderOwnerBookings();
+            renderOwnerOverviewKPIs();
+        }
+        if (document.getElementById('booking-details-modal')?.classList.contains('active')) {
+            openBookingDetailsModal(bookingId);
+        }
+    } catch (err) {
+        // apiFetch shows error toast
+    }
 }
 
 async function changeBookingStatus(bookingId, newStatus) {
@@ -5794,7 +5962,7 @@ async function openBookingDetailsModal(bookingId) {
     const bId = booking.id || booking._id;
     const shortId = bId ? bId.substring(bId.length - 8) : '--';
     const idEl = document.getElementById('bmodal-id');
-    if (idEl) idEl.textContent = '#' + shortId + ' (' + bId + ')';
+    if (idEl) idEl.textContent = (booking.reference || ('#' + shortId)) + ' · ' + bId;
 
     const contentEl = document.getElementById('bmodal-content');
     const actionsEl = document.getElementById('bmodal-quick-actions');
@@ -5804,6 +5972,9 @@ async function openBookingDetailsModal(bookingId) {
     const room = booking.room || null;
     const customer = booking.user || {};
     const guest = booking.guestDetails || {};
+    const confirmation = booking.confirmation || {};
+    const stayView = confirmation.stay || booking.staySnapshot || {};
+    const quote = confirmation.price || booking.priceBreakdown || null;
     const bType = booking.bookingType || ad.type || 'general';
 
     const typeBadge = {
@@ -5826,8 +5997,17 @@ async function openBookingDetailsModal(bookingId) {
     const startStr = booking.startDate ? new Date(booking.startDate).toLocaleDateString('ar-EG', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '--';
     const endStr = booking.endDate ? new Date(booking.endDate).toLocaleDateString('ar-EG', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '--';
 
-    const customerPhone = customer.phone || guest.phone || '';
+    const customerPhone = bookingContactPhone(guest, customer);
     const waLink = customerPhone ? ('https://wa.me/' + customerPhone.replace(/[^0-9]/g, '')) : null;
+    const guestName = guest.fullName || [guest.firstName, guest.lastName].filter(Boolean).join(' ') || customer.name || 'نفس العميل';
+    const arrivalText = guest.arrivalFrom && guest.arrivalTo
+        ? `من ${formatClock(guest.arrivalFrom) || guest.arrivalFrom} إلى ${formatClock(guest.arrivalTo) || guest.arrivalTo}`
+        : '';
+    const freeUntil = confirmation.cancellation?.freeUntil || quote?.cancellation?.freeUntil;
+    const cancelText = freeUntil
+        ? new Date(freeUntil).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })
+        : '';
+    const linesHtml = bookingLinesHtml(quote);
 
     contentEl.innerHTML = `
         <!-- Status & Type Header -->
@@ -5870,7 +6050,8 @@ async function openBookingDetailsModal(bookingId) {
                     <div class="font-bold text-slate-800 text-xs">${room.title || 'غرفة فندقية'}</div>
                     <div class="text-[11px] text-slate-600 flex flex-wrap gap-x-4 gap-y-1 pt-0.5">
                         <span><i class="fas fa-tag text-purple-600 me-1"></i>نوع الغرفة: <b>${room.roomType || 'standard'}</b></span>
-                        <span><i class="fas fa-bed text-purple-600 me-1"></i>الأسرّة: <b>${room.beds?.count || 1} (${room.beds?.bedType || 'مزدوج'})</b></span>
+                        <span><i class="fas fa-bed text-purple-600 me-1"></i>الأسرّة: <b>${room.beds?.count || stayView.bedCount || 1} (${room.beds?.bedType || stayView.bedType || 'مزدوج'})</b></span>
+                        ${(room.area || stayView.area) ? `<span><i class="fas fa-ruler-combined text-purple-600 me-1"></i>المساحة: <b>${room.area || stayView.area} م²</b></span>` : ''}
                         <span><i class="fas fa-user-friends text-purple-600 me-1"></i>السعة: <b>${room.capacity?.adults || 2} بالغين ${room.capacity?.children ? ('+ ' + room.capacity.children + ' أطفال') : ''}</b></span>
                     </div>
                 </div>
@@ -5887,17 +6068,19 @@ async function openBookingDetailsModal(bookingId) {
                 <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
                     <div class="text-slate-400 text-[10px] mb-0.5">تاريخ البداية (Check-In)</div>
                     <div class="font-bold text-slate-800">${startStr}</div>
+                    ${stayView.checkInTime ? ('<div class="text-[10px] text-sky-700 font-bold mt-0.5">من ' + escapeHtmlText(formatClock(stayView.checkInTime) || stayView.checkInTime) + '</div>') : ''}
                     ${booking.rentalType === 'hourly' && booking.startDate ? ('<div class="text-[10px] text-sky-700 font-mono mt-0.5 font-bold">الساعة: ' + new Date(booking.startDate).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) + '</div>') : ''}
                 </div>
                 <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
                     <div class="text-slate-400 text-[10px] mb-0.5">تاريخ النهاية (Check-Out)</div>
                     <div class="font-bold text-slate-800">${endStr}</div>
+                    ${stayView.checkOutTime ? ('<div class="text-[10px] text-sky-700 font-bold mt-0.5">حتى ' + escapeHtmlText(formatClock(stayView.checkOutTime) || stayView.checkOutTime) + '</div>') : ''}
                     ${booking.rentalType === 'hourly' && booking.endDate ? ('<div class="text-[10px] text-sky-700 font-mono mt-0.5 font-bold">الساعة: ' + new Date(booking.endDate).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) + '</div>') : ''}
                 </div>
                 <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
                     <div class="text-slate-400 text-[10px] mb-0.5">المدة المحسوبة</div>
                     <div class="font-bold text-[#2D4F2E] text-sm">${booking.duration || 1} ${booking.pricingUnit === 'per_hour' ? 'ساعات' : 'ليال / أيام'}</div>
-                    <div class="text-[10px] text-slate-400">${booking.rentalType === 'hourly' ? 'حساب بالساعة' : 'حساب باليوم'}</div>
+                    <div class="text-[10px] text-slate-400">${booking.rentalType === 'hourly' ? 'حساب بالساعة' : 'حساب باليوم'}${stayView.breakfastIncluded ? ' · الإفطار مشمول' : ''}</div>
                 </div>
             </div>
         </div>
@@ -5928,10 +6111,13 @@ async function openBookingDetailsModal(bookingId) {
 
                 <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100 space-y-1">
                     <div class="text-slate-400 text-[10px]">بيانات النزيل الفعلي (Guest Details)</div>
-                    <div class="font-bold text-slate-900">${guest.fullName || customer.name || 'نفس العميل'}</div>
-                    <div class="text-slate-600 font-mono text-[11px]">${guest.phone || customer.phone || '--'}</div>
-                    ${guest.nationalId ? ('<div class="text-[10px] text-slate-500">رقم الهوية: <b class="font-mono text-slate-700">' + guest.nationalId + '</b></div>') : ''}
-                    ${guest.adults ? ('<div class="text-[10px] text-slate-500">العدد: ' + guest.adults + ' بالغين ' + (guest.children ? ('+ ' + guest.children + ' أطفال') : '') + '</div>') : ''}
+                    <div class="font-bold text-slate-900">${escapeHtmlText(guestName)}</div>
+                    <div class="text-[10px] text-slate-500">${guest.bookingFor === 'someone_else' ? 'حجز لشخص آخر' : 'حجز لصاحب الحساب'}</div>
+                    <div class="text-slate-600 font-mono text-[11px]">${escapeHtmlText(customerPhone || '--')}</div>
+                    ${guest.email ? ('<div class="text-[10px] text-slate-500">' + escapeHtmlText(guest.email) + '</div>') : ''}
+                    ${guest.nationalIdOrPassport ? ('<div class="text-[10px] text-slate-500">رقم الهوية: <b class="font-mono text-slate-700">' + escapeHtmlText(guest.nationalIdOrPassport) + '</b></div>') : ''}
+                    ${guest.adults ? ('<div class="text-[10px] text-slate-500">العدد: ' + guest.adults + ' بالغين ' + (guest.children ? ('+ ' + guest.children + ' أطفال') : '') + ' · غرفة واحدة</div>') : ''}
+                    ${arrivalText ? ('<div class="text-[10px] text-slate-500">الوصول المتوقع: ' + escapeHtmlText(arrivalText) + '</div>') : ''}
                 </div>
             </div>
         </div>
@@ -5958,9 +6144,16 @@ async function openBookingDetailsModal(bookingId) {
                     <div class="font-bold ${booking.paymentStatus === 'paid' ? 'text-emerald-700' : 'text-amber-700'}">
                         ${booking.paymentStatus === 'paid' ? 'مدفوع بالكامل' : (booking.paymentStatus === 'refunded' ? 'مسترجع' : 'غير مدفوع (عند الوصول)')}
                     </div>
-                    <div class="text-[10px] text-slate-400 uppercase mt-0.5">طريقة الدفع: ${booking.paymentMethod || 'cash'}</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">طريقة الدفع: ${escapeHtmlText(paymentMethodLabel(booking.paymentMethod))}</div>
+                    <div class="mt-2">
+                        ${booking.paymentStatus === 'paid'
+                            ? `<button type="button" onclick="changeBookingPayment('${bId}', 'refunded')" class="btn-secondary text-[11px] py-1 px-2">تسجيل استرجاع</button>`
+                            : `<button type="button" onclick="changeBookingPayment('${bId}', 'paid')" class="gold-btn text-[11px] py-1 px-2">تسجيل الدفع</button>`}
+                    </div>
                 </div>
             </div>
+            ${linesHtml ? `<div class="mt-3 p-3 rounded-lg bg-white border border-slate-200 space-y-1.5">${linesHtml}</div>` : ''}
+            ${cancelText ? `<div class="text-[11px] text-slate-500 mt-2">إلغاء مجاني حتى ${escapeHtmlText(cancelText)}</div>` : ''}
         </div>
 
         ${booking.notes || booking.cancellationReason ? `
@@ -6117,7 +6310,7 @@ async function loadHotelRooms(hotelId) {
                     </td>
                     <td class="p-2.5">
                         <div class="text-slate-800 font-semibold">${capAdults} بالغين ${capChildren > 0 ? ('+ ' + capChildren + ' أطفال') : ''}</div>
-                        <div class="text-[10px] text-slate-400">${bedsCount} سرير (${bedType})</div>
+                        <div class="text-[10px] text-slate-400">${bedsCount} سرير (${bedType})${r.area ? ` · ${r.area} م²` : ''}</div>
                     </td>
                     <td class="p-2.5">
                         <div class="font-bold text-[#2D4F2E] text-sm">${Number(priceVal).toLocaleString()} ج.م</div>
@@ -6163,6 +6356,7 @@ async function handleCreateHotelRoomSubmit(e) {
     const bedsCount = Number(document.getElementById('hroom-beds-count')?.value || 1);
     const bedType = document.getElementById('hroom-bed-type')?.value.trim() || 'King Bed';
     const amenitiesStr = document.getElementById('hroom-amenities')?.value.trim() || '';
+    const areaRaw = document.getElementById('hroom-area')?.value;
 
     if (!title || price <= 0) {
         showToast('يرجى كتابة اسم الغرفة وسعر الليلة بشكل صحيح', 'error');
@@ -6200,6 +6394,9 @@ async function handleCreateHotelRoomSubmit(e) {
         bedType,
     }));
     payload.append('amenities', JSON.stringify(amenities));
+    if (areaRaw !== undefined && areaRaw !== '' && !Number.isNaN(Number(areaRaw))) {
+        payload.append('area', String(Number(areaRaw)));
+    }
     payload.append('active', 'true');
     imageFiles.forEach((file) => payload.append('images', file));
 
@@ -6518,6 +6715,7 @@ function renderOwnerOverviewKPIs() {
     recentContainer.innerHTML = pendingList.map(b => {
         const bId = b.id || b._id;
         const customer = b.user || {};
+        const guestName = b.guestDetails?.fullName || customer.name || 'عميل';
         const startStr = b.startDate ? new Date(b.startDate).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }) : '';
         const endStr = b.endDate ? new Date(b.endDate).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }) : '';
 
@@ -6528,7 +6726,7 @@ function renderOwnerOverviewKPIs() {
                         <i class="fas fa-calendar-day"></i>
                     </div>
                     <div>
-                        <div class="font-bold text-slate-900">${customer.name || 'عميل'}</div>
+                        <div class="font-bold text-slate-900">${escapeHtmlText(guestName)}</div>
                         <div class="text-[11px] text-slate-500">الفترة: ${startStr} إلى ${endStr} • <span class="font-bold text-[#2D4F2E]">${Number(b.totalPrice || 0).toLocaleString()} ج.م</span></div>
                     </div>
                 </div>
@@ -6578,6 +6776,7 @@ async function loadOwnerListingTab() {
     if (minDuration) minDuration.value = p.minDuration || 1;
     if (discountType) discountType.value = p.discountType || 'none';
     if (discountValue) discountValue.value = p.discountValue || 0;
+    fillStayFields('owner-form', ad.stay || {});
 
     calcOwnerFinalPrice();
 
@@ -6959,6 +7158,7 @@ async function handleOwnerListingSubmit(e) {
         discountType,
         discountValue,
         attributes,
+        stay: readStayFields('owner-form'),
     };
 
     if (lat !== '' && lng !== '' && !isNaN(Number(lat)) && !isNaN(Number(lng))) {
@@ -7250,8 +7450,10 @@ function renderOwnerBookings() {
         filtered = filtered.filter(b => {
             const userName = b.user?.name?.toLowerCase() || '';
             const userPhone = b.user?.phone?.toLowerCase() || '';
+            const guestName = b.guestDetails?.fullName?.toLowerCase() || '';
+            const reference = (b.reference || '').toLowerCase();
             const bId = (b.id || b._id || '').toLowerCase();
-            return userName.includes(search) || userPhone.includes(search) || bId.includes(search);
+            return userName.includes(search) || userPhone.includes(search) || guestName.includes(search) || reference.includes(search) || bId.includes(search);
         });
     }
 
@@ -7276,18 +7478,22 @@ function renderOwnerBookings() {
     container.innerHTML = filtered.map(b => {
         const bId = b.id || b._id;
         const shortId = bId ? bId.substring(bId.length - 6) : '--';
+        const reference = b.reference || ('#' + shortId);
         const customer = b.user || {};
+        const guest = b.guestDetails || {};
+        const quote = b.confirmation?.price || b.priceBreakdown || null;
+        const guestName = guest.fullName || customer.name || 'عميل';
+        const phoneNum = bookingContactPhone(guest, customer);
         const startStr = b.startDate ? new Date(b.startDate).toLocaleDateString('ar-EG', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '--';
         const endStr = b.endDate ? new Date(b.endDate).toLocaleDateString('ar-EG', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '--';
-
-        const phoneNum = customer.phone || '';
         const waLink = phoneNum ? `https://wa.me/${phoneNum.replace(/[^0-9]/g, '')}` : null;
+        const linesHtml = bookingLinesHtml(quote);
 
         return `
             <div class="card p-5 bg-white space-y-4 border border-slate-200 transition hover:border-[#2D4F2E]/40">
                 <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
                     <div class="flex items-center gap-3">
-                        <span class="font-mono font-bold text-xs bg-slate-100 px-2 py-1 rounded text-slate-700">#${shortId}</span>
+                        <span class="font-mono font-bold text-xs bg-slate-100 px-2 py-1 rounded text-slate-700">${escapeHtmlText(reference)}</span>
                         <div>
                             <span class="text-xs text-slate-400">تاريخ الطلب:</span>
                             <span class="text-xs font-semibold text-slate-700">${b.createdAt ? new Date(b.createdAt).toLocaleDateString('ar-EG') : '--'}</span>
@@ -7302,9 +7508,9 @@ function renderOwnerBookings() {
                             <i class="fas fa-user text-[#2D4F2E]"></i>
                             <span>بيانات العميل</span>
                         </div>
-                        <div class="font-bold text-slate-900 text-sm">${customer.name || 'عميل'}</div>
-                        <div class="text-slate-600 font-mono">${customer.phone || 'بدون هاتف'}</div>
-                        <div class="text-[11px] text-slate-400">${customer.email || ''}</div>
+                        <div class="font-bold text-slate-900 text-sm">${escapeHtmlText(guestName)}</div>
+                        <div class="text-slate-600 font-mono">${escapeHtmlText(phoneNum || 'بدون هاتف')}</div>
+                        <div class="text-[11px] text-slate-400">${escapeHtmlText(guest.email || customer.email || '')}</div>
                         ${phoneNum ? `
                             <div class="flex items-center gap-2 pt-1.5">
                                 <a href="tel:${phoneNum}" class="text-[11px] bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold px-2 py-1 rounded-md transition flex items-center gap-1">
@@ -7339,12 +7545,21 @@ function renderOwnerBookings() {
                             <span>التكلفة والحساب</span>
                         </div>
                         <div class="text-xl font-black text-[#2D4F2E]">${Number(b.totalPrice || 0).toLocaleString()} ج.م</div>
-                        <div class="text-[11px] text-slate-500">حالة الدفع: <span class="font-bold ${b.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-amber-600'}">${b.paymentStatus === 'paid' ? 'مدفوع' : 'غير مدفوع (عند الوصول)'}</span></div>
-                        ${b.notes ? `<div class="text-[11px] text-slate-500 italic mt-1">ملاحظات: "${b.notes}"</div>` : ''}
+                        <div class="text-[11px] text-slate-500">حالة الدفع: <span class="font-bold ${b.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-amber-600'}">${b.paymentStatus === 'paid' ? 'مدفوع' : (b.paymentStatus === 'refunded' ? 'مسترجع' : 'غير مدفوع')}</span></div>
+                        <div class="text-[11px] text-slate-500">الطريقة: <span class="font-bold text-slate-700">${escapeHtmlText(paymentMethodLabel(b.paymentMethod))}</span></div>
+                        ${linesHtml ? `<div class="pt-2 space-y-1">${linesHtml}</div>` : ''}
+                        ${b.notes ? `<div class="text-[11px] text-slate-500 italic mt-1">ملاحظات: "${escapeHtmlText(b.notes)}"</div>` : ''}
                     </div>
                 </div>
 
                 <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    ${b.paymentStatus !== 'paid' ? `
+                        <button type="button" onclick="changeBookingPayment('${bId}', 'paid')" class="btn-secondary text-xs py-1.5 px-3 cursor-pointer">
+                            <i class="fas fa-money-bill-wave me-1"></i>
+                            <span>تسجيل الدفع</span>
+                        </button>
+                    ` : ''}
+
                     ${b.status === 'pending' ? `
                         <button type="button" onclick="updateOwnerBookingStatus('${bId}', 'confirmed')" class="gold-btn text-xs py-1.5 px-4 shadow-sm cursor-pointer">
                             <i class="fas fa-check-circle me-1"></i>

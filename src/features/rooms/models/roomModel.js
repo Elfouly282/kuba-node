@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { staySchema } = require('../../advertisements/stayOptions');
 
 const roomSchema = new mongoose.Schema(
     {
@@ -75,6 +76,10 @@ const roomSchema = new mongoose.Schema(
                 enum: ['per_night', 'per_day'],
                 default: 'per_night',
             },
+        },
+        stay: {
+            type: staySchema,
+            default: undefined,
         },
         capacity: {
             adults: {

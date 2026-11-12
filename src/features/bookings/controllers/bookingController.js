@@ -9,8 +9,11 @@ const {
     prepareBooking,
     populateBooking,
     formatBooking,
+    nextReference,
+    staySnapshotFor,
 } = require('../services/bookingService');
 const { resolveBooking } = require('../bookingMode');
+const { paymentMethodOptions, normalizeGuest, assertPayment } = require('../quote');
 
 const findMyBooking = async (req) => {
     if (!isValidId(req.params.id)) throw new APIError('errors.invalidBookingId', 400);
@@ -79,6 +82,7 @@ exports.checkBooking = async (req, res) => {
             startDate: start,
             endDate: end,
             ...price,
+            paymentMethods: paymentMethodOptions(),
         },
     });
 };
@@ -87,12 +91,15 @@ exports.checkBooking = async (req, res) => {
  * POST /bookings
  */
 exports.createBooking = async (req, res) => {
-    const { ad, room, start, end, price, available } = await prepareBooking(req.body);
+    const guestDetails = normalizeGuest(req.body, req.user);
+    const payment = assertPayment(req.body);
+    const { ad, room, start, end, price, available } = await prepareBooking({ ...req.body, guestDetails });
     if (!available) throw new APIError('errors.bookingDateConflict', 400);
 
-    const { guestDetails, paymentMethod, notes } = req.body;
+    const { notes } = req.body;
 
     const booking = await Booking.create({
+        reference: await nextReference(),
         bookingType: price.bookingType,
         rentalType: price.rentalType,
         pricingUnit: price.pricingUnit,
@@ -104,8 +111,18 @@ exports.createBooking = async (req, res) => {
         duration: price.duration,
         unitPrice: price.unitPrice,
         totalPrice: price.totalPrice,
-        guestDetails: guestDetails || {},
-        paymentMethod: paymentMethod || 'cash',
+        priceBreakdown: price.quote,
+        staySnapshot: staySnapshotFor({ ad, room, quote: price.quote }),
+        addOns: price.quote.selectedAddOns.map((item) => ({
+            addOn: item.id,
+            title: item.title,
+            description: item.description,
+            price: item.price,
+            category: item.category,
+        })),
+        guestDetails,
+        acceptedTerms: payment.accepted,
+        paymentMethod: payment.method,
         notes: notes ? String(notes).trim() : '',
     });
 
