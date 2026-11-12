@@ -77,7 +77,7 @@ const findBookable = async ({ advertisement, room } = {}) => {
     if (!ad) throw new APIError('errors.advertisementNotFound', 404);
     if (!ad.active) throw new APIError('errors.advertisementInactive', 400);
 
-    if (ad.isHotel && !roomDoc && await Room.exists({ hotel: ad._id, active: true })) {
+    if (!roomDoc && await Room.exists({ hotel: ad._id, active: true })) {
         throw new APIError('validation.roomRequired', 400);
     }
 

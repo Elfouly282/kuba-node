@@ -9,6 +9,7 @@ const { SuccessResponse } = require('../../../utils/apiResponse');
 const { getImageUrl, getRelativeImagePath, deleteImageFile } = require('../../../utils/imageUrl');
 const { isPointInPolygon, getPolygonBoundingBox } = require('../../../utils/geospatial');
 const { attachDetailsHtml } = require('../../advertisements/presentDetails');
+const { attachHasRooms } = require('../../advertisements/hasRooms');
 
 const parsePoints = (raw) => {
     if (!raw) return [];
@@ -209,7 +210,9 @@ exports.getRegionData = async (req, res, next) => {
     const rawCategories = await Category.find().sort({ createdAt: -1 });
     const chalets = rawChalets.map(formatAdvertisement);
     const advertisements = rawAdvertisements.map(formatAdvertisement);
-    await attachDetailsHtml(chalets.concat(advertisements));
+    const listed = chalets.concat(advertisements);
+    await attachHasRooms(listed);
+    await attachDetailsHtml(listed);
 
     SuccessResponse.ok(res, {
         data: {

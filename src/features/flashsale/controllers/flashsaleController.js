@@ -3,6 +3,7 @@ const Advertisement = require('../../advertisements/models/advertisementModel');
 const APIError = require('../../../utils/apiError');
 const { SuccessResponse } = require('../../../utils/apiResponse');
 const { getImageUrl } = require('../../../utils/imageUrl');
+const { attachHasRooms } = require('../../advertisements/hasRooms');
 
 const FLASH_SALE_MAX_IMAGES = 3;
 const FLASH_SALE_DEFAULT_LIMIT = 20;
@@ -112,6 +113,7 @@ const collectFlashSales = async ({ city, region, limit, publicOnly }) => {
         .sort({ updatedAt: -1 });
 
     const items = docs.map((doc) => formatFlashSale(doc, pricesOf(doc.pricing)));
+    await attachHasRooms(items);
     const page = Number.isFinite(limit) ? items.slice(0, limit) : items;
 
     return {

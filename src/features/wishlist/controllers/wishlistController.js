@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const User = require('../../auth/models/userModel');
 const Advertisement = require('../../advertisements/models/advertisementModel');
 const { formatAdvertisement, attachDetailsHtml } = require('../../advertisements/controllers/advertisementController');
+const { attachHasRooms } = require('../../advertisements/hasRooms');
 const { extractAdvertisementId } = require('../middleware/wishlistMiddleware');
 const APIError = require('../../../utils/apiError');
 const { SuccessResponse } = require('../../../utils/apiResponse');
@@ -62,6 +63,7 @@ exports.getWishlist = async (req, res, next) => {
     }
 
     const formatted = pagedAds.map(formatAdvertisement);
+    await attachHasRooms(formatted);
     await attachDetailsHtml(formatted);
 
     SuccessResponse.ok(res, {

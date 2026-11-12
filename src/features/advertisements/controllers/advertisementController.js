@@ -13,6 +13,7 @@ const { searchAdvertisements } = require('../../search/listingSearch');
 const { attachDetailsHtml } = require('../presentDetails');
 const { normalizeDescriptionHtml } = require('../../../utils/descriptionHtml');
 const { resolveBooking } = require('../../bookings/bookingMode');
+const { attachHasRooms } = require('../hasRooms');
 
 const formatAdvertisement = (doc) => {
     if (!doc) return null;
@@ -55,7 +56,8 @@ const formatAdvertisement = (doc) => {
         };
     }
 
-    obj.booking = resolveBooking(obj, { requiresRoom: Boolean(obj.isHotel) });
+    obj.hasRooms = false;
+    obj.booking = resolveBooking(obj, { requiresRoom: false });
 
     return obj;
 };
@@ -75,6 +77,7 @@ const presentAdvertisements = async (advertisements, availability) => {
         if (slot) obj.availability = slot;
         return obj;
     });
+    await attachHasRooms(list);
     await attachDetailsHtml(list);
     return list;
 };
@@ -82,6 +85,7 @@ const presentAdvertisements = async (advertisements, availability) => {
 const presentOne = async (doc) => {
     const obj = formatAdvertisement(doc);
     if (!obj) return null;
+    await attachHasRooms([obj]);
     await attachDetailsHtml([obj]);
     return obj;
 };

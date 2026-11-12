@@ -45,7 +45,8 @@ exports.getBookedDates = async (req, res) => {
         throw new APIError('errors.roomDoesNotBelongToHotel', 400);
     }
 
-    const booking = resolveBooking(room || ad, { requiresRoom: Boolean(ad.isHotel) && !room });
+    const hasRooms = Boolean(await Room.exists({ hotel: ad._id, active: true }));
+    const booking = resolveBooking(room || ad, { requiresRoom: hasRooms && !room });
 
     const bookings = await Booking.find({
         advertisement: ad._id,
@@ -59,6 +60,7 @@ exports.getBookedDates = async (req, res) => {
     SuccessResponse.ok(res, {
         data: {
             advertisementId: ad._id,
+            hasRooms,
             roomId,
             pricingUnit: booking.pricingUnit,
             booking,
