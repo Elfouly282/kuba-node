@@ -1524,7 +1524,7 @@
                 }
               ]
             },
-            "description": "Requires login. Returns the logged-in user bookings, newest first. Every booking includes confirmation with the saved quote, guest, stay snapshot, payment method and amount. confirmation.price.total stays equal to totalPrice."
+            "description": "Requires login. Returns the logged-in user bookings as receipts, newest first. Each item has reference, image, property, room, guest, stay dates, payment (method, status, amount) and lines (label + amount). Internal quote fields, the account user, listing owner, amenities and national id are omitted. payment.amount is the saved total."
           }
         },
         {

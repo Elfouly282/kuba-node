@@ -306,6 +306,96 @@ const formatBooking = (doc) => {
     return obj;
 };
 
+const receiptImage = (value) => getImageUrl(value) || '';
+
+const receiptLine = (line) => {
+    if (!line || line.amount === undefined || line.amount === null) return null;
+    const row = {
+        label: line.label || '',
+        amount: line.amount,
+    };
+    if (line.quantityLabel) row.quantityLabel = line.quantityLabel;
+    return row;
+};
+
+// Customer list is a receipt: reference, stay, guest, price lines and payment.
+// Internal quote fields, the account user, and the raw listing documents stay out.
+const formatBookingReceipt = (doc) => {
+    if (!doc) return null;
+    const obj = typeof doc.toJSON === 'function' ? doc.toJSON() : { ...doc };
+
+    if (obj.staySnapshot?.image) obj.staySnapshot.image = receiptImage(obj.staySnapshot.image);
+    if (obj.advertisement && typeof obj.advertisement === 'object' && obj.advertisement.image) {
+        obj.advertisement.image = receiptImage(obj.advertisement.image);
+    }
+    if (obj.room && typeof obj.room === 'object' && obj.room.image) {
+        obj.room.image = receiptImage(obj.room.image);
+    }
+
+    const confirmation = presentConfirmation(obj);
+    const ad = obj.advertisement && typeof obj.advertisement === 'object' ? obj.advertisement : {};
+    const room = obj.room && typeof obj.room === 'object' ? obj.room : null;
+    const guest = confirmation.guest || {};
+    const stay = confirmation.stay || {};
+    const payment = confirmation.payment || {};
+
+    const receipt = {
+        id: obj.id,
+        reference: confirmation.reference || '',
+        status: obj.status,
+        bookingType: obj.bookingType,
+        createdAt: obj.createdAt,
+        image: stay.image || room?.image || ad.image || '',
+        property: {
+            title: stay.propertyTitle || ad.title || '',
+            location: ad.location || ad.address || '',
+        },
+        room: room ? {
+            title: room.title || stay.title || '',
+            roomNumber: room.roomNumber || '',
+        } : null,
+        guest: {
+            bookingFor: guest.bookingFor || 'me',
+            name: guest.name || '',
+            email: guest.email || '',
+            phoneCountryCode: guest.phoneCountryCode || '',
+            phone: guest.phone || '',
+            adults: guest.adults ?? 1,
+            children: guest.children ?? 0,
+            arrivalFrom: guest.arrivalFrom || '',
+            arrivalTo: guest.arrivalTo || '',
+        },
+        stay: {
+            title: stay.title || '',
+            checkIn: stay.checkIn,
+            checkOut: stay.checkOut,
+            checkInTime: stay.checkInTime || '',
+            checkOutTime: stay.checkOutTime || '',
+            duration: stay.nights,
+            pricingUnit: stay.pricingUnit,
+            breakfastIncluded: Boolean(stay.breakfastIncluded),
+        },
+        payment: {
+            status: payment.status,
+            method: payment.method,
+            methodLabel: payment.methodLabel || '',
+            amount: payment.amount,
+            currency: payment.currency || 'EGP',
+        },
+        lines: (confirmation.price?.lines || []).map(receiptLine).filter(Boolean),
+        cancellation: confirmation.cancellation?.freeUntil
+            ? { freeUntil: confirmation.cancellation.freeUntil }
+            : null,
+    };
+
+    if (obj.notes) receipt.notes = obj.notes;
+    if (obj.status === 'cancelled' && obj.cancellationReason) {
+        receipt.cancellationReason = obj.cancellationReason;
+    }
+
+    return receipt;
+};
+
 const nextReference = async () => {
     for (let attempt = 0; attempt < 8; attempt += 1) {
         const reference = `AZR-${crypto.randomInt(100000, 1000000)}`;
@@ -334,6 +424,7 @@ module.exports = {
     prepareBooking,
     populateBooking,
     formatBooking,
+    formatBookingReceipt,
     priceStay: calculatePrice,
     nextReference,
     staySnapshotFor,

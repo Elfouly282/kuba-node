@@ -9,6 +9,7 @@ const {
     prepareBooking,
     populateBooking,
     formatBooking,
+    formatBookingReceipt,
     nextReference,
     staySnapshotFor,
 } = require('../services/bookingService');
@@ -144,11 +145,14 @@ exports.getMyBookings = async (req, res) => {
     const filter = { user: req.user._id };
     if (req.query.status) filter.status = req.query.status;
 
-    const bookings = await populateBooking(Booking.find(filter)).sort({ createdAt: -1 });
+    const bookings = await Booking.find(filter)
+        .populate('advertisement', 'title image location address')
+        .populate('room', 'title roomNumber image')
+        .sort({ createdAt: -1 });
 
     SuccessResponse.ok(res, {
         results: bookings.length,
-        data: { bookings: bookings.map(formatBooking) },
+        data: { bookings: bookings.map(formatBookingReceipt) },
     });
 };
 

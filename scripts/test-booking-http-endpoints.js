@@ -353,7 +353,26 @@ const run = async () => {
 
         console.log('\n--- My bookings ---');
         res = await request('GET', '/api/v1/bookings/my', { token: customer.token });
+        const mine = res.body.data && res.body.data.bookings;
+        const stayedReceipt = mine && mine.find((item) => item.id === stayed.id);
         expect(res.status === 200 && res.body.results === 4, 'My bookings: returns my 4 bookings', res);
+        expect(
+            stayedReceipt
+                && stayedReceipt.reference === stayed.reference
+                && stayedReceipt.payment.amount === 27930
+                && stayedReceipt.payment.methodLabel === 'InstaPay'
+                && stayedReceipt.guest.name === 'Nadia Hassan'
+                && stayedReceipt.guest.email === 'nadia.hassan@example.com'
+                && stayedReceipt.stay.title === 'Deluxe Sea-View'
+                && stayedReceipt.property.title === 'Azure Bay Resort'
+                && stayedReceipt.lines.some((line) => line.label && line.amount !== undefined)
+                && stayedReceipt.priceBreakdown === undefined
+                && stayedReceipt.user === undefined
+                && stayedReceipt.confirmation === undefined
+                && stayedReceipt.guest.nationalIdOrPassport === undefined,
+            'My bookings: each item is a receipt without internal booking fields',
+            res
+        );
 
         res = await request('GET', `/api/v1/bookings/${chaletBookingId}`, { token: otherCustomer.token });
         expect(res.status === 403, "Another user can't see my booking", res);
