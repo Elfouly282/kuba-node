@@ -146,6 +146,12 @@ const advertisementSchema = new mongoose.Schema(
         images: {
             type: [String],
             default: [],
+            validate: {
+                validator(value) {
+                    return !value || value.length <= 4;
+                },
+                message: 'validation.advertisementGalleryLimit',
+            },
         },
         attributes: {
             type: mongoose.Schema.Types.Mixed,
@@ -238,10 +244,29 @@ advertisementSchema.pre('validate', function (next) {
         this.pricing.pricePerDay = this.pricing.fullDayPrice;
     }
 
-    if (this.image && (!this.images || this.images.length === 0)) {
-        this.images = [this.image];
-    } else if ((!this.image || this.image === '') && this.images && this.images.length > 0) {
-        this.image = this.images[0];
+    const imageKey = (value) => {
+        if (!value || typeof value !== 'string') return '';
+        const trimmed = value.trim();
+        const match = trimmed.match(/\/uploads\/(.+)$/);
+        return match ? match[1] : trimmed;
+    };
+
+    const main = imageKey(this.image);
+    const raw = Array.isArray(this.images) ? this.images : [];
+    const gallery = [];
+    raw.forEach((item) => {
+        const path = imageKey(item);
+        if (!path || path === main || gallery.includes(path)) return;
+        gallery.push(path);
+    });
+
+    if (!main && raw.length > 0) {
+        const first = imageKey(raw.find(Boolean));
+        this.image = first;
+        this.images = gallery.filter((item) => item !== first).slice(0, 4);
+    } else {
+        this.image = main;
+        this.images = gallery.slice(0, 4);
     }
 
     next();

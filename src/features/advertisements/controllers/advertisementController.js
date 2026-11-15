@@ -15,15 +15,70 @@ const { normalizeDescriptionHtml } = require('../../../utils/descriptionHtml');
 const { resolveBooking } = require('../../bookings/bookingMode');
 const { attachHasRooms } = require('../hasRooms');
 
+const GALLERY_MAX = 4;
+
+const imageKey = (value) => {
+    if (!value || typeof value !== 'string') return '';
+    return getRelativeImagePath(value.trim());
+};
+
+const parseImageList = (value) => {
+    if (value === undefined || value === null || value === '') return null;
+    let list = value;
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) return [];
+        try {
+            const parsed = JSON.parse(trimmed);
+            list = Array.isArray(parsed) ? parsed : [parsed];
+        } catch (_) {
+            list = trimmed.split(',').map((item) => item.trim()).filter(Boolean);
+        }
+    }
+    if (!Array.isArray(list)) list = [list];
+    return [...new Set(list.map((item) => imageKey(String(item || ''))).filter(Boolean))];
+};
+
+const collectUploaded = (req, fieldNames, folder) => {
+    const names = new Set(fieldNames);
+    const files = [];
+    if (req.file && names.has(req.file.fieldname)) files.push(req.file);
+    if (Array.isArray(req.files)) {
+        req.files.forEach((file) => {
+            if (!file.fieldname || names.has(file.fieldname)) files.push(file);
+        });
+    } else if (req.files && typeof req.files === 'object') {
+        fieldNames.forEach((name) => {
+            if (Array.isArray(req.files[name])) files.push(...req.files[name]);
+        });
+    }
+    return files.map((file) => `${folder}/${file.filename}`);
+};
+
+const galleryWithoutMain = (list, mainImage) => {
+    const main = imageKey(mainImage);
+    const out = [];
+    (Array.isArray(list) ? list : []).forEach((item) => {
+        const path = imageKey(typeof item === 'string' ? item : '');
+        if (!path || path === main || out.includes(path)) return;
+        out.push(path);
+    });
+    return out;
+};
+
+const discardNewUploads = (uploaded) => {
+    (uploaded || []).forEach((img) => deleteImageFile(img));
+};
+
 const formatAdvertisement = (doc) => {
     if (!doc) return null;
     const obj = typeof doc.toJSON === 'function' ? doc.toJSON() : { ...doc };
 
-    if (obj.image) obj.image = getImageUrl(obj.image);
-
-    if (Array.isArray(obj.images)) {
-        obj.images = obj.images.map((img) => getImageUrl(img)).filter(Boolean);
-    }
+    const mainKey = imageKey(obj.image || '');
+    const galleryKeys = galleryWithoutMain(obj.images, mainKey).slice(0, GALLERY_MAX);
+    obj.image = mainKey ? getImageUrl(mainKey) : '';
+    obj.gallery = galleryKeys.map((img) => getImageUrl(img)).filter(Boolean);
+    obj.images = [mainKey, ...galleryKeys].filter(Boolean).map((img) => getImageUrl(img)).filter(Boolean);
 
     if (obj.category && typeof obj.category === 'object' && obj.category.image) {
         obj.category.image = getImageUrl(obj.category.image);
@@ -241,37 +296,27 @@ exports.create = async (req, res, next) => {
         pricing = buildPricingData(req.body);
     }
 
-    let mainImage = '';
-    let imageList = [];
+    const uploadedMain = collectUploaded(req, ['image'], 'advertisements');
+    const uploadedGallery = collectUploaded(req, ['images'], 'advertisements');
+    let mainImage = uploadedMain[0] || '';
+    if (!mainImage && image && typeof image === 'string' && image.trim() !== '') {
+        mainImage = imageKey(image);
+    }
 
-    if (req.file) {
-        mainImage = `advertisements/${req.file.filename}`;
-        imageList.push(mainImage);
-    } else if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-        imageList = req.files.map((f) => `advertisements/${f.filename}`);
+    const keptGallery = parseImageList(req.body.gallery);
+    const listedGallery = parseImageList(images);
+    const seedGallery = keptGallery !== null ? keptGallery : (listedGallery || []);
+    let imageList = galleryWithoutMain([...seedGallery, ...uploadedGallery], mainImage);
+
+    if (!mainImage && keptGallery === null && uploadedGallery.length === 0 && imageList.length > 0) {
         mainImage = imageList[0];
-    } else if (image && typeof image === 'string' && image.trim() !== '') {
-        mainImage = getRelativeImagePath(image.trim());
-        imageList.push(mainImage);
+        imageList = imageList.slice(1);
     }
 
-    if (images) {
-        let extraImages = [];
-        if (Array.isArray(images)) extraImages = images;
-        else if (typeof images === 'string') {
-            try {
-                extraImages = JSON.parse(images);
-            } catch (_) {
-                extraImages = images.split(',').map((s) => s.trim());
-            }
-        }
-        extraImages.forEach((img) => {
-            if (img) imageList.push(getRelativeImagePath(img));
-        });
+    if (imageList.length > GALLERY_MAX) {
+        discardNewUploads([...uploadedGallery, ...uploadedMain]);
+        return next(new APIError('errors.advertisementGalleryLimit', 400));
     }
-
-    imageList = [...new Set(imageList)].filter(Boolean);
-    if (!mainImage && imageList.length > 0) mainImage = imageList[0];
 
     const parsedLat = (latitude !== undefined && latitude !== null && latitude !== '' && !isNaN(Number(latitude))) ? Number(latitude) : null;
     const parsedLng = (longitude !== undefined && longitude !== null && longitude !== '' && !isNaN(Number(longitude))) ? Number(longitude) : null;
@@ -504,35 +549,52 @@ exports.update = async (req, res, next) => {
         advertisement.price = pricing.finalPrice;
     }
 
-    if (req.file) {
-        deleteImageFile(advertisement.image);
-        const newImg = `advertisements/${req.file.filename}`;
-        advertisement.image = newImg;
-        if (!advertisement.images) advertisement.images = [];
-        advertisement.images.unshift(newImg);
-    } else if (req.body.image !== undefined && req.body.image.trim() !== '') {
-        const newRelative = getRelativeImagePath(req.body.image.trim());
-        if (advertisement.image !== newRelative) {
-            deleteImageFile(advertisement.image);
-            advertisement.image = newRelative;
+    const uploadedMain = collectUploaded(req, ['image'], 'advertisements');
+    const uploadedGallery = collectUploaded(req, ['images'], 'advertisements');
+    const previousMain = imageKey(advertisement.image);
+    const previousGallery = galleryWithoutMain(advertisement.images, previousMain);
+
+    let nextMain = previousMain;
+    if (uploadedMain[0]) {
+        nextMain = uploadedMain[0];
+    } else if (req.body.image !== undefined && String(req.body.image).trim() !== '') {
+        nextMain = imageKey(req.body.image);
+    }
+
+    const galleryTouched = req.body.replaceImages === true
+        || req.body.replaceImages === 'true'
+        || req.body.gallery !== undefined
+        || req.body.images !== undefined
+        || uploadedGallery.length > 0;
+
+    let nextGallery = galleryWithoutMain(previousGallery, nextMain);
+    if (galleryTouched) {
+        const keptGallery = parseImageList(req.body.gallery);
+        const listedGallery = parseImageList(req.body.images);
+        if (keptGallery !== null) {
+            nextGallery = galleryWithoutMain([...keptGallery, ...uploadedGallery], nextMain);
+        } else if (listedGallery !== null) {
+            nextGallery = galleryWithoutMain([...listedGallery, ...uploadedGallery], nextMain);
+        } else if (req.body.replaceImages === true || req.body.replaceImages === 'true') {
+            nextGallery = galleryWithoutMain(uploadedGallery, nextMain);
+        } else {
+            nextGallery = galleryWithoutMain([...previousGallery, ...uploadedGallery], nextMain);
         }
     }
 
-    if (req.body.images !== undefined) {
-        let imgArr = [];
-        if (Array.isArray(req.body.images)) imgArr = req.body.images;
-        else if (typeof req.body.images === 'string') {
-            try {
-                imgArr = JSON.parse(req.body.images);
-            } catch (_) {
-                imgArr = req.body.images.split(',').map((s) => s.trim());
-            }
-        }
-        advertisement.images = imgArr.map((im) => getRelativeImagePath(im)).filter(Boolean);
-        if (!advertisement.image && advertisement.images.length > 0) {
-            advertisement.image = advertisement.images[0];
-        }
+    if (nextGallery.length > GALLERY_MAX) {
+        discardNewUploads([...uploadedGallery, ...uploadedMain]);
+        return next(new APIError('errors.advertisementGalleryLimit', 400));
     }
+
+    const removed = previousGallery.filter((img) => !nextGallery.includes(img) && img !== nextMain);
+    if (previousMain && previousMain !== nextMain && !nextGallery.includes(previousMain)) {
+        removed.push(previousMain);
+    }
+    removed.forEach((img) => deleteImageFile(img));
+
+    advertisement.image = nextMain;
+    advertisement.images = nextGallery;
 
     await advertisement.save();
 
@@ -691,37 +753,31 @@ exports.addImages = async (req, res, next) => {
         }
     }
 
-    let newImages = [];
-    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-        newImages = req.files.map((f) => `advertisements/${f.filename}`);
-    } else if (req.file) {
-        newImages = [`advertisements/${req.file.filename}`];
-    }
+    const uploadedGallery = collectUploaded(req, ['images', 'image'], 'advertisements');
+    const linkedGallery = [
+        ...(parseImageList(req.body.imageUrl) || []),
+        ...(parseImageList(req.body.imageUrls) || []),
+    ];
+    const incoming = galleryWithoutMain([...uploadedGallery, ...linkedGallery], advertisement.image);
 
-    if (req.body.imageUrl && typeof req.body.imageUrl === 'string') {
-        newImages.push(getRelativeImagePath(req.body.imageUrl.trim()));
-    } else if (Array.isArray(req.body.imageUrls)) {
-        req.body.imageUrls.forEach((url) => {
-            if (url && typeof url === 'string') newImages.push(getRelativeImagePath(url.trim()));
-        });
-    }
-
-    if (newImages.length === 0) {
+    if (incoming.length === 0) {
+        discardNewUploads(uploadedGallery);
         return next(new APIError('validation.imageRequired', 400));
     }
 
-    if (!Array.isArray(advertisement.images)) {
-        advertisement.images = advertisement.image ? [advertisement.image] : [];
+    const existingGallery = galleryWithoutMain(advertisement.images, advertisement.image);
+    const mergedGallery = galleryWithoutMain([...existingGallery, ...incoming], advertisement.image);
+
+    if (mergedGallery.length > GALLERY_MAX) {
+        discardNewUploads(uploadedGallery);
+        return next(new APIError('errors.advertisementGalleryLimit', 400));
     }
 
-    newImages.forEach((img) => {
-        if (img && !advertisement.images.includes(img)) {
-            advertisement.images.push(img);
-        }
-    });
-
-    if (!advertisement.image && advertisement.images.length > 0) {
-        advertisement.image = advertisement.images[0];
+    if (!imageKey(advertisement.image) && mergedGallery.length > 0) {
+        advertisement.image = mergedGallery[0];
+        advertisement.images = mergedGallery.slice(1);
+    } else {
+        advertisement.images = mergedGallery;
     }
 
     await advertisement.save();
@@ -759,16 +815,19 @@ exports.deleteImage = async (req, res, next) => {
         }
     }
 
-    const relPath = getRelativeImagePath(image);
-    deleteImageFile(relPath);
-
-    if (Array.isArray(advertisement.images)) {
-        advertisement.images = advertisement.images.filter((img) => img !== relPath && img !== image);
+    const relPath = imageKey(image);
+    if (!relPath) {
+        return next(new APIError('validation.imageRequired', 400));
     }
 
-    if (advertisement.image === relPath || advertisement.image === image) {
-        advertisement.image = advertisement.images && advertisement.images.length > 0 ? advertisement.images[0] : '';
-    }
+    const wasMain = imageKey(advertisement.image) === relPath;
+    const gallery = galleryWithoutMain(advertisement.images, advertisement.image).filter((img) => img !== relPath);
+
+    if (wasMain) advertisement.image = '';
+    advertisement.images = gallery;
+
+    const stillUsed = imageKey(advertisement.image) === relPath || gallery.includes(relPath);
+    if (!stillUsed) deleteImageFile(relPath);
 
     await advertisement.save();
 
@@ -805,12 +864,20 @@ exports.setMainImage = async (req, res, next) => {
         }
     }
 
-    const relPath = getRelativeImagePath(image);
-    advertisement.image = relPath;
-
-    if (Array.isArray(advertisement.images) && !advertisement.images.includes(relPath)) {
-        advertisement.images.unshift(relPath);
+    const relPath = imageKey(image);
+    if (!relPath) {
+        return next(new APIError('validation.imageRequired', 400));
     }
+
+    const oldMain = imageKey(advertisement.image);
+    let gallery = galleryWithoutMain(advertisement.images, oldMain).filter((img) => img !== relPath);
+    if (oldMain && oldMain !== relPath) gallery.unshift(oldMain);
+
+    const overflow = gallery.slice(GALLERY_MAX);
+    overflow.forEach((img) => deleteImageFile(img));
+
+    advertisement.image = relPath;
+    advertisement.images = gallery.slice(0, GALLERY_MAX);
 
     await advertisement.save();
 

@@ -325,6 +325,7 @@ const state = {
     locationSubTab: 'cities',
     selectedCityFilter: '',
     editingAdvertisementId: null,
+    adGalleryKeep: [],
     editingUnitTypeId: null,
     editingAttributeId: null,
     bookings: [],
@@ -4009,6 +4010,20 @@ async function loadAdvertisementsTab() {
     }
 }
 
+function listingGalleryImages(ad) {
+    if (!ad) return [];
+    if (Array.isArray(ad.gallery)) return ad.gallery.filter(Boolean).slice(0, 4);
+    const main = ad.image || '';
+    const list = Array.isArray(ad.images) ? ad.images : [];
+    return list.filter((img) => img && img !== main).slice(0, 4);
+}
+
+function adImageSrc(img) {
+    if (!img) return '';
+    if (String(img).startsWith('http') || String(img).startsWith('/uploads/')) return img;
+    return `/uploads/${img}`;
+}
+
 function renderAdvertisementsGrid() {
     const grid = document.getElementById('advertisements-grid');
     if (!grid) return;
@@ -4022,6 +4037,7 @@ function renderAdvertisementsGrid() {
         const adId = ad.id || ad._id;
         const imgSrc = ad.image?.startsWith('http') ? ad.image : (ad.image ? `/uploads/${ad.image}` : 'https://placehold.co/400x250?text=No+Image');
         const isActive = ad.active !== false;
+        const galleryCount = listingGalleryImages(ad).length;
 
         // Pricing details
         const pricing = ad.pricing || {};
@@ -4082,6 +4098,7 @@ function renderAdvertisementsGrid() {
                             ${isActive ? 'نشط' : 'معطل'}
                         </span>
                         ${ad.isFlashSale ? `<span class="absolute bottom-2 start-2 badge bg-rose-600 text-white text-[10px] shadow"><i class="fas fa-bolt me-1"></i>فلاش</span>` : ''}
+                        ${galleryCount ? `<span class="absolute bottom-2 end-2 badge bg-black/70 text-white text-[10px] shadow"><i class="fas fa-images me-1"></i>${galleryCount}/4</span>` : ''}
                     </div>
 
                     <div class="space-y-1 text-xs">
@@ -5157,6 +5174,12 @@ function openAddAdvertisementModal() {
     const flashInput = document.getElementById('ad-modal-flashsale');
     if (flashInput) flashInput.checked = false;
     document.getElementById('ad-modal-preview').innerHTML = '';
+    state.adGalleryKeep = [];
+    const galleryInput = document.getElementById('ad-modal-gallery-files');
+    if (galleryInput) galleryInput.value = '';
+    const galleryPreview = document.getElementById('ad-modal-gallery-preview');
+    if (galleryPreview) galleryPreview.innerHTML = '';
+    renderAdGalleryExisting();
 
     populateLocationSelects();
     populateAdCategorySelect();
@@ -5276,7 +5299,77 @@ async function openEditAdvertisementModal(adId) {
     const imgSrc = ad.image?.startsWith('http') ? ad.image : (ad.image ? `/uploads/${ad.image}` : '');
     preview.innerHTML = imgSrc ? `<img src="${imgSrc}" class="h-24 w-auto rounded border border-slate-300 object-cover mt-2">` : '';
 
+    state.adGalleryKeep = listingGalleryImages(ad);
+    const galleryInput = document.getElementById('ad-modal-gallery-files');
+    if (galleryInput) galleryInput.value = '';
+    const galleryPreview = document.getElementById('ad-modal-gallery-preview');
+    if (galleryPreview) galleryPreview.innerHTML = '';
+    renderAdGalleryExisting();
+
     document.getElementById('advertisement-modal').classList.add('active');
+}
+
+function previewAdMainImage(input) {
+    const preview = document.getElementById('ad-modal-preview');
+    const file = input?.files?.[0];
+    if (!preview || !file) return;
+    const url = URL.createObjectURL(file);
+    preview.innerHTML = `<img src="${url}" class="h-24 w-auto rounded border border-slate-300 object-cover mt-2">`;
+}
+
+function updateAdGalleryCount() {
+    const countEl = document.getElementById('ad-modal-gallery-count');
+    if (!countEl) return;
+    const pending = document.getElementById('ad-modal-gallery-files')?.files?.length || 0;
+    const total = (state.adGalleryKeep?.length || 0) + pending;
+    countEl.textContent = `${total}/4`;
+}
+
+function renderAdGalleryExisting() {
+    const box = document.getElementById('ad-modal-gallery-existing');
+    updateAdGalleryCount();
+    if (!box) return;
+
+    const items = state.adGalleryKeep || [];
+    if (!items.length) {
+        box.innerHTML = '<span class="text-[11px] text-slate-400">لا توجد صور جاليري محفوظة</span>';
+        return;
+    }
+
+    box.innerHTML = items.map((img, index) => `
+        <div class="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200">
+            <img src="${adImageSrc(img)}" class="w-full h-full object-cover" alt="">
+            <button type="button" onclick="removeAdGalleryImage(${index})" class="absolute top-0.5 end-0.5 bg-red-600 text-white text-[10px] w-4 h-4 rounded-full leading-4 text-center cursor-pointer" title="حذف من الجاليري">&times;</button>
+        </div>
+    `).join('');
+}
+
+function removeAdGalleryImage(index) {
+    if (!Array.isArray(state.adGalleryKeep)) state.adGalleryKeep = [];
+    state.adGalleryKeep.splice(index, 1);
+    renderAdGalleryExisting();
+    previewAdGalleryFiles(document.getElementById('ad-modal-gallery-files'));
+}
+
+function previewAdGalleryFiles(input) {
+    const preview = document.getElementById('ad-modal-gallery-preview');
+    if (!input || !preview) return;
+
+    const room = Math.max(0, 4 - (state.adGalleryKeep?.length || 0));
+    let files = Array.from(input.files || []);
+    if (files.length > room) {
+        showToast('يمكن إضافة 4 صور جاليري كحد أقصى لكل إعلان', 'warning');
+        const dt = new DataTransfer();
+        files.slice(0, room).forEach((file) => dt.items.add(file));
+        input.files = dt.files;
+        files = Array.from(input.files);
+    }
+
+    preview.innerHTML = files.map((file) => {
+        const url = URL.createObjectURL(file);
+        return `<div class="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200"><img src="${url}" class="w-full h-full object-cover" alt=""></div>`;
+    }).join('');
+    updateAdGalleryCount();
 }
 
 async function handleAdvertisementFormSubmit(e) {
@@ -5306,6 +5399,8 @@ async function handleAdvertisementFormSubmit(e) {
     const owner = document.getElementById('ad-modal-owner')?.value || null;
     const imageFile = document.getElementById('ad-modal-image-file').files[0];
     const imageUrl = document.getElementById('ad-modal-image-url').value.trim();
+    const galleryFiles = Array.from(document.getElementById('ad-modal-gallery-files')?.files || []);
+    const galleryKeep = Array.isArray(state.adGalleryKeep) ? state.adGalleryKeep : [];
 
     if (!title) {
         showToast('يرجى إدخال عنوان الإعلان', 'error');
@@ -5314,6 +5409,11 @@ async function handleAdvertisementFormSubmit(e) {
 
     if (!category) {
         showToast('يرجى اختيار القسم (Category)', 'error');
+        return;
+    }
+
+    if (galleryKeep.length + galleryFiles.length > 4) {
+        showToast('يمكن إضافة 4 صور جاليري كحد أقصى لكل إعلان', 'error');
         return;
     }
 
@@ -5349,8 +5449,9 @@ async function handleAdvertisementFormSubmit(e) {
     const stay = readStayFields('ad-modal');
 
     let payload;
+    const galleryPayload = JSON.stringify(galleryKeep);
 
-    if (imageFile) {
+    if (imageFile || galleryFiles.length > 0) {
         payload = new FormData();
         payload.append('title', title);
         if (category) payload.append('category', category);
@@ -5372,7 +5473,11 @@ async function handleAdvertisementFormSubmit(e) {
         payload.append('isFlashSale', isFlashSale);
         if (owner) payload.append('owner', owner);
         payload.append('attributes', JSON.stringify(attributes));
-        payload.append('image', imageFile);
+        if (imageFile) payload.append('image', imageFile);
+        else if (imageUrl) payload.append('image', imageUrl);
+        payload.append('gallery', galleryPayload);
+        payload.append('replaceImages', 'true');
+        galleryFiles.forEach((file) => payload.append('images', file));
     } else {
         const bodyObj = {
             title,
@@ -5380,7 +5485,6 @@ async function handleAdvertisementFormSubmit(e) {
             category: category || null,
             unitType: unitType || null,
             city: city || null,
-            region: region || null,
             region: region || null,
             pricing,
             stay,
@@ -5392,6 +5496,8 @@ async function handleAdvertisementFormSubmit(e) {
             active,
             isFlashSale,
             attributes,
+            gallery: galleryKeep,
+            replaceImages: true,
         };
         if (imageUrl) bodyObj.image = imageUrl;
         payload = JSON.stringify(bodyObj);
@@ -6624,7 +6730,7 @@ async function loadOwnerOverviewTab() {
     if (previewPrice) previewPrice.textContent = `${Number(finalP).toLocaleString()} ج.م / ${pUnit}`;
     if (previewTitle) previewTitle.textContent = ad.title || '--';
     if (previewLoc) previewLoc.innerHTML = `<i class="fas fa-location-dot text-[#2D4F2E] me-1"></i>${ad.location || ad.city?.name || 'غير محدد'}`;
-    const photosCount = Array.isArray(ad.images) ? ad.images.length : (ad.image ? 1 : 0);
+    const photosCount = (ad.image ? 1 : 0) + listingGalleryImages(ad).length;
     if (previewCount) previewCount.textContent = photosCount;
     if (previewType) previewType.textContent = ad.unitType?.nameAr || ad.unitType?.name || 'وحدة سكنية';
 
@@ -7198,71 +7304,59 @@ async function loadOwnerGalleryTab() {
     renderOwnerGalleryImages(ad);
 }
 
+function ownerPhotoCard(img, label, actions) {
+    const fullSrc = adImageSrc(img);
+    return `
+        <div class="card overflow-hidden p-0 bg-white border ${label === 'الأساسية' ? 'border-amber-400 ring-2 ring-amber-400/30' : 'border-slate-200'} rounded-xl group relative shadow-sm transition hover:shadow-md">
+            <div class="relative h-36 bg-slate-100 overflow-hidden">
+                <img src="${fullSrc}" alt="Listing Photo" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='images/kuba-logo.jpeg'">
+                <div class="absolute top-2 start-2 bg-black/70 text-white font-bold text-[10px] px-2 py-0.5 rounded-full shadow">${label}</div>
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2 p-2">
+                    ${actions}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 function renderOwnerGalleryImages(ad) {
     const container = document.getElementById('owner-gallery-images-grid');
     const countEl = document.getElementById('owner-gallery-count');
     if (!container) return;
 
-    let images = [];
-    if (Array.isArray(ad.images) && ad.images.length > 0) {
-        images = [...ad.images];
-    } else if (ad.image) {
-        images = [ad.image];
+    const gallery = listingGalleryImages(ad);
+    if (countEl) countEl.textContent = gallery.length;
+
+    const cards = [];
+    if (ad.image) {
+        cards.push(ownerPhotoCard(
+            ad.image,
+            'الأساسية',
+            `<button type="button" onclick="deleteOwnerImage('${ad.image}')" class="bg-red-600/90 hover:bg-red-600 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow transition cursor-pointer flex items-center gap-1" title="حذف الصورة"><i class="fas fa-trash-alt"></i></button>`
+        ));
     }
 
-    if (countEl) countEl.textContent = images.length;
+    gallery.forEach((img, idx) => {
+        cards.push(ownerPhotoCard(
+            img,
+            `جاليري ${idx + 1}`,
+            `<button type="button" onclick="setOwnerMainImage('${img}')" class="bg-white/95 text-slate-900 hover:bg-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow transition cursor-pointer flex items-center gap-1"><i class="fas fa-star text-amber-500"></i><span>تعيين كأساسية</span></button>
+             <button type="button" onclick="deleteOwnerImage('${img}')" class="bg-red-600/90 hover:bg-red-600 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow transition cursor-pointer flex items-center gap-1" title="حذف الصورة"><i class="fas fa-trash-alt"></i></button>`
+        ));
+    });
 
-    if (images.length === 0) {
+    if (!cards.length) {
         container.innerHTML = `
             <div class="col-span-full text-center py-12 text-slate-400">
                 <i class="fas fa-images text-4xl mb-3 text-slate-300"></i>
                 <div class="text-xs font-semibold">لم تقم بإضافة صور لهذا الإعلان بعد</div>
-                <div class="text-[11px] text-slate-400 mt-1">قم برفع أول صورة من المربع أعلاه لظهور إعلانك بشكل جذاب</div>
+                <div class="text-[11px] text-slate-400 mt-1">ارفع الصورة الأساسية وصور الجاليري، بحد أقصى 4 صور جاليري</div>
             </div>
         `;
         return;
     }
 
-    const mainImg = ad.image || images[0];
-
-    container.innerHTML = images.map((img, idx) => {
-        const isMain = img === mainImg;
-        const fullSrc = img.startsWith('http') ? img : `/uploads/${img}`;
-
-        return `
-            <div class="card overflow-hidden p-0 bg-white border ${isMain ? 'border-amber-400 ring-2 ring-amber-400/30' : 'border-slate-200'} rounded-xl group relative shadow-sm transition hover:shadow-md">
-                <div class="relative h-36 bg-slate-100 overflow-hidden">
-                    <img src="${fullSrc}" alt="Listing Photo" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='images/kuba-logo.jpeg'">
-                    
-                    ${isMain ? `
-                        <div class="absolute top-2 start-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-full shadow flex items-center gap-1">
-                            <i class="fas fa-crown text-[9px]"></i>
-                            <span>الغلاف الرئيسي</span>
-                        </div>
-                    ` : ''}
-
-                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2 p-2">
-                        ${!isMain ? `
-                            <button type="button" onclick="setOwnerMainImage('${img}')" class="bg-white/95 text-slate-900 hover:bg-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow transition cursor-pointer flex items-center gap-1">
-                                <i class="fas fa-star text-amber-500"></i>
-                                <span>تعيين كغلاف</span>
-                            </button>
-                        ` : ''}
-                        <button type="button" onclick="deleteOwnerImage('${img}')" class="bg-red-600/90 hover:bg-red-600 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow transition cursor-pointer flex items-center gap-1" title="حذف الصورة">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="p-2 flex items-center justify-between text-[11px] bg-slate-50 border-t border-slate-100">
-                    <span class="text-slate-400 font-mono">صورة #${idx + 1}</span>
-                    <button type="button" onclick="deleteOwnerImage('${img}')" class="text-red-500 hover:text-red-700 text-xs cursor-pointer" title="حذف">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
+    container.innerHTML = cards.join('');
 }
 
 async function handleOwnerImagesUpload(e) {
@@ -7277,9 +7371,19 @@ async function handleOwnerImagesUpload(e) {
 
     const files = fileInput?.files;
     const url = urlInput?.value.trim();
+    const gallery = listingGalleryImages(ad);
+    const incoming = (files && files.length > 0) ? files.length : (url ? 1 : 0);
 
-    if ((!files || files.length === 0) && !url) {
+    if (incoming === 0) {
         showToast('يرجى اختيار صور لرفعها أو إدخال رابط مباشر', 'warning');
+        return;
+    }
+
+    if (gallery.length >= 4 || gallery.length + incoming > 4) {
+        const room = Math.max(0, 4 - gallery.length);
+        showToast(room === 0
+            ? 'هذا الإعلان وصل للحد الأقصى: 4 صور جاليري'
+            : `يمكنك إضافة ${room} صورة جاليري فقط`, 'warning');
         return;
     }
 

@@ -1,0 +1,2764 @@
+{
+  "info": {
+    "name": "Kuba — Admin Dashboard",
+    "_postman_id": "kuba-admin-dashboard",
+    "description": "مجموعة طلبات لوحة تحكم الأدمن (مدير عام).\nكل الطلبات تحت /api/v1/admin ما عدا الغرف الفندقية اللي تحت /api/v1/rooms و /api/v1/advertisements/:id/rooms.\nسجل دخول الأول عشان التوكن يتحفظ في المتغير token.\nحساب الأدمن المحلي الافتراضي: admin@kuba-app.com / Admin@123456\nالعمليات اللي عليها requireAdmin مسموحة لدور admin فقط.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://kuba-app.com/api/v1",
+      "type": "string",
+      "description": "Production: https://kuba-app.com/api/v1 | Local: http://localhost:3000/api/v1"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "JWT. يتحفظ تلقائي بعد Login."
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "advertisementId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "hotelId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "roomId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cityId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "regionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bannerId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "onboardingId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "unitTypeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "attributeId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "تسجيل دخول الأدمن. التوكن يتحفظ تلقائي.",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "دخول لوحة الأدمن. الأدمن المحلي: admin@kuba-app.com / Admin@123456. صاحب الإعلان يقدر يدخل من نفس المسار لكن مجموعته منفصلة.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@kuba-app.com\",\n  \"password\": \"Admin@123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) pm.collectionVariables.set(\"token\", res.token);",
+                  "const user = res.data && res.data.user;",
+                  "if (user) {",
+                  "  const id = user.id || user._id;",
+                  "  if (id) pm.collectionVariables.set(\"userId\", String(id));",
+                  "  const ads = user.ownedAds || [];",
+                  "  if (ads[0]) {",
+                  "    const adId = ads[0].id || ads[0]._id;",
+                  "    if (adId) {",
+                  "      pm.collectionVariables.set(\"advertisementId\", String(adId));",
+                  "      pm.collectionVariables.set(\"hotelId\", String(adId));",
+                  "    }",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (Google / Firebase)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/auth/google",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "auth",
+                "google"
+              ]
+            },
+            "description": "دخول الأدمن بتوكن Firebase. الـ role الناتج admin.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firebaseIdToken\": \"<FIREBASE_ID_TOKEN>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) pm.collectionVariables.set(\"token\", res.token);",
+                  "const user = res.data && res.data.user;",
+                  "if (user) {",
+                  "  const id = user.id || user._id;",
+                  "  if (id) pm.collectionVariables.set(\"userId\", String(id));",
+                  "  const ads = user.ownedAds || [];",
+                  "  if (ads[0]) {",
+                  "    const adId = ads[0].id || ads[0]._id;",
+                  "    if (adId) {",
+                  "      pm.collectionVariables.set(\"advertisementId\", String(adId));",
+                  "      pm.collectionVariables.set(\"hotelId\", String(adId));",
+                  "    }",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "بيانات المستخدم الحالي. للأدمن وصاحب الإعلان."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Overview",
+      "description": "إحصائيات الصفحة الرئيسية. أدمن فقط.",
+      "item": [
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "stats"
+              ]
+            },
+            "description": "أرقام المستخدمين والإعلانات والحجوزات وبيانات الرسوم. requireAdmin."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "إدارة المستخدمين. requireAdmin.",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users?page=1&limit=10&search=&role=owner&active=true&provider=local&isEmailVerified=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "اسم أو إيميل أو موبايل",
+                  "disabled": true
+                },
+                {
+                  "key": "role",
+                  "value": "owner",
+                  "description": "user | admin | owner | advertiser",
+                  "disabled": true
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "provider",
+                  "value": "local",
+                  "description": "local | google",
+                  "disabled": true
+                },
+                {
+                  "key": "isEmailVerified",
+                  "value": "true",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "قائمة المستخدمين مع بحث وفلاتر وترقيم."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const list = res.data && res.data.users;",
+                  "const first = Array.isArray(list) ? list[0] : null;",
+                  "if (first) {",
+                  "  const id = first.id || first._id;",
+                  "  if (id && !pm.collectionVariables.get(\"userId\")) pm.collectionVariables.set(\"userId\", String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ]
+            },
+            "description": "email و password مطلوبين. role: user | admin | owner | advertiser.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"صاحب إعلان جديد\",\n  \"email\": \"owner@example.com\",\n  \"phone\": \"01000000000\",\n  \"password\": \"Password123\",\n  \"role\": \"owner\",\n  \"active\": true,\n  \"isEmailVerified\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "الحقول المقبولة: name, phone, role, active, isEmailVerified, password (8 أحرف على الأقل).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"اسم محدّث\",\n  \"phone\": \"01011111111\",\n  \"role\": \"owner\",\n  \"active\": true,\n  \"isEmailVerified\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Toggle User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id/toggle-status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":id",
+                "toggle-status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "يعكس active بين مفعّل ومعطّل. بدون body."
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Onboarding",
+      "description": "شاشات البداية. الكتابة requireAdmin.",
+      "item": [
+        {
+          "name": "List Screens",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/onboarding",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "onboarding"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const list = res.data && res.data.screens;",
+                  "const first = Array.isArray(list) ? list[0] : null;",
+                  "if (first) {",
+                  "  const id = first.id || first._id;",
+                  "  if (id && !pm.collectionVariables.get(\"onboardingId\")) pm.collectionVariables.set(\"onboardingId\", String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Screen",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/onboarding/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "onboarding",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{onboardingId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Create Screen",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/onboarding",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "onboarding"
+              ]
+            },
+            "description": "multipart. الصورة اختيارية في الحقل image.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "titleEn",
+                  "value": "Welcome",
+                  "type": "text"
+                },
+                {
+                  "key": "titleAr",
+                  "value": "مرحبا",
+                  "type": "text"
+                },
+                {
+                  "key": "descriptionEn",
+                  "value": "Find your stay",
+                  "type": "text"
+                },
+                {
+                  "key": "descriptionAr",
+                  "value": "اعثر على إقامتك",
+                  "type": "text"
+                },
+                {
+                  "key": "order",
+                  "value": "0",
+                  "type": "text"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Screen",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/onboarding/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "onboarding",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{onboardingId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "titleEn",
+                  "value": "Welcome",
+                  "type": "text"
+                },
+                {
+                  "key": "titleAr",
+                  "value": "مرحبا",
+                  "type": "text"
+                },
+                {
+                  "key": "descriptionEn",
+                  "value": "Find your stay",
+                  "type": "text"
+                },
+                {
+                  "key": "descriptionAr",
+                  "value": "اعثر على إقامتك",
+                  "type": "text"
+                },
+                {
+                  "key": "order",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": [],
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reorder Screens",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/onboarding/reorder/bulk",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "onboarding",
+                "reorder",
+                "bulk"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order\": [\n    {\n      \"id\": \"{{onboardingId}}\",\n      \"order\": 0\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete Screen",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/onboarding/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "onboarding",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{onboardingId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "description": "الأقسام. الكتابة requireAdmin.",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "categories"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const list = res.data && (res.data.categories || res.data);",
+                  "const first = Array.isArray(list) ? list[0] : null;",
+                  "if (first) {",
+                  "  const id = first.id || first._id;",
+                  "  if (id && !pm.collectionVariables.get(\"categoryId\")) pm.collectionVariables.set(\"categoryId\", String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Category (JSON + image URL)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "categories"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"شاليهات\",\n  \"image\": \"https://example.com/category.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Create Category (file)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "categories"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "شاليهات",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{categoryId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"فيلات\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{categoryId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cities",
+      "description": "المدن ونطاقها. الكتابة requireAdmin.",
+      "item": [
+        {
+          "name": "List Cities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cities"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const list = res.data && (res.data.cities || res.data);",
+                  "const first = Array.isArray(list) ? list[0] : null;",
+                  "if (first) {",
+                  "  const id = first.id || first._id;",
+                  "  if (id && !pm.collectionVariables.get(\"cityId\")) pm.collectionVariables.set(\"cityId\", String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get City",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cities/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cities",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{cityId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Get City Regions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cities/:id/regions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cities",
+                ":id",
+                "regions"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{cityId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Get City Screen Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cities/:id/data",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cities",
+                ":id",
+                "data"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{cityId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Create City",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cities"
+              ]
+            },
+            "description": "points مصفوفة { latitude, longitude }. لو فيه ملف صورة استخدم form-data بنفس الحقول.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"سهل حشيش\",\n  \"order\": 0,\n  \"active\": true,\n  \"color\": \"#2D4F2E\",\n  \"points\": [\n    {\n      \"latitude\": 27.05,\n      \"longitude\": 33.85\n    },\n    {\n      \"latitude\": 27.08,\n      \"longitude\": 33.9\n    },\n    {\n      \"latitude\": 27.02,\n      \"longitude\": 33.93\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update City",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cities/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cities",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{cityId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"سهل حشيش\",\n  \"order\": 1,\n  \"active\": true,\n  \"color\": \"#2D4F2E\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete City",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/cities/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "cities",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{cityId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Regions",
+      "description": "المناطق داخل المدينة. الكتابة requireAdmin.",
+      "item": [
+        {
+          "name": "List Regions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const list = res.data && (res.data.regions || res.data);",
+                  "const first = Array.isArray(list) ? list[0] : null;",
+                  "if (first) {",
+                  "  const id = first.id || first._id;",
+                  "  if (id && !pm.collectionVariables.get(\"regionId\")) pm.collectionVariables.set(\"regionId\", String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Region",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{regionId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Get Region Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions/:id/data",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions",
+                ":id",
+                "data"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{regionId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Create Region",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"city\": \"{{cityId}}\",\n  \"name\": \"المنطقة الأولى\",\n  \"order\": 0,\n  \"active\": true,\n  \"color\": \"#2D4F2E\",\n  \"points\": [\n    {\n      \"latitude\": 27.04,\n      \"longitude\": 33.88\n    },\n    {\n      \"latitude\": 27.06,\n      \"longitude\": 33.9\n    },\n    {\n      \"latitude\": 27.03,\n      \"longitude\": 33.91\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update Region",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{regionId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"المنطقة الأولى\",\n  \"order\": 1,\n  \"active\": true,\n  \"color\": \"#2D4F2E\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete Region",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/regions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "regions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{regionId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unit Types",
+      "description": "أنواع الوحدات وخصائصها. الكتابة requireAdmin.",
+      "item": [
+        {
+          "name": "List Unit Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const list = res.data && (res.data.unitTypes || res.data);",
+                  "const first = Array.isArray(list) ? list[0] : null;",
+                  "if (first) {",
+                  "  const id = first.id || first._id;",
+                  "  if (id && !pm.collectionVariables.get(\"unitTypeId\")) pm.collectionVariables.set(\"unitTypeId\", String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Unit Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{unitTypeId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Create Unit Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Chalet\",\n  \"nameAr\": \"شاليه\",\n  \"description\": \"وحدة ساحلية\",\n  \"categories\": [\n    \"{{categoryId}}\"\n  ],\n  \"pricingUnits\": [\n    \"per_night\"\n  ],\n  \"defaultPricingUnit\": \"per_night\",\n  \"order\": 0,\n  \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update Unit Type",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{unitTypeId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Chalet\",\n  \"nameAr\": \"شاليه\",\n  \"description\": \"وحدة ساحلية\",\n  \"categories\": [\n    \"{{categoryId}}\"\n  ],\n  \"pricingUnits\": [\n    \"per_night\",\n    \"per_day\"\n  ],\n  \"defaultPricingUnit\": \"per_night\",\n  \"order\": 0,\n  \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete Unit Type",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{unitTypeId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "List Attributes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types/:id/attributes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types",
+                ":id",
+                "attributes"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{unitTypeId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const list = res.data && (res.data.attributes || res.data);",
+                  "const first = Array.isArray(list) ? list[0] : null;",
+                  "if (first) {",
+                  "  const id = first.id || first._id;",
+                  "  if (id && !pm.collectionVariables.get(\"attributeId\")) pm.collectionVariables.set(\"attributeId\", String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Attribute",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types/:id/attributes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types",
+                ":id",
+                "attributes"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{unitTypeId}}"
+                }
+              ]
+            },
+            "description": "dataType: string | number | boolean | single_select | multi_select",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"bedrooms\",\n  \"nameAr\": \"غرف النوم\",\n  \"key\": \"bedrooms\",\n  \"dataType\": \"number\",\n  \"options\": [],\n  \"unit\": \"\",\n  \"order\": 0,\n  \"defaultValue\": null,\n  \"required\": false,\n  \"showInFilters\": true,\n  \"showInDetails\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update Attribute",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types/:id/attributes/:attrId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types",
+                ":id",
+                "attributes",
+                ":attrId"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{unitTypeId}}"
+                },
+                {
+                  "key": "attrId",
+                  "value": "{{attributeId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"bedrooms\",\n  \"nameAr\": \"عدد غرف النوم\",\n  \"key\": \"bedrooms\",\n  \"dataType\": \"number\",\n  \"options\": [],\n  \"unit\": \"\",\n  \"order\": 0,\n  \"defaultValue\": null,\n  \"required\": true,\n  \"showInFilters\": true,\n  \"showInDetails\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete Attribute",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unit-types/:id/attributes/:attrId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "unit-types",
+                ":id",
+                "attributes",
+                ":attrId"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{unitTypeId}}"
+                },
+                {
+                  "key": "attrId",
+                  "value": "{{attributeId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Advertisements",
+      "description": "الإعلانات. الإنشاء والتعديل للأدمن وصاحب الإعلان على إعلانه. تعيين المالك للأدمن فقط.",
+      "item": [
+        {
+          "name": "List Advertisements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements?search=&city={{cityId}}&region={{regionId}}&type=apartment&active=true&limit=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "city",
+                  "value": "{{cityId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "region",
+                  "value": "{{regionId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "apartment",
+                  "disabled": true
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "الأدمن يشوف الكل. صاحب الإعلان يتشاف له إعلاناته فقط لو التوكن بتاعه."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const list = res.data && res.data.advertisements;",
+                  "const first = Array.isArray(list) ? list[0] : null;",
+                  "if (first) {",
+                  "  const id = first.id || first._id;",
+                  "  if (id && !pm.collectionVariables.get(\"advertisementId\")) pm.collectionVariables.set(\"advertisementId\", String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Advertisement",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{advertisementId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Create Advertisement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements"
+              ]
+            },
+            "description": "title مطلوب. owner اختياري للأدمن. لو فيه ملف صورة استخدم form-data والحقول pricing[basePrice] و attributes كنص JSON.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"شاليه على البحر\",\n  \"owner\": null,\n  \"category\": \"{{categoryId}}\",\n  \"unitType\": \"{{unitTypeId}}\",\n  \"city\": \"{{cityId}}\",\n  \"region\": \"{{regionId}}\",\n  \"pricing\": {\n    \"basePrice\": 2500,\n    \"discountType\": \"none\",\n    \"discountValue\": 0,\n    \"pricingUnit\": \"per_night\",\n    \"minDuration\": 1\n  },\n  \"stay\": {\n    \"cleaningFee\": 150,\n    \"serviceFeePercent\": 5,\n    \"taxPercent\": 14,\n    \"taxLabel\": \"VAT\",\n    \"breakfastIncluded\": false,\n    \"freeCancellationDays\": 2,\n    \"checkInTime\": \"14:00\",\n    \"checkOutTime\": \"12:00\",\n    \"addOns\": [\n      {\n        \"title\": \"Airport transfer\",\n        \"description\": \"\",\n        \"price\": 300,\n        \"category\": \"extra\",\n        \"active\": true\n      }\n    ]\n  },\n  \"location\": \"سهل حشيش\",\n  \"address\": \"الكورنيش\",\n  \"latitude\": 27.041086,\n  \"longitude\": 33.891272,\n  \"description\": \"<p>وصف الإعلان</p>\",\n  \"active\": true,\n  \"isFlashSale\": false,\n  \"attributes\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update Advertisement",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{advertisementId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"شاليه على البحر\",\n  \"category\": \"{{categoryId}}\",\n  \"unitType\": \"{{unitTypeId}}\",\n  \"city\": \"{{cityId}}\",\n  \"region\": \"{{regionId}}\",\n  \"pricing\": {\n    \"basePrice\": 2800,\n    \"discountType\": \"percent\",\n    \"discountValue\": 10,\n    \"pricingUnit\": \"per_night\",\n    \"minDuration\": 1\n  },\n  \"stay\": {\n    \"cleaningFee\": 150,\n    \"serviceFeePercent\": 5,\n    \"taxPercent\": 14,\n    \"taxLabel\": \"VAT\",\n    \"breakfastIncluded\": false,\n    \"freeCancellationDays\": 2,\n    \"checkInTime\": \"14:00\",\n    \"checkOutTime\": \"12:00\",\n    \"addOns\": [\n      {\n        \"title\": \"Airport transfer\",\n        \"description\": \"\",\n        \"price\": 300,\n        \"category\": \"extra\",\n        \"active\": true\n      }\n    ]\n  },\n  \"location\": \"سهل حشيش\",\n  \"address\": \"الكورنيش\",\n  \"latitude\": 27.041086,\n  \"longitude\": 33.891272,\n  \"description\": \"<p>وصف محدّث</p>\",\n  \"active\": true,\n  \"isFlashSale\": false,\n  \"attributes\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Toggle Flash Sale",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{advertisementId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isFlashSale\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete Advertisement",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{advertisementId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Assign Owner (existing user)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id/owner",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id",
+                "owner"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{advertisementId}}"
+                }
+              ]
+            },
+            "description": "أدمن فقط. يربط مستخدم موجود ويحوّل دوره إلى owner لو كان user.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Assign Owner (create account)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id/owner",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id",
+                "owner"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{advertisementId}}"
+                }
+              ]
+            },
+            "description": "أدمن فقط. ينشئ حساب owner ويربطه بالإعلان. password 8 أحرف على الأقل لو الحساب موجود وعايز تغيّر الباسورد.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"صاحب الإعلان\",\n  \"email\": \"listing-owner@example.com\",\n  \"phone\": \"01022222222\",\n  \"password\": \"Password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Unlink Owner",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id/owner",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id",
+                "owner"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{advertisementId}}"
+                }
+              ]
+            },
+            "description": "أدمن فقط. يفك ربط صاحب الإعلان."
+          }
+        },
+        {
+          "name": "Add Images (files)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id/images",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id",
+                "images"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{advertisementId}}"
+                }
+              ]
+            },
+            "description": "صور الجاليري بحد 4 ملفات في الحقل images، بالإضافة إلى الصورة الأساسية. أو أرسل imageUrl في JSON.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Image by URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id/images",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id",
+                "images"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{advertisementId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imageUrl\": \"https://example.com/listing.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete Image",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id/images",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id",
+                "images"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{advertisementId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"image\": \"advertisements/example.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Set Main Image",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id/set-main-image",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id",
+                "set-main-image"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{advertisementId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"image\": \"advertisements/example.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Banners",
+      "description": "البانرات. الكتابة requireAdmin.",
+      "item": [
+        {
+          "name": "List Banners",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/banners",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "banners"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const list = res.data && (res.data.banners || res.data);",
+                  "const first = Array.isArray(list) ? list[0] : null;",
+                  "if (first) {",
+                  "  const id = first.id || first._id;",
+                  "  if (id && !pm.collectionVariables.get(\"bannerId\")) pm.collectionVariables.set(\"bannerId\", String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Banner",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/banners/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "banners",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{bannerId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Create Banner",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/banners",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "banners"
+              ]
+            },
+            "description": "advertisementId مطلوب. position مثال: top.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"advertisementId\": \"{{advertisementId}}\",\n  \"position\": \"top\",\n  \"city\": \"{{cityId}}\",\n  \"region\": \"{{regionId}}\",\n  \"image\": \"https://example.com/banner.jpg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update Banner",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/banners/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "banners",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{bannerId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"advertisementId\": \"{{advertisementId}}\",\n  \"position\": \"top\",\n  \"city\": \"{{cityId}}\",\n  \"region\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete Banner",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/banners/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "banners",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{bannerId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flash Sale",
+      "description": "عروض الفلاش. التفعيل يتم بتعديل isFlashSale على الإعلان.",
+      "item": [
+        {
+          "name": "List Flash Sale",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/flashsale?limit=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "flashsale"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Add To Flash Sale",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{advertisementId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isFlashSale\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Remove From Flash Sale",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "advertisements",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{advertisementId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isFlashSale\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "description": "كل الحجوزات للأدمن. صاحب الإعلان يشوف حجوزات إعلاناته فقط.",
+      "item": [
+        {
+          "name": "List Bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings?limit=150&status=pending&advertisement={{advertisementId}}&user={{userId}}&room={{roomId}}&bookingType=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "150",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "description": "pending | confirmed | cancelled | completed",
+                  "disabled": true
+                },
+                {
+                  "key": "advertisement",
+                  "value": "{{advertisementId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "user",
+                  "value": "{{userId}}",
+                  "description": "أدمن فقط",
+                  "disabled": true
+                },
+                {
+                  "key": "room",
+                  "value": "{{roomId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "bookingType",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const list = res.data && res.data.bookings;",
+                  "const first = Array.isArray(list) ? list[0] : null;",
+                  "if (first) {",
+                  "  const id = first.id || first._id;",
+                  "  if (id && !pm.collectionVariables.get(\"bookingId\")) pm.collectionVariables.set(\"bookingId\", String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Booking",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{bookingId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Update Booking Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{bookingId}}"
+                }
+              ]
+            },
+            "description": "status: pending | confirmed | cancelled | completed. paymentStatus: unpaid | paid | refunded.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\",\n  \"paymentStatus\": \"paid\",\n  \"notes\": \"\",\n  \"cancellationReason\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete Booking",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/bookings/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "bookings",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{bookingId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hotel Rooms",
+      "description": "غرف الفندق. المسار تحت API العميل مش /admin. الأدمن يدير أي فندق، وصاحب الإعلان فندقه فقط.",
+      "item": [
+        {
+          "name": "List Hotel Rooms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/advertisements/:hotelId/rooms",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "advertisements",
+                ":hotelId",
+                "rooms"
+              ],
+              "variable": [
+                {
+                  "key": "hotelId",
+                  "value": "{{hotelId}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const list = res.data && res.data.rooms;",
+                  "const first = Array.isArray(list) ? list[0] : null;",
+                  "if (first) {",
+                  "  const id = first.id || first._id;",
+                  "  if (id && !pm.collectionVariables.get(\"roomId\")) pm.collectionVariables.set(\"roomId\", String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Room",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/advertisements/:hotelId/rooms",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "advertisements",
+                ":hotelId",
+                "rooms"
+              ],
+              "variable": [
+                {
+                  "key": "hotelId",
+                  "value": "{{hotelId}}"
+                }
+              ]
+            },
+            "description": "multipart. images حتى 3 ملفات. pricing و capacity و beds و amenities نصوص JSON.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "hotel",
+                  "value": "{{hotelId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "title",
+                  "value": "غرفة ديلوكس",
+                  "type": "text"
+                },
+                {
+                  "key": "roomNumber",
+                  "value": "101",
+                  "type": "text"
+                },
+                {
+                  "key": "roomType",
+                  "value": "deluxe",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "1800",
+                  "type": "text"
+                },
+                {
+                  "key": "pricing",
+                  "value": "{\"basePrice\":1800,\"finalPrice\":1800,\"pricingUnit\":\"per_night\",\"currency\":\"EGP\"}",
+                  "type": "text"
+                },
+                {
+                  "key": "capacity",
+                  "value": "{\"adults\":2,\"children\":1,\"maxGuests\":3}",
+                  "type": "text"
+                },
+                {
+                  "key": "beds",
+                  "value": "{\"count\":1,\"bedType\":\"King Bed\"}",
+                  "type": "text"
+                },
+                {
+                  "key": "amenities",
+                  "value": "[\"WiFi\",\"Sea view\"]",
+                  "type": "text"
+                },
+                {
+                  "key": "area",
+                  "value": "32",
+                  "type": "text"
+                },
+                {
+                  "key": "active",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Room Images",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rooms/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{roomId}}"
+                }
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "replaceImages",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Room",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/rooms/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "rooms",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{roomId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    }
+  ]
+}

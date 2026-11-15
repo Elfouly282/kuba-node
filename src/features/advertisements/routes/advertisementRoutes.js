@@ -10,7 +10,7 @@ const {
     remove,
 } = require('../controllers/advertisementController');
 
-const { uploadSingle, uploadFields } = require('../../../middleware/uploadMiddleware');
+const { uploadFields } = require('../../../middleware/uploadMiddleware');
 const { protect, restrictTo } = require('../../auth/middleware/authMiddleware');
 const {
     validateAdvertisementId,
@@ -42,9 +42,14 @@ router.post('/:id/rooms', protect, validateAdvertisementId, ...uploadFields([
     { name: 'image', maxCount: 1 },
 ], 'rooms'), createRoom);
 
-router.post('/', protect, restrictTo('admin'), ...uploadSingle('image', 'advertisements'), validateCreateAdvertisement, create);
-router.patch('/:id', protect, restrictTo('admin'), validateAdvertisementId, ...uploadSingle('image', 'advertisements'), validateUpdateAdvertisement, update);
-router.put('/:id', protect, restrictTo('admin'), validateAdvertisementId, ...uploadSingle('image', 'advertisements'), validateUpdateAdvertisement, update);
+const advertisementUploads = uploadFields([
+    { name: 'image', maxCount: 1 },
+    { name: 'images', maxCount: 4 },
+], 'advertisements');
+
+router.post('/', protect, restrictTo('admin'), ...advertisementUploads, validateCreateAdvertisement, create);
+router.patch('/:id', protect, restrictTo('admin'), validateAdvertisementId, ...advertisementUploads, validateUpdateAdvertisement, update);
+router.put('/:id', protect, restrictTo('admin'), validateAdvertisementId, ...advertisementUploads, validateUpdateAdvertisement, update);
 router.delete('/:id', protect, restrictTo('admin'), validateAdvertisementId, remove);
 
 module.exports = router;
