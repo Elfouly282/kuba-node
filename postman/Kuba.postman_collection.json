@@ -250,6 +250,7 @@
           "item": [
             {
               "name": "Login (Email & Password)",
+              "description": "Returns the account in data.user, including its stored role (user, admin, owner, or advertiser). The JWT payload includes the same role.",
               "request": {
                 "method": "POST",
                 "header": [
@@ -284,7 +285,14 @@
                   "script": {
                     "exec": [
                       "const res = pm.response.json();",
-                      "if (res.token) pm.collectionVariables.set('token', res.token);"
+                      "if (res.token) pm.collectionVariables.set('token', res.token);",
+                      "pm.test('login returns the account role in the body and the token', function () {",
+                      "    const role = res.data && res.data.user && res.data.user.role;",
+                      "    pm.expect(['user', 'admin', 'owner', 'advertiser']).to.include(role);",
+                      "    const part = res.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');",
+                      "    const payload = JSON.parse(atob(part));",
+                      "    pm.expect(payload.role).to.eql(role);",
+                      "});"
                     ],
                     "type": "text/javascript"
                   }
@@ -293,7 +301,7 @@
             },
             {
               "name": "Login (Google / Firebase)",
-              "description": "Verifies the Firebase ID token, creates or updates the user (name, email, picture, optional city query), and returns a JWT whose subject is the Mongo user id. data.uid/email/name/picture stay for existing clients; data.user is the saved account.",
+              "description": "Verifies the Firebase ID token, creates or updates the user (name, email, picture, optional city query), and returns a JWT whose subject is the Mongo user id and whose role is the saved account role. data.uid/email/name/picture stay for existing clients; data.user is the saved account.",
               "request": {
                 "method": "POST",
                 "header": [

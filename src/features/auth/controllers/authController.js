@@ -31,6 +31,11 @@ const clean = (user) => {
     return obj;
 };
 
+const authToken = (user) => generateToken({
+    id: user._id,
+    role: user.role || 'user',
+});
+
 const deleteUserData = async (userId) => {
     if (!userId) return;
 
@@ -117,7 +122,7 @@ exports.login = async (req, res, next) => {
 
     SuccessResponse.ok(res, {
         message: req.t('messages.loginSuccess'),
-        token: generateToken({ id: user._id }),
+        token: authToken(user),
         data: { user: clean(user) },
     });
 };
@@ -298,7 +303,7 @@ exports.resetPassword = async (req, res, next) => {
 
     SuccessResponse.ok(res, {
         message: req.t('messages.passwordResetSuccess'),
-        token: generateToken({ id: user._id }),
+        token: authToken(user),
     });
 };
 
@@ -316,7 +321,7 @@ exports.changePassword = async (req, res, next) => {
 
     SuccessResponse.ok(res, {
         message: req.t('messages.passwordChanged'),
-        token: generateToken({ id: user._id }),
+        token: authToken(user),
     });
 };
 
@@ -449,7 +454,7 @@ exports.googleLogin = async (req, res, next) => {
 
         SuccessResponse.ok(res, {
             message: req.t('messages.loginSuccess'),
-            token: generateToken({ id: user._id }),
+            token: authToken(user),
             data: {
                 uid: decoded.uid,
                 email: presented.email,
