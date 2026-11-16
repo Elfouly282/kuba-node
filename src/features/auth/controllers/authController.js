@@ -320,9 +320,15 @@ exports.changePassword = async (req, res, next) => {
     });
 };
 
+const presentUser = (user) => {
+    const obj = user?.toObject ? clean(user) : { ...(user || {}) };
+    if (obj.firebaseUid) obj.uid = obj.firebaseUid;
+    if (obj.avatar && !obj.picture) obj.picture = obj.avatar;
+    return obj;
+};
+
 exports.getMe = (req, res) => {
-    const user = req.user.toObject ? clean(req.user) : req.user;
-    SuccessResponse.ok(res, { data: { user } });
+    SuccessResponse.ok(res, { data: { user: presentUser(req.user) } });
 };
 
 exports.updateProfile = async (req, res, next) => {
@@ -351,6 +357,85 @@ exports.deleteAccount = async (req, res, next) => {
     });
 };
 
+const explicitGoogleName = (decoded) => {
+    const raw = String(decoded.name || decoded.displayName || '').trim();
+    return raw.length >= 2 ? raw.slice(0, 50) : '';
+};
+
+const normalizeGoogleName = (decoded) => {
+    const explicit = explicitGoogleName(decoded);
+    if (explicit) return explicit;
+    const local = String(decoded.email || '').split('@')[0].trim();
+    if (local.length >= 2) return local.slice(0, 50);
+    return 'User';
+};
+
+const isGooglePhoto = (url) => !url || /googleusercontent\.com/.test(String(url));
+
+const resolveCityId = async (cityId) => {
+    if (!cityId || !mongoose.Types.ObjectId.isValid(cityId)) return null;
+    const city = await City.findById(cityId).select('_id');
+    return city ? city._id : null;
+};
+
+const upsertGoogleUser = async (decoded, cityId) => {
+    const email = String(decoded.email || '').toLowerCase().trim();
+    if (!decoded.uid || !email) throw new APIError('errors.missingFields', 400);
+
+    const name = normalizeGoogleName(decoded);
+    const picture = decoded.picture || decoded.photoURL || null;
+    const city = await resolveCityId(cityId);
+
+    let user = await User.findOne({ firebaseUid: decoded.uid })
+        .setOptions({ includeInactive: true })
+        .select('+active');
+
+    if (!user) {
+        user = await User.findOne({ email })
+            .setOptions({ includeInactive: true })
+            .select('+active');
+    }
+
+    if (user) {
+        if (user.active === false) throw new APIError('errors.userDisabled', 403);
+
+        user.firebaseUid = decoded.uid;
+        user.email = email;
+        user.isEmailVerified = true;
+        const googleName = explicitGoogleName(decoded);
+        if (googleName) user.name = googleName;
+        else if (!user.name) user.name = name;
+        if (picture && isGooglePhoto(user.avatar)) user.avatar = picture;
+        if (user.provider !== 'local') user.provider = 'google';
+        if (city) user.city = city;
+
+        try {
+            await user.save({ validateBeforeSave: false });
+        } catch (err) {
+            if (err.code === 11000) throw new APIError('errors.emailAlreadyExists', 400);
+            throw err;
+        }
+        return user;
+    }
+
+    try {
+        return await User.create({
+            name,
+            email,
+            firebaseUid: decoded.uid,
+            avatar: picture,
+            provider: 'google',
+            isEmailVerified: true,
+            ...(city ? { city } : {}),
+        });
+    } catch (err) {
+        if (err.code === 11000) throw new APIError('errors.emailAlreadyExists', 400);
+        throw err;
+    }
+};
+
+exports.upsertGoogleUser = upsertGoogleUser;
+
 exports.googleLogin = async (req, res, next) => {
     try {
         let firebaseToken = req.body.firebaseIdToken || req.headers.authorization?.split(' ')[1];
@@ -358,11 +443,20 @@ exports.googleLogin = async (req, res, next) => {
 
         const admin = require('../../../../admin/config/firebase');
         const decoded = await admin.auth().verifyIdToken(firebaseToken);
+        const saved = await upsertGoogleUser(decoded, req.query.city || req.body.city || req.body.cityId);
+        const user = await User.findById(saved._id).populate('city', 'name image').populate('region', 'name');
+        const presented = presentUser(user);
 
         SuccessResponse.ok(res, {
             message: req.t('messages.loginSuccess'),
-            token: generateToken({ uid: decoded.uid }),
-            data: { uid: decoded.uid, email: decoded.email, name: decoded.name, picture: decoded.picture },
+            token: generateToken({ id: user._id }),
+            data: {
+                uid: decoded.uid,
+                email: presented.email,
+                name: presented.name,
+                picture: presented.picture || decoded.picture || null,
+                user: presented,
+            },
         });
     } catch (err) {
         const map = {

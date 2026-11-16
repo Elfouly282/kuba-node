@@ -32,6 +32,12 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: null,
         },
+        firebaseUid: {
+            type: String,
+            unique: true,
+            sparse: true,
+            index: true,
+        },
         provider: {
             type: String,
             enum: ['local', 'google'],

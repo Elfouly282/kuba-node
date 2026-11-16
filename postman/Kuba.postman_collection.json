@@ -293,6 +293,7 @@
             },
             {
               "name": "Login (Google / Firebase)",
+              "description": "Verifies the Firebase ID token, creates or updates the user (name, email, picture, optional city query), and returns a JWT whose subject is the Mongo user id. data.uid/email/name/picture stay for existing clients; data.user is the saved account.",
               "request": {
                 "method": "POST",
                 "header": [
@@ -500,6 +501,7 @@
           "item": [
             {
               "name": "Get My Profile",
+              "description": "Returns the saved account for the Bearer token, including Google users: name, email, avatar, picture, uid, provider, city, and region. Older Google tokens that only contain uid are resolved to the same account.",
               "request": {
                 "method": "GET",
                 "header": [
