@@ -36,6 +36,9 @@ const protect = async (req, _res, next) => {
         const userId = decompressId(decoded.id);
         const user = await User.findById(userId).populate('region', 'name');
         if (!user) return next(new APIError('errors.userNotFound', 401));
+        if (user.provider === 'local' && !user.isEmailVerified) {
+            return next(new APIError('errors.emailNotVerified', 403));
+        }
         req.user = user;
         return next();
     }

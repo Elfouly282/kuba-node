@@ -52,6 +52,7 @@
         "invalidCredentials": "Invalid email or password.",
         "emailAlreadyExists": "An account with this email already exists.",
         "emailAlreadyVerified": "This email address is already verified.",
+        "emailNotVerified": "Please verify your email before logging in. Check your inbox or resend the verification link.",
         "invalidOrExpiredToken": "This link is invalid or has expired. Please request a new one.",
         "invalidOrExpiredOtp": "Invalid or expired OTP. Please request a new one.",
         "userNotFound": "No user found with that identifier.",

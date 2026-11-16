@@ -101,7 +101,6 @@ exports.signUp = async (req, res, next) => {
 
     SuccessResponse.created(res, {
         message: req.t('messages.signUpSuccess'),
-        token: generateToken({ id: user._id }),
         data: { user: clean(user) },
     });
 };
@@ -114,6 +113,7 @@ exports.login = async (req, res, next) => {
     const user = await User.findOne({ email: normalizedEmail }).select('+password').populate('region', 'name');
     if (!user || !(await user.comparePassword(password))) return next(new APIError('errors.invalidCredentials', 401));
     if (user.provider !== 'local') return next(new APIError('errors.useGoogleLogin', 400));
+    if (!user.isEmailVerified) return next(new APIError('errors.emailNotVerified', 403));
 
     SuccessResponse.ok(res, {
         message: req.t('messages.loginSuccess'),
@@ -293,6 +293,7 @@ exports.resetPassword = async (req, res, next) => {
     user.password = password;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
+    user.isEmailVerified = true;
     await user.save();
 
     SuccessResponse.ok(res, {
