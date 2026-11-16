@@ -26,6 +26,11 @@ const unitTypeSchema = new mongoose.Schema(
             trim: true,
             default: '',
         },
+        descriptionAr: {
+            type: String,
+            trim: true,
+            default: '',
+        },
         icon: {
             type: String,
             trim: true,

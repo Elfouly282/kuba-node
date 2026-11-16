@@ -57,7 +57,7 @@ const collectImages = (doc) => {
 const refSummary = (value) => {
     if (!value) return null;
     if (typeof value === 'object' && value._id) {
-        return { id: value._id.toString(), name: value.name || '' };
+        return { id: value._id.toString(), name: value.name || '', nameAr: value.nameAr || '' };
     }
     return value.toString();
 };
@@ -65,7 +65,9 @@ const refSummary = (value) => {
 const formatFlashSale = (doc, prices) => ({
     id: doc._id.toString(),
     title: doc.title || '',
+    titleAr: doc.titleAr || '',
     location: doc.location || '',
+    locationAr: doc.locationAr || '',
     images: collectImages(doc),
     discountPercent: prices.discountPercent,
     priceBefore: prices.priceBefore,
@@ -107,9 +109,9 @@ const collectFlashSales = async ({ city, region, limit, publicOnly }) => {
     if (region) filter.region = region;
 
     const docs = await Advertisement.find(filter)
-        .select('title location images image pricing city region active status updatedAt')
-        .populate('city', 'name')
-        .populate('region', 'name')
+        .select('title titleAr location locationAr images image pricing city region active status updatedAt')
+        .populate('city', 'name nameAr')
+        .populate('region', 'name nameAr')
         .sort({ updatedAt: -1 });
 
     const items = docs.map((doc) => formatFlashSale(doc, pricesOf(doc.pricing)));

@@ -6,6 +6,7 @@ const {
     buildAttributeSpecsHtml,
     buildDetailsHtml,
 } = require('../../utils/descriptionHtml');
+const { responseLocale, presentAttributeValues, pickText } = require('../../../utils/localize');
 
 const unitTypeIdOf = (ad) => {
     const unitType = ad?.unitType;
@@ -14,8 +15,10 @@ const unitTypeIdOf = (ad) => {
     return String(unitType);
 };
 
-const attachDetailsHtml = async (items) => {
+const attachDetailsHtml = async (items, req) => {
     const list = (Array.isArray(items) ? items : []).filter(Boolean);
+    const locale = req ? responseLocale(req) : 'en';
+    const exact = Boolean(req?.localeExact);
     const unitTypeIds = [...new Set(list.map(unitTypeIdOf).filter((id) => mongoose.Types.ObjectId.isValid(id)))];
     const grouped = new Map();
 
@@ -33,18 +36,23 @@ const attachDetailsHtml = async (items) => {
     }
 
     list.forEach((ad) => {
-        const written = normalizeDescriptionHtml(ad.description);
         const defs = grouped.get(unitTypeIdOf(ad)) || [];
-        const specs = buildAttributeSpecsHtml(ad.attributes, defs);
+        ad.attributes = presentAttributeValues(ad.attributes, defs, locale);
+        const written = normalizeDescriptionHtml(pickText(ad.description, ad.descriptionAr, locale, exact));
+        const location = pickText(ad.location, ad.locationAr, locale, exact);
+        const address = pickText(ad.address, ad.addressAr, locale, exact);
+        delete ad.descriptionAr;
+        const specs = buildAttributeSpecsHtml(ad.attributes, defs, locale);
         ad.descriptionSource = written;
         ad.description = [written, specs].filter(Boolean).join('<br>');
         ad.descriptionText = stripHtml(ad.description);
         ad.detailsHtml = buildDetailsHtml({
             description: written,
-            location: ad.location,
-            address: ad.address,
+            location,
+            address,
             attributes: ad.attributes,
             attributeDefs: defs,
+            locale,
         });
     });
 

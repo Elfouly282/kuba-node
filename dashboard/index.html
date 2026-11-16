@@ -1411,9 +1411,15 @@
                                     <span>المعلومات الأساسية</span>
                                 </h3>
 
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">عنوان الإعلان *</label>
-                                    <input type="text" id="owner-form-title" required class="form-input text-xs" placeholder="مثال: شاليه فاخر بفيو بحري مفتوح">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">عنوان الإعلان (English) *</label>
+                                        <input type="text" id="owner-form-title" required class="form-input text-xs" dir="ltr" placeholder="Luxury sea-view chalet">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">عنوان الإعلان (عربي)</label>
+                                        <input type="text" id="owner-form-title-ar" class="form-input text-xs" placeholder="شاليه فاخر بفيو بحري">
+                                    </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1444,7 +1450,7 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">الوصف والتفاصيل</label>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">الوصف والتفاصيل (English)</label>
                                     <div class="html-editor" data-html-editor="owner-form-description">
                                         <div class="html-editor-toolbar">
                                             <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
@@ -1458,15 +1464,23 @@
                                             <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
                                             <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
                                         </div>
-                                        <div class="html-editor-area" contenteditable="true" dir="rtl" data-placeholder="اكتب التفاصيل في فقرات وقوائم عشان تظهر منظمة في التطبيق..."></div>
+                                        <div class="html-editor-area" contenteditable="true" dir="ltr" data-placeholder="Write the listing details..."></div>
                                         <textarea id="owner-form-description" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
                                     </div>
-                                    <p class="text-[11px] text-slate-400 mt-1">خصائص نوع الوحدة اللي تكتبها بتنزل تلقائيًا مع الوصف في التطبيق.</p>
-                                    <div class="mt-2">
-                                        <div class="text-[11px] font-bold text-slate-500 mb-1">معاينة الوصف</div>
-                                        <div id="owner-form-description-preview" class="html-editor-preview" dir="rtl">
-                                            <span class="text-slate-400 text-xs">ستظهر التفاصيل هنا بشكل منظم...</span>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">الوصف والتفاصيل (عربي)</label>
+                                    <div class="html-editor" data-html-editor="owner-form-description-ar">
+                                        <div class="html-editor-toolbar">
+                                            <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                            <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                            <button type="button" data-cmd="underline" title="تحته خط"><i class="fas fa-underline"></i></button>
+                                            <span class="html-editor-sep"></span>
+                                            <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                            <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
                                         </div>
+                                        <div class="html-editor-area" contenteditable="true" dir="rtl" data-placeholder="اكتب التفاصيل بالعربية..."></div>
+                                        <textarea id="owner-form-description-ar" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -1537,8 +1551,12 @@
                                             <input type="number" id="owner-form-tax-percent" min="0" max="100" step="any" class="form-input text-xs" placeholder="10">
                                         </div>
                                         <div>
-                                            <label class="block text-xs font-semibold text-slate-700 mb-1">اسم الضريبة</label>
-                                            <input type="text" id="owner-form-tax-label" class="form-input text-xs" placeholder="VAT">
+                                            <label class="block text-xs font-semibold text-slate-700 mb-1">اسم الضريبة (English)</label>
+                                            <input type="text" id="owner-form-tax-label" class="form-input text-xs" dir="ltr" placeholder="VAT">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-700 mb-1">اسم الضريبة (عربي)</label>
+                                            <input type="text" id="owner-form-tax-label-ar" class="form-input text-xs" placeholder="ضريبة القيمة المضافة">
                                         </div>
                                     </div>
                                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -1595,12 +1613,20 @@
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1">الموقع / الحي</label>
-                                        <input type="text" id="owner-form-location" class="form-input text-xs" placeholder="مثال: الساحل الشمالي - الكيلو 120">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">الموقع (English)</label>
+                                        <input type="text" id="owner-form-location" class="form-input text-xs" dir="ltr" placeholder="North Coast, km 120">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1">العنوان التفصيلي</label>
-                                        <input type="text" id="owner-form-address" class="form-input text-xs" placeholder="مثال: قرية مراسي، منطقة فيردي، فيلا 15">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">الموقع (عربي)</label>
+                                        <input type="text" id="owner-form-location-ar" class="form-input text-xs" placeholder="الساحل الشمالي - الكيلو 120">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">العنوان (English)</label>
+                                        <input type="text" id="owner-form-address" class="form-input text-xs" dir="ltr" placeholder="Marassi, villa 15">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">العنوان (عربي)</label>
+                                        <input type="text" id="owner-form-address-ar" class="form-input text-xs" placeholder="قرية مراسي، فيلا 15">
                                     </div>
                                 </div>
 
@@ -1910,9 +1936,15 @@
             </div>
 
             <form id="category-form" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="categoryName">اسم التصنيف (مثل: فنادق، شاليهات...)</label>
-                    <input type="text" id="category-modal-name" required class="form-input text-xs" placeholder="مثال: فنادق، شقق ساحلية، شاليهات...">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الاسم (English) *</label>
+                        <input type="text" id="category-modal-name" required class="form-input text-xs" dir="ltr" placeholder="Hotels, Chalets...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الاسم (عربي)</label>
+                        <input type="text" id="category-modal-name-ar" class="form-input text-xs" placeholder="فنادق، شاليهات...">
+                    </div>
                 </div>
 
                 <div>
@@ -2014,9 +2046,15 @@
             </div>
 
             <form id="city-form" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">اسم المدينة / الوجهة (مثل: سهل حشيش، الغردقة، الساحل الشمالي...)</label>
-                    <input type="text" id="city-modal-name" required class="form-input text-xs" placeholder="مثال: سهل حشيش، الجونة، الغردقة، الساحل الشمالي...">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">اسم المدينة (English) *</label>
+                        <input type="text" id="city-modal-name" required class="form-input text-xs" dir="ltr" placeholder="Hurghada, North Coast...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">اسم المدينة (عربي)</label>
+                        <input type="text" id="city-modal-name-ar" class="form-input text-xs" placeholder="الغردقة، الساحل الشمالي...">
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
@@ -2147,9 +2185,15 @@
                     </select>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">اسم المنطقة / الحي (مثل: منطقة جمران، منطقة أزورا، الأولد تاون...)</label>
-                    <input type="text" id="region-modal-name" required class="form-input text-xs" placeholder="مثال: منطقة جمران، منطقة ازورا، الاولد تاون...">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">اسم المنطقة (English) *</label>
+                        <input type="text" id="region-modal-name" required class="form-input text-xs" dir="ltr" placeholder="Jamaran, Old Town...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">اسم المنطقة (عربي)</label>
+                        <input type="text" id="region-modal-name-ar" class="form-input text-xs" placeholder="جمران، الأولد تاون...">
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
@@ -2369,9 +2413,15 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">الوصف</label>
-                    <textarea id="unit-type-modal-description" rows="2" class="form-textarea text-xs" placeholder="وصف موجز لطبيعة الوحدات..."></textarea>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الوصف (English)</label>
+                        <textarea id="unit-type-modal-description" rows="2" class="form-textarea text-xs" dir="ltr" placeholder="Short description..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الوصف (عربي)</label>
+                        <textarea id="unit-type-modal-description-ar" rows="2" class="form-textarea text-xs" placeholder="وصف موجز لطبيعة الوحدات..."></textarea>
+                    </div>
                 </div>
 
                 <div class="flex items-center justify-between pt-2">
@@ -2544,16 +2594,26 @@
                     </div>
                 </div>
 
-                <div id="attr-options-container" class="hidden">
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">الخيارات المتاحة (مفصولة بفاصلة)</label>
-                    <input type="text" id="attr-modal-options" class="form-input text-xs" placeholder="مثال: سرير مزدوج, سريرين مفردين, أريكة سرير">
-                    <p class="text-[11px] text-slate-400 mt-1">اكتب الخيارات مفصولة بفاصلة (,) لاختيارها في نموذج الإعلان.</p>
+                <div id="attr-options-container" class="hidden space-y-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الخيارات (English، مفصولة بفاصلة)</label>
+                        <input type="text" id="attr-modal-options" class="form-input text-xs" dir="ltr" placeholder="King Bed, Twin Beds, Sofa Bed">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الخيارات (عربي، مفصولة بفاصلة)</label>
+                        <input type="text" id="attr-modal-options-ar" class="form-input text-xs" placeholder="سرير مزدوج, سريرين مفردين, أريكة سرير">
+                    </div>
+                    <p class="text-[11px] text-slate-400">رتّب الخيار العربي مقابل نفس ترتيب الخيار الإنجليزي.</p>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">الوحدة (Unit)</label>
-                        <input type="text" id="attr-modal-unit" class="form-input text-xs" placeholder="م²، شخص، كابينة...">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الوحدة (English)</label>
+                        <input type="text" id="attr-modal-unit" class="form-input text-xs" dir="ltr" placeholder="m², guest, cabin...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الوحدة (عربي)</label>
+                        <input type="text" id="attr-modal-unit-ar" class="form-input text-xs" placeholder="م²، شخص، كابينة...">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">الترتيب</label>
@@ -2600,9 +2660,15 @@
                 <!-- 1. Basic Info -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adTitle">عنوان الإعلان *</label>
-                        <input type="text" id="ad-modal-title" required class="form-input text-xs" placeholder="مثال: شاليه فاخر بفيو بحري في هاسيندا باي">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">عنوان الإعلان (English) *</label>
+                        <input type="text" id="ad-modal-title" required class="form-input text-xs" dir="ltr" placeholder="Luxury sea-view chalet">
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">عنوان الإعلان (عربي)</label>
+                        <input type="text" id="ad-modal-title-ar" class="form-input text-xs" placeholder="شاليه فاخر بفيو بحري">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <div class="flex items-center justify-between mb-1">
                             <label class="text-xs font-semibold text-slate-700">صاحب الإعلان (Owner)</label>
@@ -2730,8 +2796,12 @@
                                 <input type="number" id="ad-modal-tax-percent" min="0" max="100" step="any" class="form-input text-xs" placeholder="10">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">اسم الضريبة</label>
-                                <input type="text" id="ad-modal-tax-label" class="form-input text-xs" placeholder="VAT">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">اسم الضريبة (English)</label>
+                                <input type="text" id="ad-modal-tax-label" class="form-input text-xs" dir="ltr" placeholder="VAT">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">اسم الضريبة (عربي)</label>
+                                <input type="text" id="ad-modal-tax-label-ar" class="form-input text-xs" placeholder="ضريبة القيمة المضافة">
                             </div>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -2765,12 +2835,20 @@
                 <!-- 4. Location & Address -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">الموقع / المدينة</label>
-                        <input type="text" id="ad-modal-location" class="form-input text-xs" placeholder="مثال: الساحل الشمالي - الكيلو 124">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الموقع (English)</label>
+                        <input type="text" id="ad-modal-location" class="form-input text-xs" dir="ltr" placeholder="North Coast, km 124">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">العنوان التفصيلي</label>
-                        <input type="text" id="ad-modal-address" class="form-input text-xs" placeholder="مثال: قرية هاسيندا باي، فيلا رقم 42">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الموقع (عربي)</label>
+                        <input type="text" id="ad-modal-location-ar" class="form-input text-xs" placeholder="الساحل الشمالي - الكيلو 124">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">العنوان (English)</label>
+                        <input type="text" id="ad-modal-address" class="form-input text-xs" dir="ltr" placeholder="Hacienda Bay, villa 42">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">العنوان (عربي)</label>
+                        <input type="text" id="ad-modal-address-ar" class="form-input text-xs" placeholder="قرية هاسيندا باي، فيلا رقم 42">
                     </div>
                 </div>
 
@@ -2848,7 +2926,7 @@
 
                 <!-- 5. Description -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="adDescription">الوصف والتفاصيل</label>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">الوصف والتفاصيل (English)</label>
                     <div class="html-editor" data-html-editor="ad-modal-description">
                         <div class="html-editor-toolbar">
                             <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
@@ -2862,15 +2940,24 @@
                             <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
                             <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
                         </div>
-                        <div class="html-editor-area" contenteditable="true" dir="rtl" data-placeholder="اكتب تفاصيل الوحدة والخدمات والمرافق في فقرات وقوائم..."></div>
+                        <div class="html-editor-area" contenteditable="true" dir="ltr" data-placeholder="Write the unit details, services, and amenities..."></div>
                         <textarea id="ad-modal-description" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
                     </div>
-                    <p class="text-[11px] text-slate-400 mt-1">خصائص نوع الوحدة اللي تكتبها بتنزل تلقائيًا مع الوصف في التطبيق.</p>
-                    <div class="mt-2">
-                        <div class="text-[11px] font-bold text-slate-500 mb-1">معاينة الوصف</div>
-                        <div id="ad-modal-description-preview" class="html-editor-preview" dir="rtl">
-                            <span class="text-slate-400 text-xs">ستظهر التفاصيل هنا بشكل منظم...</span>
+                    <p class="text-[11px] text-slate-400 mt-1">خصائص نوع الوحدة بتنزل تلقائيًا مع الوصف في التطبيق حسب لغة الهيدر.</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">الوصف والتفاصيل (عربي)</label>
+                    <div class="html-editor" data-html-editor="ad-modal-description-ar">
+                        <div class="html-editor-toolbar">
+                            <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                            <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                            <button type="button" data-cmd="underline" title="تحته خط"><i class="fas fa-underline"></i></button>
+                            <span class="html-editor-sep"></span>
+                            <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                            <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
                         </div>
+                        <div class="html-editor-area" contenteditable="true" dir="rtl" data-placeholder="اكتب تفاصيل الوحدة والخدمات والمرافق..."></div>
+                        <textarea id="ad-modal-description-ar" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
                     </div>
                 </div>
 
@@ -3111,8 +3198,12 @@
             <form id="hotel-room-add-form" onsubmit="handleCreateHotelRoomSubmit(event)" class="space-y-3 hidden">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">اسم أو وصف الغرفة *</label>
-                        <input type="text" id="hroom-title" required class="form-input text-xs" placeholder="مثال: Deluxe Ocean View Suite">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">اسم الغرفة (English) *</label>
+                        <input type="text" id="hroom-title" required class="form-input text-xs" dir="ltr" placeholder="Deluxe Ocean View Suite">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">اسم الغرفة (عربي)</label>
+                        <input type="text" id="hroom-title-ar" class="form-input text-xs" placeholder="جناح ديلوكس بإطلالة بحرية">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">رقم الغرفة (Room Number)</label>
@@ -3154,8 +3245,8 @@
                         <input type="number" id="hroom-beds-count" min="1" value="1" class="form-input text-xs">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">نوع السرير (Bed Type)</label>
-                        <input type="text" id="hroom-bed-type" class="form-input text-xs" placeholder="مثال: King Bed أو 2 Twin Beds">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">نوع السرير (English)</label>
+                        <input type="text" id="hroom-bed-type" class="form-input text-xs" dir="ltr" placeholder="King Bed">
                     </div>
                 </div>
 
@@ -3166,9 +3257,29 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">المرافق والخدمات (مفصولة بفاصلة)</label>
-                    <input type="text" id="hroom-amenities" class="form-input text-xs" placeholder="واي فاي مجاني, شاشة سمارت, ميني بار, شرفة خاصة, إطلالة بحر">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">نوع السرير (عربي)</label>
+                        <input type="text" id="hroom-bed-type-ar" class="form-input text-xs" placeholder="سرير كينج">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الوصف (English)</label>
+                        <input type="text" id="hroom-description" class="form-input text-xs" dir="ltr" placeholder="Sea view, private balcony">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">الوصف (عربي)</label>
+                        <input type="text" id="hroom-description-ar" class="form-input text-xs" placeholder="إطلالة بحرية وشرفة خاصة">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">المرافق (English، مفصولة بفاصلة)</label>
+                        <input type="text" id="hroom-amenities" class="form-input text-xs" dir="ltr" placeholder="Free Wi-Fi, Smart TV, Minibar">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">المرافق (عربي، مفصولة بفاصلة)</label>
+                        <input type="text" id="hroom-amenities-ar" class="form-input text-xs" placeholder="واي فاي مجاني, شاشة سمارت, ميني بار">
+                    </div>
                 </div>
 
                 <div>

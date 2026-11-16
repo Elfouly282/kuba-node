@@ -10,10 +10,11 @@ const { resolveBooking } = require('../../bookings/bookingMode');
 const { priceStay } = require('../../bookings/services/bookingService');
 const { normalizeStay } = require('../../advertisements/stayOptions');
 const { normalizeDescriptionHtml, stripHtml } = require('../../../utils/descriptionHtml');
+const { pickText } = require('../../../../utils/localize');
 
 const ROOM_MAX_IMAGES = 3;
 
-const formatRoom = (doc) => {
+const formatRoom = (doc, locale = 'en', exact = false) => {
     if (!doc) return null;
     const obj = typeof doc.toJSON === 'function' ? doc.toJSON() : { ...doc };
 
@@ -29,10 +30,11 @@ const formatRoom = (doc) => {
 
     obj.images = merged;
     obj.image = merged[0] || '';
-    obj.details = buildRoomDetails(obj);
-    obj.detailsHtml = buildRoomDetailsHtml(obj.details);
     obj.booking = resolveBooking(obj);
-    const written = normalizeDescriptionHtml(obj.description || obj.descriptionAr || '');
+    const written = normalizeDescriptionHtml(pickText(obj.description, obj.descriptionAr, locale, exact));
+    delete obj.descriptionAr;
+    obj.details = buildRoomDetails(obj, locale, exact);
+    obj.detailsHtml = buildRoomDetailsHtml(obj.details, locale);
     obj.descriptionSource = written;
     obj.description = [written, obj.detailsHtml].filter(Boolean).join('<br>');
     obj.descriptionText = stripHtml(obj.description);
@@ -171,13 +173,14 @@ exports.createRoom = async (req, res, next) => {
                 roomData.beds = JSON.parse(req.body.beds);
             } catch (_) {}
         }
-        if (req.body.amenities && typeof req.body.amenities === 'string') {
+        ['amenities', 'amenitiesAr'].forEach((key) => {
+            if (typeof req.body[key] !== 'string') return;
             try {
-                roomData.amenities = JSON.parse(req.body.amenities);
+                roomData[key] = JSON.parse(req.body[key]);
             } catch (_) {
-                roomData.amenities = req.body.amenities.split(',').map((s) => s.trim()).filter(Boolean);
+                roomData[key] = req.body[key].split(',').map((item) => item.trim()).filter(Boolean);
             }
-        }
+        });
         if (req.body.stay && typeof req.body.stay === 'string') {
             try { roomData.stay = JSON.parse(req.body.stay); } catch (_) {}
         }
@@ -193,7 +196,7 @@ exports.createRoom = async (req, res, next) => {
 
         SuccessResponse.created(res, {
             message: req.t ? req.t('messages.roomCreated') : 'Room created successfully.',
-            data: { room: formatRoom(room) },
+            data: { room: formatRoom(room, req.locale, req.localeExact) },
         });
     } catch (err) {
         next(err);
@@ -218,7 +221,7 @@ exports.getRoomsByHotel = async (req, res, next) => {
 
         SuccessResponse.ok(res, {
             results: rooms.length,
-            data: { rooms: rooms.map(formatRoom) },
+            data: { rooms: rooms.map((room) => formatRoom(room, req.locale, req.localeExact)) },
         });
     } catch (err) {
         next(err);
@@ -291,7 +294,7 @@ exports.getAvailableRoomsForHotel = async (req, res, next) => {
 
         // Format and enrich rooms with calculated pricing for this specific stay
         const enrichedRooms = availableRooms.map((room) => {
-            const formatted = formatRoom(room);
+            const formatted = formatRoom(room, req.locale, req.localeExact);
             const price = priceStay({ ad: hotel, room, start, end });
 
             return {
@@ -313,7 +316,9 @@ exports.getAvailableRoomsForHotel = async (req, res, next) => {
                 hotel: {
                     id: hotel._id,
                     title: hotel.title,
+                    titleAr: hotel.titleAr || '',
                     location: hotel.location,
+                    locationAr: hotel.locationAr || '',
                     image: getImageUrl(hotel.image),
                 },
                 startDate: start,
@@ -335,13 +340,13 @@ exports.getRoomById = async (req, res, next) => {
             return next(new APIError('errors.invalidRoomId', 400));
         }
 
-        const room = await Room.findById(req.params.id).populate('hotel', 'title image location address city region');
+        const room = await Room.findById(req.params.id).populate('hotel', 'title titleAr image location locationAr address addressAr city region');
         if (!room) {
             return next(new APIError('errors.roomNotFound', 404));
         }
 
         SuccessResponse.ok(res, {
-            data: { room: formatRoom(room) },
+            data: { room: formatRoom(room, req.locale, req.localeExact) },
         });
     } catch (err) {
         next(err);
@@ -377,13 +382,14 @@ exports.updateRoom = async (req, res, next) => {
         if (req.body.beds && typeof req.body.beds === 'string') {
             try { updates.beds = JSON.parse(req.body.beds); } catch (_) {}
         }
-        if (req.body.amenities && typeof req.body.amenities === 'string') {
+        ['amenities', 'amenitiesAr'].forEach((key) => {
+            if (typeof req.body[key] !== 'string') return;
             try {
-                updates.amenities = JSON.parse(req.body.amenities);
+                updates[key] = JSON.parse(req.body[key]);
             } catch (_) {
-                updates.amenities = req.body.amenities.split(',').map((s) => s.trim()).filter(Boolean);
+                updates[key] = req.body[key].split(',').map((item) => item.trim()).filter(Boolean);
             }
-        }
+        });
         if (req.body.stay && typeof req.body.stay === 'string') {
             try { updates.stay = JSON.parse(req.body.stay); } catch (_) {}
         }
@@ -398,7 +404,7 @@ exports.updateRoom = async (req, res, next) => {
 
         SuccessResponse.ok(res, {
             message: req.t ? req.t('messages.roomUpdated') : 'Room updated successfully.',
-            data: { room: formatRoom(room) },
+            data: { room: formatRoom(room, req.locale, req.localeExact) },
         });
     } catch (err) {
         next(err);

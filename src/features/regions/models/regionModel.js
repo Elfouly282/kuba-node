@@ -10,6 +10,12 @@ const regionSchema = new mongoose.Schema(
             minlength: [2, 'validation.nameTooShort'],
             maxlength: [100, 'validation.nameTooLong'],
         },
+        nameAr: {
+            type: String,
+            trim: true,
+            default: '',
+            maxlength: [100, 'validation.nameTooLong'],
+        },
         city: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'City',

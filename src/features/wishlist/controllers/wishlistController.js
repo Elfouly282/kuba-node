@@ -28,10 +28,10 @@ exports.getWishlist = async (req, res, next) => {
         _id: { $in: wishlistIds },
         active: { $ne: false },
     })
-        .populate('category', 'name image')
-        .populate('city', 'name image')
-        .populate('region', 'name')
-        .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+        .populate('category', 'name nameAr image')
+        .populate('city', 'name nameAr image')
+        .populate('region', 'name nameAr')
+        .populate('unitType', 'name nameAr description descriptionAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 
     const foundAdIds = new Set(advertisements.map((ad) => ad._id.toString()));
@@ -64,7 +64,7 @@ exports.getWishlist = async (req, res, next) => {
 
     const formatted = pagedAds.map(formatAdvertisement);
     await attachHasRooms(formatted);
-    await attachDetailsHtml(formatted);
+    await attachDetailsHtml(formatted, req);
 
     SuccessResponse.ok(res, {
         results: formatted.length,

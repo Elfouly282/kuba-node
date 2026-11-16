@@ -37,11 +37,11 @@ exports.getAll = async (req, res) => {
 
     if (req.query.search) {
         const regex = new RegExp(escapeRegExp(req.query.search.trim()), 'i');
-        filter.$or = [{ name: regex }, { nameAr: regex }, { slug: regex }, { description: regex }];
+        filter.$or = [{ name: regex }, { nameAr: regex }, { slug: regex }, { description: regex }, { descriptionAr: regex }];
     }
 
     const unitTypes = await UnitType.find(filter)
-        .populate('categories', 'name image')
+        .populate('categories', 'name nameAr image')
         .sort({ order: 1, createdAt: -1 });
 
     const unitTypeIds = unitTypes.map(u => u._id);
@@ -69,9 +69,9 @@ exports.getAll = async (req, res) => {
 exports.getOne = async (req, res, next) => {
     let unitType = null;
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-        unitType = await UnitType.findById(req.params.id).populate('categories', 'name image');
+        unitType = await UnitType.findById(req.params.id).populate('categories', 'name nameAr image');
     } else {
-        unitType = await UnitType.findOne({ slug: req.params.id }).populate('categories', 'name image');
+        unitType = await UnitType.findOne({ slug: req.params.id }).populate('categories', 'name nameAr image');
     }
 
     if (!unitType) {
@@ -89,7 +89,7 @@ exports.getOne = async (req, res, next) => {
 };
 
 exports.create = async (req, res, next) => {
-    const { name, nameAr, slug, description, icon, categories, pricingUnits, defaultPricingUnit, order, active } = req.body;
+    const { name, nameAr, slug, description, descriptionAr, icon, categories, pricingUnits, defaultPricingUnit, order, active } = req.body;
 
     if (!name || !name.trim()) {
         return next(new APIError('validation.nameRequired', 400));
@@ -114,6 +114,7 @@ exports.create = async (req, res, next) => {
         nameAr: nameAr ? nameAr.trim() : '',
         slug: slug ? slug.trim() : undefined,
         description: description ? description.trim() : '',
+        descriptionAr: descriptionAr ? String(descriptionAr).trim() : '',
         icon: icon ? icon.trim() : '',
         categories: validCategories,
         pricingUnits: Array.isArray(pricingUnits) && pricingUnits.length > 0 ? pricingUnits : ['per_night'],
@@ -122,7 +123,7 @@ exports.create = async (req, res, next) => {
         active: active !== undefined ? (String(active) === 'true' || active === true) : true,
     });
 
-    const populated = await UnitType.findById(unitType._id).populate('categories', 'name image');
+    const populated = await UnitType.findById(unitType._id).populate('categories', 'name nameAr image');
 
     SuccessResponse.created(res, {
         message: req.t ? req.t('messages.unitTypeCreated') : 'Unit type created successfully.',
@@ -140,7 +141,7 @@ exports.update = async (req, res, next) => {
         return next(new APIError('errors.unitTypeNotFound', 404));
     }
 
-    const allowedFields = ['name', 'nameAr', 'slug', 'description', 'icon', 'categories', 'pricingUnits', 'defaultPricingUnit', 'order', 'active'];
+    const allowedFields = ['name', 'nameAr', 'slug', 'description', 'descriptionAr', 'icon', 'categories', 'pricingUnits', 'defaultPricingUnit', 'order', 'active'];
 
     for (const field of allowedFields) {
         if (req.body[field] !== undefined) {
@@ -159,7 +160,7 @@ exports.update = async (req, res, next) => {
 
     await unitType.save();
 
-    const populated = await UnitType.findById(unitType._id).populate('categories', 'name image');
+    const populated = await UnitType.findById(unitType._id).populate('categories', 'name nameAr image');
 
     SuccessResponse.ok(res, {
         message: req.t ? req.t('messages.unitTypeUpdated') : 'Unit type updated successfully.',
@@ -220,8 +221,10 @@ exports.createAttribute = async (req, res, next) => {
         showInFilters,
         order,
         options,
+        optionsAr,
         defaultValue,
         unit,
+        unitAr,
         validation,
         active,
     } = req.body;
@@ -241,12 +244,13 @@ exports.createAttribute = async (req, res, next) => {
         return next(new APIError('errors.duplicateAttributeKey', 400));
     }
 
-    let parsedOptions = [];
-    if (Array.isArray(options)) {
-        parsedOptions = options.map((opt) => String(opt).trim()).filter(Boolean);
-    } else if (typeof options === 'string' && options.trim()) {
-        parsedOptions = options.split(',').map((opt) => opt.trim()).filter(Boolean);
-    }
+    const parseOptionList = (value) => {
+        if (Array.isArray(value)) return value.map((opt) => String(opt).trim()).filter(Boolean);
+        if (typeof value === 'string' && value.trim()) return value.split(',').map((opt) => opt.trim()).filter(Boolean);
+        return [];
+    };
+    const parsedOptions = parseOptionList(options);
+    const parsedOptionsAr = parseOptionList(optionsAr);
 
     const attribute = await UnitTypeAttribute.create({
         unitType: unitTypeId,
@@ -260,8 +264,10 @@ exports.createAttribute = async (req, res, next) => {
         showInFilters: showInFilters !== undefined ? (String(showInFilters) === 'true' || showInFilters === true) : false,
         order: order !== undefined ? Number(order) : 0,
         options: parsedOptions,
+        optionsAr: parsedOptionsAr,
         defaultValue: defaultValue !== undefined ? defaultValue : null,
         unit: unit ? unit.trim() : '',
+        unitAr: unitAr ? String(unitAr).trim() : '',
         validation: validation || {},
         active: active !== undefined ? (String(active) === 'true' || active === true) : true,
     });
@@ -294,19 +300,22 @@ exports.updateAttribute = async (req, res, next) => {
         'showInFilters',
         'order',
         'options',
+        'optionsAr',
         'defaultValue',
         'unit',
+        'unitAr',
         'validation',
         'active',
     ];
 
     for (const field of allowed) {
         if (req.body[field] !== undefined) {
-            if (field === 'options') {
-                if (Array.isArray(req.body.options)) {
-                    attribute.options = req.body.options.map((opt) => String(opt).trim()).filter(Boolean);
-                } else if (typeof req.body.options === 'string') {
-                    attribute.options = req.body.options.split(',').map((opt) => opt.trim()).filter(Boolean);
+            if (field === 'options' || field === 'optionsAr') {
+                const value = req.body[field];
+                if (Array.isArray(value)) {
+                    attribute[field] = value.map((opt) => String(opt).trim()).filter(Boolean);
+                } else if (typeof value === 'string') {
+                    attribute[field] = value.split(',').map((opt) => opt.trim()).filter(Boolean);
                 }
             } else if (['required', 'isArray', 'showInDetails', 'showInFilters', 'active'].includes(field)) {
                 attribute[field] = String(req.body[field]) === 'true' || req.body[field] === true;

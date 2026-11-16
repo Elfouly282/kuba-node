@@ -7,7 +7,17 @@ const addOnSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
+        titleAr: {
+            type: String,
+            trim: true,
+            default: '',
+        },
         description: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+        descriptionAr: {
             type: String,
             trim: true,
             default: '',
@@ -36,6 +46,7 @@ const staySchema = new mongoose.Schema(
         serviceFeePercent: { type: Number, min: 0, max: 100 },
         taxPercent: { type: Number, min: 0, max: 100 },
         taxLabel: { type: String, trim: true },
+        taxLabelAr: { type: String, trim: true, default: '' },
         checkInTime: { type: String, trim: true },
         checkOutTime: { type: String, trim: true },
         freeCancellationDays: { type: Number, min: 0 },
@@ -57,11 +68,14 @@ const numOrUndefined = (value) => {
 const normalizeAddOns = (list) => (Array.isArray(list) ? list : []).map((item) => {
     const price = numOrUndefined(item?.price);
     const title = String(item?.title || '').trim();
-    if (!title || price === undefined) return null;
+    const titleAr = String(item?.titleAr || '').trim();
+    if ((!title && !titleAr) || price === undefined) return null;
 
     const addOn = {
-        title,
+        title: title || titleAr,
+        titleAr,
         description: String(item.description || '').trim(),
+        descriptionAr: String(item.descriptionAr || '').trim(),
         price,
         category: item.category === 'meal' ? 'meal' : 'extra',
         active: item.active !== false && item.active !== 'false',
@@ -95,6 +109,7 @@ const normalizeStay = (input) => {
     if (taxPercent !== undefined) stay.taxPercent = Math.min(100, taxPercent);
 
     if (source.taxLabel !== undefined) stay.taxLabel = String(source.taxLabel || 'VAT').trim() || 'VAT';
+    if (source.taxLabelAr !== undefined) stay.taxLabelAr = String(source.taxLabelAr || '').trim();
     if (source.checkInTime !== undefined && TIME.test(String(source.checkInTime))) stay.checkInTime = String(source.checkInTime);
     if (source.checkOutTime !== undefined && TIME.test(String(source.checkOutTime))) stay.checkOutTime = String(source.checkOutTime);
 

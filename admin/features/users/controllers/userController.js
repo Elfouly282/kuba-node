@@ -57,7 +57,7 @@ exports.getAllUsers = async (req, res, next) => {
         const total = await User.countDocuments(queryObj).setOptions({ includeInactive: true });
         const users = await User.find(queryObj)
             .setOptions({ includeInactive: true })
-            .populate('region', 'name')
+            .populate('region', 'name nameAr')
             .select('+active')
             .sort({ createdAt: -1 })
             .skip(skip)
@@ -140,7 +140,7 @@ exports.getUserStats = async (_req, res, next) => {
             Booking.countDocuments(),
             User.find()
                 .setOptions({ includeInactive: true })
-                .populate('region', 'name')
+                .populate('region', 'name nameAr')
                 .select('+active')
                 .sort({ createdAt: -1 })
                 .limit(5),

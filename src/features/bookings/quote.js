@@ -37,22 +37,31 @@ const clockInZone = (date, timeZone = 'Africa/Cairo') => {
 };
 
 const PAYMENT_LABELS = {
-    cash: 'Cash',
-    card: 'Card',
-    wallet: 'Wallet',
-    online: 'Online',
-    instapay: 'InstaPay',
-    fawry: 'Fawry',
-    meeza: 'Meeza',
+    cash: { en: 'Cash', ar: 'كاش' },
+    card: { en: 'Card', ar: 'بطاقة' },
+    wallet: { en: 'Wallet', ar: 'محفظة' },
+    online: { en: 'Online', ar: 'أونلاين' },
+    instapay: { en: 'InstaPay', ar: 'InstaPay' },
+    fawry: { en: 'Fawry', ar: 'Fawry' },
+    meeza: { en: 'Meeza', ar: 'Meeza' },
+};
+
+const paymentLabel = (method, locale = 'en') => {
+    const labels = PAYMENT_LABELS[method];
+    if (!labels) return method || '';
+    return locale === 'ar' ? labels.ar : labels.en;
 };
 
 const money = (value) => Math.round((Number(value) || 0) * 100) / 100;
 
-const paymentMethodOptions = () => ([
-    { key: 'instapay', label: 'InstaPay', subtitle: '' },
-    { key: 'fawry', label: 'Fawry', subtitle: 'Cash & retail' },
-    { key: 'meeza', label: 'Meeza', subtitle: 'Wallet' },
-]);
+const paymentMethodOptions = (locale = 'en') => {
+    const ar = locale === 'ar';
+    return [
+        { key: 'instapay', label: 'InstaPay', subtitle: '' },
+        { key: 'fawry', label: 'Fawry', subtitle: ar ? 'كاش ومنفذ دفع' : 'Cash & retail' },
+        { key: 'meeza', label: 'Meeza', subtitle: ar ? 'محفظة' : 'Wallet' },
+    ];
+};
 
 const pickNumber = (...values) => {
     const found = values.find((value) => value !== undefined && value !== null && value !== '');
@@ -83,6 +92,7 @@ const mergeStay = (ad, room) => {
         serviceFeePercent: Math.min(100, pickNumber(roomStay.serviceFeePercent, hotelStay.serviceFeePercent, 0)),
         taxPercent: Math.min(100, pickNumber(roomStay.taxPercent, hotelStay.taxPercent, 0)),
         taxLabel: pickText(roomStay.taxLabel, hotelStay.taxLabel, 'VAT'),
+        taxLabelAr: pickText(roomStay.taxLabelAr, hotelStay.taxLabelAr, ''),
         checkInTime: pickText(roomStay.checkInTime, hotelStay.checkInTime),
         checkOutTime: pickText(roomStay.checkOutTime, hotelStay.checkOutTime),
         freeCancellationDays: (() => {
@@ -260,7 +270,9 @@ const buildQuote = ({
     const selectedAddOns = selected.map((item) => ({
         id: String(item._id || item.id),
         title: item.title,
+        titleAr: item.titleAr || '',
         description: item.description || '',
+        descriptionAr: item.descriptionAr || '',
         price: money(item.price),
         category: item.category || 'extra',
     }));
@@ -295,6 +307,7 @@ const buildQuote = ({
             label: `Taxes (${stay.taxLabel} ${percentText(stay.taxPercent)}%)`,
             percent: stay.taxPercent,
             taxLabel: stay.taxLabel,
+            taxLabelAr: stay.taxLabelAr || '',
             amount: taxes,
         });
     }
@@ -303,7 +316,9 @@ const buildQuote = ({
             key: 'addon',
             id: item.id,
             label: item.title,
+            labelAr: item.titleAr || '',
             description: item.description,
+            descriptionAr: item.descriptionAr || '',
             category: item.category,
             amount: item.price,
         });
@@ -328,6 +343,7 @@ const buildQuote = ({
         serviceFee,
         taxPercent: stay.taxPercent,
         taxLabel: stay.taxLabel,
+        taxLabelAr: stay.taxLabelAr || '',
         taxes,
         taxesAndService,
         addOnsTotal,
@@ -345,7 +361,9 @@ const buildQuote = ({
         availableAddOns: catalog.map((item) => ({
             id: String(item._id || item.id),
             title: item.title,
+            titleAr: item.titleAr || '',
             description: item.description || '',
+            descriptionAr: item.descriptionAr || '',
             price: money(item.price),
             category: item.category || 'extra',
             selected: selectedAddOns.some((chosen) => chosen.id === String(item._id || item.id)),
@@ -429,7 +447,7 @@ const presentConfirmation = (booking) => {
         payment: {
             status: booking.paymentStatus,
             method: booking.paymentMethod,
-            methodLabel: PAYMENT_LABELS[booking.paymentMethod] || booking.paymentMethod || '',
+            methodLabel: paymentLabel(booking.paymentMethod),
             amount: quote.total,
             currency: quote.currency || 'EGP',
         },
@@ -449,12 +467,16 @@ const presentConfirmation = (booking) => {
         },
         stay: {
             propertyTitle: stay.propertyTitle || ad.title || '',
+            propertyTitleAr: stay.propertyTitleAr || ad.titleAr || '',
             title: stay.title || room?.title || ad.title || '',
+            titleAr: stay.titleAr || room?.titleAr || ad.titleAr || '',
             image: stay.image || room?.image || ad.image || '',
             bedType: stay.bedType || room?.beds?.bedType || '',
+            bedTypeAr: stay.bedTypeAr || room?.beds?.bedTypeAr || '',
             bedCount: stay.bedCount ?? room?.beds?.count ?? null,
             area: stay.area ?? room?.area ?? null,
             amenities: stay.amenities || room?.amenities || [],
+            amenitiesAr: stay.amenitiesAr || room?.amenitiesAr || [],
             nights: quote.duration,
             pricingUnit: quote.pricingUnit,
             breakfastIncluded: stay.breakfastIncluded ?? quote.breakfastIncluded ?? false,

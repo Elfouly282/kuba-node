@@ -35,6 +35,10 @@ const roomSchema = new mongoose.Schema(
             trim: true,
             default: '',
         },
+        amenitiesAr: {
+            type: [String],
+            default: [],
+        },
         roomType: {
             type: String,
             enum: ['standard', 'deluxe', 'suite', 'junior_suite', 'royal_suite', 'studio', 'family', 'chalet_room', 'other'],
@@ -107,6 +111,11 @@ const roomSchema = new mongoose.Schema(
             bedType: {
                 type: String,
                 default: 'King Bed',
+                trim: true,
+            },
+            bedTypeAr: {
+                type: String,
+                default: '',
                 trim: true,
             },
         },

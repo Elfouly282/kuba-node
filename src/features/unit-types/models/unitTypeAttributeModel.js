@@ -55,11 +55,20 @@ const unitTypeAttributeSchema = new mongoose.Schema(
             type: [String],
             default: [],
         },
+        optionsAr: {
+            type: [String],
+            default: [],
+        },
         defaultValue: {
             type: mongoose.Schema.Types.Mixed,
             default: null,
         },
         unit: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+        unitAr: {
             type: String,
             trim: true,
             default: '',

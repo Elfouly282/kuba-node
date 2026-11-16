@@ -49,8 +49,11 @@ const toParagraphs = (text) => escapeHtml(text)
     .join('');
 
 const pickLang = (req) => {
+    const headerLang = String(req.headers.lang || req.headers['x-lang'] || '').toLowerCase().split(/[-_]/)[0];
+    if (headerLang === 'ar' || headerLang === 'en') return headerLang;
     const queryLang = String(req.query.lang || '').toLowerCase();
     if (queryLang === 'ar' || queryLang === 'en') return queryLang;
+    if (req.locale === 'ar' || req.locale === 'en') return req.locale;
     const header = String(req.headers['accept-language'] || '').toLowerCase();
     return header.startsWith('ar') ? 'ar' : 'en';
 };
@@ -58,8 +61,8 @@ const pickLang = (req) => {
 const renderPrivacyHtml = (policy, lang) => {
     const presented = presentPolicy(policy);
     const isAr = lang === 'ar';
-    const title = isAr ? presented.titleAr : presented.titleEn;
-    const content = isAr ? presented.contentAr : presented.contentEn;
+    const title = isAr ? (presented.titleAr || presented.titleEn) : (presented.titleEn || presented.titleAr);
+    const content = isAr ? (presented.contentAr || presented.contentEn) : (presented.contentEn || presented.contentAr);
     const updated = new Date(presented.updatedAt);
     const updatedLabel = updated.toLocaleDateString(isAr ? 'ar-EG' : 'en-GB', {
         day: 'numeric',

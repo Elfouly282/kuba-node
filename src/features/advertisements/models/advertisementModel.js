@@ -9,7 +9,18 @@ const advertisementSchema = new mongoose.Schema(
             trim: true,
             maxlength: [200, 'validation.titleTooLong'],
         },
+        titleAr: {
+            type: String,
+            trim: true,
+            default: '',
+            maxlength: [200, 'validation.titleTooLong'],
+        },
         description: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+        descriptionAr: {
             type: String,
             trim: true,
             default: '',
@@ -108,7 +119,17 @@ const advertisementSchema = new mongoose.Schema(
             trim: true,
             default: '',
         },
+        locationAr: {
+            type: String,
+            trim: true,
+            default: '',
+        },
         address: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+        addressAr: {
             type: String,
             trim: true,
             default: '',

@@ -14,6 +14,7 @@ const {
     presentConfirmation,
     normalizeTime,
 } = require('../quote');
+const { presentReceiptLine } = require('../../../../utils/localize');
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -278,11 +279,11 @@ const prepareBooking = async (input) => {
 };
 
 const populateBooking = (query) => query
-    .populate('advertisement', 'title price pricing image images location category region unitType owner isHotel type')
-    .populate('room', 'title roomNumber roomType price pricing capacity beds bathrooms area amenities image images')
+    .populate('advertisement', 'title titleAr price pricing image images location locationAr address addressAr category region unitType owner isHotel type')
+    .populate('room', 'title titleAr description descriptionAr roomNumber roomType price pricing capacity beds bathrooms area amenities amenitiesAr image images')
     .populate('user', 'name email phone');
 
-const formatBooking = (doc) => {
+const formatBooking = (doc, locale = 'en', exact = false) => {
     if (!doc) return null;
     const obj = typeof doc.toJSON === 'function' ? doc.toJSON() : { ...doc };
 
@@ -295,8 +296,8 @@ const formatBooking = (doc) => {
             if (field === 'room') ref.images = ref.images.slice(0, 3);
         }
         if (field === 'room') {
-            ref.details = buildRoomDetails(ref);
-            ref.detailsHtml = buildRoomDetailsHtml(ref.details);
+            ref.details = buildRoomDetails(ref, locale, exact);
+            ref.detailsHtml = buildRoomDetailsHtml(ref.details, locale);
         }
     });
 
@@ -308,19 +309,11 @@ const formatBooking = (doc) => {
 
 const receiptImage = (value) => getImageUrl(value) || '';
 
-const receiptLine = (line) => {
-    if (!line || line.amount === undefined || line.amount === null) return null;
-    const row = {
-        label: line.label || '',
-        amount: line.amount,
-    };
-    if (line.quantityLabel) row.quantityLabel = line.quantityLabel;
-    return row;
-};
+const receiptLine = (line, locale) => presentReceiptLine(line, locale);
 
 // Customer list is a receipt: reference, stay, guest, price lines and payment.
 // Internal quote fields, the account user, and the raw listing documents stay out.
-const formatBookingReceipt = (doc) => {
+const formatBookingReceipt = (doc, locale = 'en') => {
     if (!doc) return null;
     const obj = typeof doc.toJSON === 'function' ? doc.toJSON() : { ...doc };
 
@@ -347,11 +340,17 @@ const formatBookingReceipt = (doc) => {
         createdAt: obj.createdAt,
         image: stay.image || room?.image || ad.image || '',
         property: {
-            title: stay.propertyTitle || ad.title || '',
-            location: ad.location || ad.address || '',
+            title: locale === 'ar'
+                ? (stay.propertyTitleAr || ad.titleAr || stay.propertyTitle || ad.title || '')
+                : (stay.propertyTitle || ad.title || stay.propertyTitleAr || ad.titleAr || ''),
+            location: locale === 'ar'
+                ? (ad.locationAr || ad.addressAr || ad.location || ad.address || '')
+                : (ad.location || ad.address || ad.locationAr || ad.addressAr || ''),
         },
         room: room ? {
-            title: room.title || stay.title || '',
+            title: locale === 'ar'
+                ? (room.titleAr || stay.titleAr || room.title || stay.title || '')
+                : (room.title || stay.title || room.titleAr || stay.titleAr || ''),
             roomNumber: room.roomNumber || '',
         } : null,
         guest: {
@@ -366,7 +365,7 @@ const formatBookingReceipt = (doc) => {
             arrivalTo: guest.arrivalTo || '',
         },
         stay: {
-            title: stay.title || '',
+            title: locale === 'ar' ? (stay.titleAr || stay.title || '') : (stay.title || stay.titleAr || ''),
             checkIn: stay.checkIn,
             checkOut: stay.checkOut,
             checkInTime: stay.checkInTime || '',
@@ -382,7 +381,7 @@ const formatBookingReceipt = (doc) => {
             amount: payment.amount,
             currency: payment.currency || 'EGP',
         },
-        lines: (confirmation.price?.lines || []).map(receiptLine).filter(Boolean),
+        lines: (confirmation.price?.lines || []).map((line) => receiptLine(line, locale)).filter(Boolean),
         cancellation: confirmation.cancellation?.freeUntil
             ? { freeUntil: confirmation.cancellation.freeUntil }
             : null,
@@ -407,12 +406,16 @@ const nextReference = async () => {
 
 const staySnapshotFor = ({ ad, room, quote }) => ({
     propertyTitle: ad.title || '',
+    propertyTitleAr: ad.titleAr || '',
     title: room?.title || ad.title || '',
+    titleAr: room?.titleAr || ad.titleAr || '',
     image: (room && (room.image || room.images?.[0])) || ad.image || '',
     bedType: room?.beds?.bedType || '',
+    bedTypeAr: room?.beds?.bedTypeAr || '',
     bedCount: room?.beds?.count ?? null,
     area: room?.area ?? null,
     amenities: Array.isArray(room?.amenities) ? [...room.amenities] : [],
+    amenitiesAr: Array.isArray(room?.amenitiesAr) ? [...room.amenitiesAr] : [],
     breakfastIncluded: Boolean(quote.breakfastIncluded),
     checkInTime: quote.schedule?.checkInTime || '',
     checkOutTime: quote.schedule?.checkOutTime || '',

@@ -9,6 +9,12 @@ const categorySchema = new mongoose.Schema(
             minlength: [2, 'validation.nameTooShort'],
             maxlength: [100, 'validation.nameTooLong'],
         },
+        nameAr: {
+            type: String,
+            trim: true,
+            default: '',
+            maxlength: [100, 'validation.nameTooLong'],
+        },
         image: {
             type: String,
             required: [true, 'validation.imageRequired'],

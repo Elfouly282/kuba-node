@@ -116,7 +116,7 @@ exports.getAll = async (req, res) => {
     }
 
     const rawRegions = await Region.find(filter)
-        .populate('city', 'name image color')
+        .populate('city', 'name nameAr image color')
         .sort({ order: 1, createdAt: -1 });
     const regions = rawRegions.map(formatRegion);
 
@@ -131,7 +131,7 @@ exports.getOne = async (req, res, next) => {
         return next(new APIError('errors.invalidRegionId', 400));
     }
 
-    const region = await Region.findById(req.params.id).populate('city', 'name image color');
+    const region = await Region.findById(req.params.id).populate('city', 'name nameAr image color');
     if (!region) {
         return next(new APIError('errors.regionNotFound', 404));
     }
@@ -200,11 +200,11 @@ exports.getRegionData = async (req, res, next) => {
     const rawChalets = await Advertisement.find({
         ...adFilter,
         type: 'chalet',
-    }).populate('category', 'name image').populate('region', 'name').sort({ createdAt: -1 });
+    }).populate('category', 'name nameAr image').populate('region', 'name nameAr').sort({ createdAt: -1 });
 
     const rawAdvertisements = await Advertisement.find(adFilter)
-        .populate('category', 'name image')
-        .populate('region', 'name')
+        .populate('category', 'name nameAr image')
+        .populate('region', 'name nameAr')
         .sort({ createdAt: -1 });
 
     const rawCategories = await Category.find().sort({ createdAt: -1 });
@@ -212,7 +212,7 @@ exports.getRegionData = async (req, res, next) => {
     const advertisements = rawAdvertisements.map(formatAdvertisement);
     const listed = chalets.concat(advertisements);
     await attachHasRooms(listed);
-    await attachDetailsHtml(listed);
+    await attachDetailsHtml(listed, req);
 
     SuccessResponse.ok(res, {
         data: {
@@ -251,6 +251,7 @@ exports.create = async (req, res, next) => {
 
     const region = new Region({
         name,
+        nameAr: req.body.nameAr ? String(req.body.nameAr).trim() : '',
         city,
         image,
         active,
@@ -264,7 +265,7 @@ exports.create = async (req, res, next) => {
         await syncAdvertisementsInZone(region);
     }
 
-    const populated = await Region.findById(region._id).populate('city', 'name image color');
+    const populated = await Region.findById(region._id).populate('city', 'name nameAr image color');
 
     SuccessResponse.created(res, {
         message: req.t ? req.t('messages.regionCreated') : 'Region created successfully.',
@@ -288,6 +289,9 @@ exports.update = async (req, res, next) => {
             return next(new APIError('validation.nameRequired', 400));
         }
         region.name = trimmedName;
+    }
+    if (req.body.nameAr !== undefined) {
+        region.nameAr = String(req.body.nameAr || '').trim();
     }
 
     if (req.body.active !== undefined) {
@@ -329,7 +333,7 @@ exports.update = async (req, res, next) => {
         await syncAdvertisementsInZone(region);
     }
 
-    const populated = await Region.findById(region._id).populate('city', 'name image color');
+    const populated = await Region.findById(region._id).populate('city', 'name nameAr image color');
 
     SuccessResponse.ok(res, {
         message: req.t ? req.t('messages.regionUpdated') : 'Region updated successfully.',

@@ -74,7 +74,9 @@ const bookingSchema = new mongoose.Schema(
             {
                 addOn: { type: mongoose.Schema.Types.ObjectId },
                 title: { type: String, trim: true, default: '' },
+                titleAr: { type: String, trim: true, default: '' },
                 description: { type: String, trim: true, default: '' },
+                descriptionAr: { type: String, trim: true, default: '' },
                 price: { type: Number, default: 0, min: 0 },
                 category: { type: String, trim: true, default: 'extra' },
             },

@@ -1,13 +1,65 @@
 const ROOM_TYPE_LABELS = {
-    standard: 'قياسية',
-    deluxe: 'ديلوكس',
-    suite: 'جناح',
-    junior_suite: 'جناح صغير',
-    royal_suite: 'جناح ملكي',
-    studio: 'استوديو',
-    family: 'عائلية',
-    chalet_room: 'غرفة شاليه',
-    other: 'أخرى',
+    ar: {
+        standard: 'قياسية',
+        deluxe: 'ديلوكس',
+        suite: 'جناح',
+        junior_suite: 'جناح صغير',
+        royal_suite: 'جناح ملكي',
+        studio: 'استوديو',
+        family: 'عائلية',
+        chalet_room: 'غرفة شاليه',
+        other: 'أخرى',
+    },
+    en: {
+        standard: 'Standard',
+        deluxe: 'Deluxe',
+        suite: 'Suite',
+        junior_suite: 'Junior suite',
+        royal_suite: 'Royal suite',
+        studio: 'Studio',
+        family: 'Family',
+        chalet_room: 'Chalet room',
+        other: 'Other',
+    },
+};
+
+const ROOM_COPY = {
+    ar: {
+        roomType: 'نوع الغرفة',
+        roomNumber: 'رقم الغرفة',
+        adults: 'البالغين',
+        adult: 'بالغ',
+        children: 'الأطفال',
+        child: 'طفل',
+        beds: 'عدد الأسرّة',
+        bed: 'سرير',
+        bedsUnit: 'أسرّة',
+        bedType: 'نوع السرير',
+        bathrooms: 'الحمامات',
+        bathroom: 'حمام',
+        bathroomsUnit: 'حمامات',
+        area: 'المساحة',
+        details: 'تفاصيل الغرفة',
+        dir: 'rtl',
+    },
+    en: {
+        roomType: 'Room type',
+        roomNumber: 'Room number',
+        adults: 'Adults',
+        adult: 'adult',
+        children: 'Children',
+        child: 'child',
+        beds: 'Beds',
+        bed: 'bed',
+        bedsUnit: 'beds',
+        bedType: 'Bed type',
+        bathrooms: 'Bathrooms',
+        bathroom: 'bathroom',
+        bathroomsUnit: 'bathrooms',
+        area: 'Area',
+        details: 'Room details',
+        dir: 'ltr',
+    },
 };
 
 const AMENITY_ICONS = [
@@ -63,22 +115,24 @@ const detail = ({ key, label, value, unit = '', icon }) => {
     };
 };
 
-const buildRoomDetails = (room) => {
+const buildRoomDetails = (room, locale = 'ar', exact = false) => {
     if (!room) return [];
+    const copy = ROOM_COPY[locale === 'en' ? 'en' : 'ar'];
+    const typeLabels = ROOM_TYPE_LABELS[locale === 'en' ? 'en' : 'ar'];
     const items = [];
     const roomType = room.roomType || 'standard';
 
     items.push(detail({
         key: 'roomType',
-        label: 'نوع الغرفة',
-        value: ROOM_TYPE_LABELS[roomType] || roomType,
+        label: copy.roomType,
+        value: typeLabels[roomType] || roomType,
         icon: 'fa-door-open',
     }));
 
     if (room.roomNumber) {
         items.push(detail({
             key: 'roomNumber',
-            label: 'رقم الغرفة',
+            label: copy.roomNumber,
             value: room.roomNumber,
             icon: 'fa-hashtag',
         }));
@@ -88,9 +142,9 @@ const buildRoomDetails = (room) => {
     if (adults > 0) {
         items.push(detail({
             key: 'adults',
-            label: 'البالغين',
+            label: copy.adults,
             value: adults,
-            unit: 'بالغ',
+            unit: copy.adult,
             icon: 'fa-user',
         }));
     }
@@ -99,9 +153,9 @@ const buildRoomDetails = (room) => {
     if (children > 0) {
         items.push(detail({
             key: 'children',
-            label: 'الأطفال',
+            label: copy.children,
             value: children,
-            unit: 'طفل',
+            unit: copy.child,
             icon: 'fa-child',
         }));
     }
@@ -110,18 +164,23 @@ const buildRoomDetails = (room) => {
     if (beds > 0) {
         items.push(detail({
             key: 'beds',
-            label: 'عدد الأسرّة',
+            label: copy.beds,
             value: beds,
-            unit: beds === 1 ? 'سرير' : 'أسرّة',
+            unit: beds === 1 ? copy.bed : copy.bedsUnit,
             icon: 'fa-bed',
         }));
     }
 
-    if (room.beds?.bedType) {
+    const bedType = exact
+        ? (locale === 'en' ? room.beds?.bedType : room.beds?.bedTypeAr)
+        : (locale === 'en'
+            ? (room.beds?.bedType || room.beds?.bedTypeAr)
+            : (room.beds?.bedTypeAr || room.beds?.bedType));
+    if (bedType) {
         items.push(detail({
             key: 'bedType',
-            label: 'نوع السرير',
-            value: room.beds.bedType,
+            label: copy.bedType,
+            value: bedType,
             icon: 'fa-bed',
         }));
     }
@@ -130,9 +189,9 @@ const buildRoomDetails = (room) => {
     if (bathrooms > 0) {
         items.push(detail({
             key: 'bathrooms',
-            label: 'الحمامات',
+            label: copy.bathrooms,
             value: bathrooms,
-            unit: bathrooms === 1 ? 'حمام' : 'حمامات',
+            unit: bathrooms === 1 ? copy.bathroom : copy.bathroomsUnit,
             icon: 'fa-bath',
         }));
     }
@@ -141,22 +200,27 @@ const buildRoomDetails = (room) => {
     if (area > 0) {
         items.push(detail({
             key: 'area',
-            label: 'المساحة',
+            label: copy.area,
             value: area,
-            unit: 'م²',
+            unit: locale === 'en' ? 'm²' : 'م²',
             icon: 'fa-ruler-combined',
         }));
     }
 
-    const amenities = Array.isArray(room.amenities) ? room.amenities : [];
-    amenities.forEach((name) => {
+    const englishAmenities = Array.isArray(room.amenities) ? room.amenities : [];
+    const arabicAmenities = Array.isArray(room.amenitiesAr) ? room.amenitiesAr : [];
+    const amenities = exact
+        ? (locale === 'en' ? englishAmenities : arabicAmenities)
+        : (locale === 'en' ? (englishAmenities.length ? englishAmenities : arabicAmenities) : (arabicAmenities.length ? arabicAmenities : englishAmenities));
+    amenities.forEach((name, index) => {
         const label = String(name || '').trim();
         if (!label) return;
+        const iconSource = englishAmenities[index] || label;
         items.push(detail({
             key: 'amenity',
             label,
             value: label,
-            icon: amenityIcon(label),
+            icon: amenityIcon(iconSource),
         }));
     });
 
@@ -168,13 +232,14 @@ const detailLine = (item) => {
     return `${item.label}: ${item.text}`;
 };
 
-const buildRoomDetailsHtml = (items) => {
+const buildRoomDetailsHtml = (items, locale = 'ar') => {
     const list = Array.isArray(items) ? items : [];
     if (!list.length) return '';
+    const copy = ROOM_COPY[locale === 'en' ? 'en' : 'ar'];
     const lines = list.map((item) => (
         `• <i class="${escapeHtml(item.iconClass || iconClass(item.icon))}" style="color:#2D4F2E;margin-left:6px;"></i> ${escapeHtml(detailLine(item))}`
     )).join('<br>');
-    return `<div class="room-auto-details" dir="rtl"><p style="display:block;margin:14px 0 8px;font-size:15px;font-weight:700;color:#2D4F2E;">تفاصيل الغرفة</p><p style="display:block;margin:0;line-height:2;font-size:14px;color:#334155;">${lines}</p></div>`;
+    return `<div class="room-auto-details" dir="${copy.dir}"><p style="display:block;margin:14px 0 8px;font-size:15px;font-weight:700;color:#2D4F2E;">${copy.details}</p><p style="display:block;margin:0;line-height:2;font-size:14px;color:#334155;">${lines}</p></div>`;
 };
 
 module.exports = {

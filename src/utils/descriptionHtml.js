@@ -77,21 +77,42 @@ const styleDescription = (html) => String(html || '')
     .replace(/<h4>/g, '<h4 style="margin:10px 0 6px;font-size:14px;font-weight:700;color:#1e293b;">')
     .replace(/<blockquote>/g, '<blockquote style="margin:0 0 8px;padding:8px 12px;border-right:3px solid #2D4F2E;color:#475569;">');
 
-const formatAttributeValue = (value, def) => {
+const COPY = {
+    ar: { yes: 'نعم', specs: 'المواصفات', description: 'الوصف', location: 'الموقع', joiner: '، ' },
+    en: { yes: 'Yes', specs: 'Specifications', description: 'Description', location: 'Location', joiner: ', ' },
+};
+
+const copyFor = (locale) => COPY[locale === 'en' ? 'en' : 'ar'];
+
+const defLabel = (def, locale) => (
+    locale === 'en'
+        ? (def?.name || def?.nameAr || def?.key || '')
+        : (def?.nameAr || def?.name || def?.key || '')
+);
+
+const defUnit = (def, locale) => (
+    locale === 'en'
+        ? (def?.unit || def?.unitAr || '')
+        : (def?.unitAr || def?.unit || '')
+);
+
+const formatAttributeValue = (value, def, locale = 'ar') => {
+    const copy = copyFor(locale);
     if (value === null || value === undefined || value === '') return '';
     if (Array.isArray(value)) {
-        return value.map((item) => String(item).trim()).filter(Boolean).join('، ');
+        return value.map((item) => String(item).trim()).filter(Boolean).join(copy.joiner);
     }
     if (typeof value === 'boolean' || def?.dataType === 'boolean') {
-        if (value === true || value === 'true' || value === 1 || value === '1') return 'نعم';
+        if (value === true || value === 'true' || value === 1 || value === '1') return copy.yes;
         return '';
     }
     const text = String(value).trim();
     if (!text) return '';
-    return def?.unit ? `${text} ${def.unit}` : text;
+    const unit = defUnit(def, locale);
+    return unit ? `${text} ${unit}` : text;
 };
 
-const collectSpecItems = (attributes, attributeDefs) => {
+const collectSpecItems = (attributes, attributeDefs, locale = 'ar') => {
     const allDefs = (Array.isArray(attributeDefs) ? attributeDefs : []).filter((def) => def && def.key);
     const hidden = new Set(allDefs.filter((def) => def.showInDetails === false || def.active === false).map((def) => def.key));
     const defs = allDefs
@@ -109,12 +130,12 @@ const collectSpecItems = (attributes, attributeDefs) => {
 
     defs.forEach((def) => {
         used.add(def.key);
-        pushItem(def.nameAr || def.name || def.key, formatAttributeValue(attrs[def.key], def));
+        pushItem(defLabel(def, locale), formatAttributeValue(attrs[def.key], def, locale));
     });
 
     Object.keys(attrs).forEach((key) => {
         if (used.has(key) || hidden.has(key)) return;
-        pushItem(String(key).replace(/_/g, ' '), formatAttributeValue(attrs[key]));
+        pushItem(String(key).replace(/_/g, ' '), formatAttributeValue(attrs[key], null, locale));
     });
 
     return items;
@@ -128,21 +149,26 @@ const formatSpecLinesHtml = (items) => {
     return `<p style="display:block;margin:0;line-height:2;font-size:14px;color:#334155;">${lines}</p>`;
 };
 
-const buildAttributeSpecsHtml = (attributes, attributeDefs) => {
-    const items = collectSpecItems(attributes, attributeDefs);
+const buildAttributeSpecsHtml = (attributes, attributeDefs, locale = 'ar') => {
+    const items = collectSpecItems(attributes, attributeDefs, locale);
     if (!items.length) return '';
-    return `<div class="ad-auto-specs"><p style="display:block;margin:14px 0 8px;font-size:15px;font-weight:700;color:#2D4F2E;">المواصفات</p>${formatSpecLinesHtml(items)}</div>`;
+    const copy = copyFor(locale);
+    return `<div class="ad-auto-specs"><p style="display:block;margin:14px 0 8px;font-size:15px;font-weight:700;color:#2D4F2E;">${copy.specs}</p>${formatSpecLinesHtml(items)}</div>`;
 };
 
-const buildDetailsHtml = ({ description, location, address, attributes, attributeDefs } = {}) => {
+const buildDetailsHtml = ({ description, location, address, attributes, attributeDefs, locale = 'ar' } = {}) => {
+    const copy = copyFor(locale);
     const descriptionHtml = styleDescription(normalizeDescriptionHtml(description));
-    const rows = formatSpecLinesHtml(collectSpecItems(attributes, attributeDefs));
+    const rows = formatSpecLinesHtml(collectSpecItems(attributes, attributeDefs, locale));
+    const isEnglish = locale === 'en';
+    const align = isEnglish ? 'left' : 'right';
+    const dir = isEnglish ? 'ltr' : 'rtl';
 
     const sections = [];
     if (descriptionHtml) {
         sections.push(
             `<section style="margin:0 0 16px;">`
-            + `<h2 style="margin:0 0 8px;font-size:16px;font-weight:700;color:#2D4F2E;">الوصف</h2>`
+            + `<h2 style="margin:0 0 8px;font-size:16px;font-weight:700;color:#2D4F2E;">${copy.description}</h2>`
             + `<div>${descriptionHtml}</div>`
             + `</section>`
         );
@@ -150,7 +176,7 @@ const buildDetailsHtml = ({ description, location, address, attributes, attribut
     if (rows) {
         sections.push(
             `<section style="margin:0 0 16px;">`
-            + `<h2 style="margin:0 0 8px;font-size:16px;font-weight:700;color:#2D4F2E;">المواصفات</h2>`
+            + `<h2 style="margin:0 0 8px;font-size:16px;font-weight:700;color:#2D4F2E;">${copy.specs}</h2>`
             + `<div>${rows}</div>`
             + `</section>`
         );
@@ -160,7 +186,7 @@ const buildDetailsHtml = ({ description, location, address, attributes, attribut
     if (place.length) {
         sections.push(
             `<section style="margin:0 0 16px;">`
-            + `<h2 style="margin:0 0 8px;font-size:16px;font-weight:700;color:#2D4F2E;">الموقع</h2>`
+            + `<h2 style="margin:0 0 8px;font-size:16px;font-weight:700;color:#2D4F2E;">${copy.location}</h2>`
             + place.map((part) => `<p style="margin:0 0 6px;font-size:14px;line-height:1.7;color:#334155;">${escapeHtml(part)}</p>`).join('')
             + `</section>`
         );
@@ -168,7 +194,7 @@ const buildDetailsHtml = ({ description, location, address, attributes, attribut
 
     if (!sections.length) return '';
 
-    return `<article dir="rtl" style="font-family:Cairo,Tahoma,sans-serif;direction:rtl;text-align:right;color:#0f172a;line-height:1.7;">${sections.join('')}</article>`;
+    return `<article dir="${dir}" style="font-family:Cairo,Tahoma,sans-serif;direction:${dir};text-align:${align};color:#0f172a;line-height:1.7;">${sections.join('')}</article>`;
 };
 
 module.exports = {

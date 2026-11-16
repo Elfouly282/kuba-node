@@ -251,15 +251,15 @@ exports.getCityData = async (req, res, next) => {
         ...adFilter,
         type: 'chalet',
     })
-        .populate('category', 'name image')
-        .populate('city', 'name image')
-        .populate('region', 'name')
+        .populate('category', 'name nameAr image')
+        .populate('city', 'name nameAr image')
+        .populate('region', 'name nameAr')
         .sort({ createdAt: -1 });
 
     const rawAdvertisements = await Advertisement.find(adFilter)
-        .populate('category', 'name image')
-        .populate('city', 'name image')
-        .populate('region', 'name')
+        .populate('category', 'name nameAr image')
+        .populate('city', 'name nameAr image')
+        .populate('region', 'name nameAr')
         .sort({ createdAt: -1 });
 
     const rawCategories = await Category.find().sort({ createdAt: -1 });
@@ -267,7 +267,7 @@ exports.getCityData = async (req, res, next) => {
     const advertisements = rawAdvertisements.map(formatAdvertisement);
     const listed = chalets.concat(advertisements);
     await attachHasRooms(listed);
-    await attachDetailsHtml(listed);
+    await attachDetailsHtml(listed, req);
 
     const formattedCity = formatCity(city, regions.length);
 
@@ -308,6 +308,7 @@ exports.create = async (req, res, next) => {
 
     const city = new City({
         name,
+        nameAr: req.body.nameAr ? String(req.body.nameAr).trim() : '',
         image,
         active,
         order,
@@ -342,6 +343,9 @@ exports.update = async (req, res, next) => {
             return next(new APIError('validation.nameRequired', 400));
         }
         city.name = trimmedName;
+    }
+    if (req.body.nameAr !== undefined) {
+        city.nameAr = String(req.body.nameAr || '').trim();
     }
 
     if (req.body.active !== undefined) {

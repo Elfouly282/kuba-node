@@ -11,6 +11,12 @@ const citySchema = new mongoose.Schema(
             maxlength: [100, 'validation.nameTooLong'],
             unique: true,
         },
+        nameAr: {
+            type: String,
+            trim: true,
+            default: '',
+            maxlength: [100, 'validation.nameTooLong'],
+        },
         image: {
             type: String,
             trim: true,

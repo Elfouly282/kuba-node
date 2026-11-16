@@ -394,14 +394,62 @@ function getApiBaseUrl() {
     return '';
 }
 
+function findRecord(list, id) {
+    return (list || []).find((item) => String(item.id || item._id) === String(id)) || null;
+}
+
+async function apiFetchLang(endpoint, lang, options = {}) {
+    return apiFetch(endpoint, {
+        ...options,
+        headers: {
+            ...(options.headers || {}),
+            lang,
+            'Accept-Language': lang,
+            'x-locale-exact': '1',
+        },
+    });
+}
+
+async function fetchLangPair(endpoint, pick) {
+    const [enRes, arRes] = await Promise.all([
+        apiFetchLang(endpoint, 'en'),
+        apiFetchLang(endpoint, 'ar'),
+    ]);
+    return {
+        en: (pick ? pick(enRes) : enRes) || {},
+        ar: (pick ? pick(arRes) : arRes) || {},
+    };
+}
+
+function mergeStayForForm(enStay = {}, arStay = {}) {
+    const english = Array.isArray(enStay.addOns) ? enStay.addOns : [];
+    const arabic = Array.isArray(arStay.addOns) ? arStay.addOns : [];
+    const arabicById = new Map(arabic.map((item) => [String(item.id || item._id || ''), item]));
+    return {
+        ...enStay,
+        taxLabel: enStay.taxLabel || '',
+        taxLabelAr: arStay.taxLabel || '',
+        addOns: english.map((item, index) => {
+            const match = arabicById.get(String(item.id || item._id || '')) || arabic[index] || {};
+            return {
+                ...item,
+                title: item.title || '',
+                titleAr: match.title || '',
+                description: item.description || '',
+                descriptionAr: match.description || '',
+            };
+        }),
+    };
+}
+
 async function apiFetch(endpoint, options = {}) {
-    const headers = options.headers || {};
-    if (state.token) {
-        headers['Authorization'] = `Bearer ${state.token}`;
+    const headers = { ...(options.headers || {}) };
+    if (state.token && !headers.Authorization && !headers.authorization) {
+        headers.Authorization = `Bearer ${state.token}`;
     }
-    
-    // Auto attach accept-language
-    headers['Accept-Language'] = state.lang;
+
+    if (!headers.lang && !headers.Lang) headers.lang = state.lang;
+    if (!headers['Accept-Language']) headers['Accept-Language'] = headers.lang || state.lang;
 
     if (!(options.body instanceof FormData)) {
         headers['Content-Type'] = 'application/json';
@@ -664,8 +712,8 @@ function loadCurrentTab() {
 }
 
 async function loadPrivacyPolicy() {
-    const data = await apiFetch('/api/v1/admin/privacy-policy');
-    const policy = data.data?.policy || {};
+    const pair = await fetchLangPair('/api/v1/admin/privacy-policy', (res) => res.data?.policy);
+    const policy = pair.en.url ? pair.en : (pair.ar || {});
     const url = policy.url || 'https://kuba-app.com/privacy-policy';
     const urlInput = document.getElementById('privacy-url');
     const openLink = document.getElementById('privacy-open');
@@ -676,10 +724,10 @@ async function loadPrivacyPolicy() {
         if (el) el.value = value || '';
     };
     setValue('privacy-email', policy.contactEmail);
-    setValue('privacy-title-ar', policy.titleAr);
-    setValue('privacy-title-en', policy.titleEn);
-    setValue('privacy-content-ar', policy.contentAr);
-    setValue('privacy-content-en', policy.contentEn);
+    setValue('privacy-title-ar', pair.ar.title);
+    setValue('privacy-title-en', pair.en.title);
+    setValue('privacy-content-ar', pair.ar.content);
+    setValue('privacy-content-en', pair.en.content);
     const updatedEl = document.getElementById('privacy-updated');
     if (updatedEl) {
         updatedEl.textContent = policy.updatedAt
@@ -1217,16 +1265,9 @@ function renderOnboardingGrid() {
                     </div>
                 </div>
 
-                <div class="mb-2">
-                    <div class="text-xs text-[#2D4F2E] font-bold uppercase tracking-wider mb-0.5">EN</div>
-                    <h3 class="font-bold text-slate-900 text-sm mb-1">${s.titleEn}</h3>
-                    <p class="text-xs text-slate-500 line-clamp-2">${s.descriptionEn || '—'}</p>
-                </div>
-
-                <div class="border-t border-slate-100 pt-2 mb-3">
-                    <div class="text-xs text-[#2D4F2E] font-bold uppercase tracking-wider mb-0.5">AR</div>
-                    <h3 class="font-bold text-slate-900 text-sm mb-1">${s.titleAr}</h3>
-                    <p class="text-xs text-slate-500 line-clamp-2">${s.descriptionAr || '—'}</p>
+                <div class="mb-3">
+                    <h3 class="font-bold text-slate-900 text-sm mb-1">${s.title || ''}</h3>
+                    <p class="text-xs text-slate-500 line-clamp-2">${s.description || '—'}</p>
                 </div>
             </div>
 
@@ -1253,16 +1294,17 @@ function openAddOnboardingModal() {
     document.getElementById('onboarding-modal').classList.add('active');
 }
 
-function openEditOnboardingModal(screenId) {
-    const screen = state.onboardingScreens.find(s => s._id === screenId);
+async function openEditOnboardingModal(screenId) {
+    const screen = state.onboardingScreens.find(s => (s._id || s.id) === screenId);
     if (!screen) return;
+    const pair = await fetchLangPair(`/api/v1/admin/onboarding/${screenId}`, (res) => res.data?.screen);
 
     state.editingScreenId = screenId;
     document.getElementById('onboarding-modal-title').textContent = t('edit');
-    document.getElementById('onboarding-title-en').value = screen.titleEn || '';
-    document.getElementById('onboarding-title-ar').value = screen.titleAr || '';
-    document.getElementById('onboarding-desc-en').value = screen.descriptionEn || '';
-    document.getElementById('onboarding-desc-ar').value = screen.descriptionAr || '';
+    document.getElementById('onboarding-title-en').value = pair.en.title || '';
+    document.getElementById('onboarding-title-ar').value = pair.ar.title || '';
+    document.getElementById('onboarding-desc-en').value = pair.en.description || '';
+    document.getElementById('onboarding-desc-ar').value = pair.ar.description || '';
     document.getElementById('onboarding-order').value = screen.order ?? 0;
     document.getElementById('onboarding-active').checked = screen.active !== false;
 
@@ -1394,13 +1436,15 @@ function openAddCategoryModal() {
     document.getElementById('category-modal').classList.add('active');
 }
 
-function openEditCategoryModal(categoryId) {
+async function openEditCategoryModal(categoryId) {
     const cat = state.categories.find(c => (c.id || c._id) === categoryId);
     if (!cat) return;
+    const pair = await fetchLangPair('/api/v1/admin/categories', (res) => findRecord(res.data?.categories, categoryId));
 
     state.editingCategoryId = categoryId;
-    document.getElementById('category-modal-title').textContent = `${t('edit')}: ${cat.name}`;
-    document.getElementById('category-modal-name').value = cat.name || '';
+    document.getElementById('category-modal-title').textContent = `${t('edit')}: ${pair.ar.name || pair.en.name || cat.name}`;
+    document.getElementById('category-modal-name').value = pair.en.name || '';
+    document.getElementById('category-modal-name-ar').value = pair.ar.name || '';
     
     const urlInput = document.getElementById('category-modal-image-url');
     if (cat.image?.startsWith('http')) {
@@ -1419,6 +1463,7 @@ function openEditCategoryModal(categoryId) {
 async function handleCategoryFormSubmit(e) {
     e.preventDefault();
     const name = document.getElementById('category-modal-name').value.trim();
+    const nameAr = document.getElementById('category-modal-name-ar').value.trim();
     const imageFile = document.getElementById('category-modal-image-file').files[0];
     const imageUrl = document.getElementById('category-modal-image-url').value.trim();
 
@@ -1433,13 +1478,13 @@ async function handleCategoryFormSubmit(e) {
     if (imageFile) {
         payload = new FormData();
         payload.append('name', name);
+        payload.append('nameAr', nameAr);
         payload.append('image', imageFile);
         isFormData = true;
     } else if (imageUrl) {
-        payload = JSON.stringify({ name, image: imageUrl });
+        payload = JSON.stringify({ name, nameAr, image: imageUrl });
     } else if (state.editingCategoryId) {
-        // Keeping current image
-        payload = JSON.stringify({ name });
+        payload = JSON.stringify({ name, nameAr });
     } else {
         showToast('يرجى اختيار ملف صورة أو إدخال رابط الصورة للتصنيف', 'error');
         return;
@@ -2767,7 +2812,7 @@ function openAddCityModal() {
     document.getElementById('city-modal').classList.add('active');
 }
 
-function openEditCityModal(cityId) {
+async function openEditCityModal(cityId) {
     exitMapFullscreen();
     const navLat = document.getElementById('city-nav-latitude');
     const navLng = document.getElementById('city-nav-longitude');
@@ -2776,9 +2821,11 @@ function openEditCityModal(cityId) {
     const city = state.cities.find(c => (c.id || c._id) === cityId);
     if (!city) return;
 
+    const pair = await fetchLangPair('/api/v1/admin/cities', (res) => findRecord(res.data?.cities, cityId));
     state.editingCityId = cityId;
-    document.getElementById('city-modal-title').textContent = `تعديل المدينة: ${city.name}`;
-    document.getElementById('city-modal-name').value = city.name || '';
+    document.getElementById('city-modal-title').textContent = `تعديل المدينة: ${pair.ar.name || pair.en.name || city.name}`;
+    document.getElementById('city-modal-name').value = pair.en.name || '';
+    document.getElementById('city-modal-name-ar').value = pair.ar.name || '';
     document.getElementById('city-modal-order').value = city.order || 0;
     document.getElementById('city-modal-active').checked = city.active !== false;
 
@@ -2823,6 +2870,7 @@ function openEditCityModal(cityId) {
 async function handleCityFormSubmit(e) {
     e.preventDefault();
     const name = document.getElementById('city-modal-name').value.trim();
+    const nameAr = document.getElementById('city-modal-name-ar').value.trim();
     const order = document.getElementById('city-modal-order').value || 0;
     const active = document.getElementById('city-modal-active').checked;
     const pointsStr = document.getElementById('city-modal-points').value || '[]';
@@ -2840,6 +2888,7 @@ async function handleCityFormSubmit(e) {
     if (imageFile) {
         payload = new FormData();
         payload.append('name', name);
+        payload.append('nameAr', nameAr);
         payload.append('order', order);
         payload.append('active', active);
         payload.append('points', pointsStr);
@@ -2848,6 +2897,7 @@ async function handleCityFormSubmit(e) {
     } else {
         const bodyObj = {
             name,
+            nameAr,
             order,
             active,
             points: JSON.parse(pointsStr),
@@ -2936,7 +2986,7 @@ function openAddRegionModal(preselectedCityId) {
     document.getElementById('region-modal').classList.add('active');
 }
 
-function openEditRegionModal(regionId) {
+async function openEditRegionModal(regionId) {
     exitMapFullscreen();
     const navLat = document.getElementById('region-nav-latitude');
     const navLng = document.getElementById('region-nav-longitude');
@@ -2945,9 +2995,11 @@ function openEditRegionModal(regionId) {
     const region = state.regions.find(r => (r.id || r._id) === regionId);
     if (!region) return;
 
+    const pair = await fetchLangPair('/api/v1/admin/regions', (res) => findRecord(res.data?.regions, regionId));
     state.editingRegionId = regionId;
-    document.getElementById('region-modal-title').textContent = `${t('edit')}: ${region.name}`;
-    document.getElementById('region-modal-name').value = region.name || '';
+    document.getElementById('region-modal-title').textContent = `${t('edit')}: ${pair.ar.name || pair.en.name || region.name}`;
+    document.getElementById('region-modal-name').value = pair.en.name || '';
+    document.getElementById('region-modal-name-ar').value = pair.ar.name || '';
     document.getElementById('region-modal-order').value = region.order || 0;
     document.getElementById('region-modal-active').checked = region.active !== false;
 
@@ -2991,6 +3043,7 @@ async function handleRegionFormSubmit(e) {
     e.preventDefault();
     const city = document.getElementById('region-modal-city').value || null;
     const name = document.getElementById('region-modal-name').value.trim();
+    const nameAr = document.getElementById('region-modal-name-ar').value.trim();
     const order = document.getElementById('region-modal-order').value || 0;
     const active = document.getElementById('region-modal-active').checked;
     const pointsStr = document.getElementById('region-modal-points').value || '[]';
@@ -3015,6 +3068,7 @@ async function handleRegionFormSubmit(e) {
         payload = new FormData();
         payload.append('city', city);
         payload.append('name', name);
+        payload.append('nameAr', nameAr);
         payload.append('order', order);
         payload.append('active', active);
         payload.append('points', pointsStr);
@@ -3024,6 +3078,7 @@ async function handleRegionFormSubmit(e) {
         const bodyObj = {
             city,
             name,
+            nameAr,
             order,
             active,
             points: JSON.parse(pointsStr),
@@ -3399,15 +3454,19 @@ function openAddUnitTypeModal() {
     document.getElementById('unit-type-modal').classList.add('active');
 }
 
-function openEditUnitTypeModal(utId) {
+async function openEditUnitTypeModal(utId) {
     const ut = state.unitTypes.find(u => (u.id || u._id) === utId);
     if (!ut) return;
+    const pair = await fetchLangPair(`/api/v1/admin/unit-types/${utId}`, (res) => res.data?.unitType);
+    const en = pair.en.id || pair.en._id ? pair.en : ut;
+    const ar = pair.ar.id || pair.ar._id ? pair.ar : {};
 
     state.editingUnitTypeId = utId;
-    document.getElementById('unit-type-modal-title').textContent = `تعديل نوع الوحدة: ${ut.nameAr || ut.name}`;
-    document.getElementById('unit-type-modal-name').value = ut.name || '';
-    document.getElementById('unit-type-modal-name-ar').value = ut.nameAr || '';
-    document.getElementById('unit-type-modal-description').value = ut.description || '';
+    document.getElementById('unit-type-modal-title').textContent = `تعديل نوع الوحدة: ${ar.name || en.name || ut.name}`;
+    document.getElementById('unit-type-modal-name').value = en.name || '';
+    document.getElementById('unit-type-modal-name-ar').value = ar.name || '';
+    document.getElementById('unit-type-modal-description').value = en.description || '';
+    document.getElementById('unit-type-modal-description-ar').value = ar.description || '';
     document.getElementById('unit-type-modal-order').value = ut.order || 0;
     document.getElementById('unit-type-modal-default-unit').value = ut.defaultPricingUnit || 'per_night';
     document.getElementById('unit-type-modal-active').checked = ut.active !== false;
@@ -3437,6 +3496,7 @@ async function handleUnitTypeFormSubmit(e) {
     const name = document.getElementById('unit-type-modal-name').value.trim();
     const nameAr = document.getElementById('unit-type-modal-name-ar').value.trim();
     const description = document.getElementById('unit-type-modal-description').value.trim();
+    const descriptionAr = document.getElementById('unit-type-modal-description-ar').value.trim();
     const order = document.getElementById('unit-type-modal-order').value || 0;
     const defaultPricingUnit = document.getElementById('unit-type-modal-default-unit').value;
     const active = document.getElementById('unit-type-modal-active').checked;
@@ -3452,6 +3512,7 @@ async function handleUnitTypeFormSubmit(e) {
         name,
         nameAr,
         description,
+        descriptionAr,
         categories,
         pricingUnits: pricingUnits.length > 0 ? pricingUnits : ['per_night'],
         defaultPricingUnit,
@@ -3969,18 +4030,26 @@ function openAddAttributeModal() {
     document.getElementById('attribute-modal').classList.add('active');
 }
 
-function openEditAttributeModal(attrId) {
+async function openEditAttributeModal(attrId) {
     const attr = state.unitTypeAttributes.find(a => (a.id || a._id) === attrId);
     if (!attr) return;
+    const pair = await fetchLangPair(
+        `/api/v1/admin/unit-types/${state.selectedUnitTypeId}/attributes`,
+        (res) => findRecord(res.data?.attributes, attrId)
+    );
+    const en = pair.en.key ? pair.en : attr;
+    const ar = pair.ar.key ? pair.ar : {};
 
     state.editingAttributeId = attrId;
-    document.getElementById('attribute-modal-title').textContent = `تعديل الخاصية: ${attr.nameAr || attr.name}`;
-    document.getElementById('attr-modal-name').value = attr.name || '';
-    document.getElementById('attr-modal-name-ar').value = attr.nameAr || '';
-    document.getElementById('attr-modal-key').value = attr.key || '';
-    document.getElementById('attr-modal-datatype').value = attr.dataType || 'string';
-    document.getElementById('attr-modal-options').value = (attr.options || []).join(', ');
-    document.getElementById('attr-modal-unit').value = attr.unit || '';
+    document.getElementById('attribute-modal-title').textContent = `تعديل الخاصية: ${ar.name || en.name || attr.name}`;
+    document.getElementById('attr-modal-name').value = en.name || '';
+    document.getElementById('attr-modal-name-ar').value = ar.name || '';
+    document.getElementById('attr-modal-key').value = en.key || attr.key || '';
+    document.getElementById('attr-modal-datatype').value = en.dataType || attr.dataType || 'string';
+    document.getElementById('attr-modal-options').value = (en.options || []).join(', ');
+    document.getElementById('attr-modal-options-ar').value = (ar.options || []).join(', ');
+    document.getElementById('attr-modal-unit').value = en.unit || '';
+    document.getElementById('attr-modal-unit-ar').value = ar.unit || '';
     document.getElementById('attr-modal-order').value = attr.order || 0;
     document.getElementById('attr-modal-default').value = attr.defaultValue !== null ? attr.defaultValue : '';
     document.getElementById('attr-modal-required').checked = !!attr.required;
@@ -4001,7 +4070,9 @@ async function handleAttributeFormSubmit(e) {
     const key = document.getElementById('attr-modal-key').value.trim();
     const dataType = document.getElementById('attr-modal-datatype').value;
     const optionsStr = document.getElementById('attr-modal-options').value.trim();
+    const optionsArStr = document.getElementById('attr-modal-options-ar').value.trim();
     const unit = document.getElementById('attr-modal-unit').value.trim();
+    const unitAr = document.getElementById('attr-modal-unit-ar').value.trim();
     const order = document.getElementById('attr-modal-order').value || 0;
     const defaultValue = document.getElementById('attr-modal-default').value.trim();
     const required = document.getElementById('attr-modal-required').checked;
@@ -4009,6 +4080,7 @@ async function handleAttributeFormSubmit(e) {
     const showInDetails = document.getElementById('attr-modal-show-details').checked;
 
     const options = optionsStr ? optionsStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const optionsAr = optionsArStr ? optionsArStr.split(',').map(s => s.trim()).filter(Boolean) : [];
 
     const payload = {
         name,
@@ -4016,7 +4088,9 @@ async function handleAttributeFormSubmit(e) {
         key,
         dataType,
         options,
+        optionsAr,
         unit,
+        unitAr,
         order: Number(order),
         defaultValue: defaultValue || null,
         required,
@@ -5027,15 +5101,17 @@ function addStayAddonRow(prefix, addon = {}) {
     const row = document.createElement('div');
     row.className = 'stay-addon-row grid grid-cols-1 sm:grid-cols-12 gap-2';
     row.innerHTML = `
-        <input data-addon="title" class="form-input text-xs sm:col-span-3" placeholder="اسم الإضافة" value="${escapeHtmlText(addon.title || '')}">
-        <input data-addon="description" class="form-input text-xs sm:col-span-4" placeholder="الوصف" value="${escapeHtmlText(addon.description || '')}">
+        <input data-addon="title" class="form-input text-xs sm:col-span-3" dir="ltr" placeholder="Add-on (English)" value="${escapeHtmlText(addon.title || '')}">
+        <input data-addon="titleAr" class="form-input text-xs sm:col-span-3" placeholder="الإضافة (عربي)" value="${escapeHtmlText(addon.titleAr || '')}">
+        <input data-addon="description" class="form-input text-xs sm:col-span-3" dir="ltr" placeholder="Description (English)" value="${escapeHtmlText(addon.description || '')}">
+        <input data-addon="descriptionAr" class="form-input text-xs sm:col-span-3" placeholder="الوصف (عربي)" value="${escapeHtmlText(addon.descriptionAr || '')}">
         <input data-addon="price" type="number" min="0" step="any" class="form-input text-xs sm:col-span-2" placeholder="السعر" value="${addon.price ?? ''}">
         <select data-addon="category" class="form-select text-xs sm:col-span-2">
             <option value="meal" ${addon.category === 'meal' ? 'selected' : ''}>وجبة</option>
             <option value="extra" ${addon.category !== 'meal' ? 'selected' : ''}>إضافة</option>
         </select>
         <input type="hidden" data-addon="id" value="${escapeHtmlText(addon.id || addon._id || '')}">
-        <button type="button" class="btn-secondary text-[11px] sm:col-span-1" onclick="this.closest('.stay-addon-row').remove()">حذف</button>
+        <button type="button" class="btn-secondary text-[11px] sm:col-span-2" onclick="this.closest('.stay-addon-row').remove()">حذف</button>
     `;
     box.appendChild(row);
 }
@@ -5049,6 +5125,7 @@ function fillStayFields(prefix, stay = {}) {
     setValue('service-percent', stay.serviceFeePercent ?? '');
     setValue('tax-percent', stay.taxPercent ?? '');
     setValue('tax-label', stay.taxLabel || '');
+    setValue('tax-label-ar', stay.taxLabelAr || '');
     setValue('checkin', stay.checkInTime || '');
     setValue('checkout', stay.checkOutTime || '');
     setValue('cancel-days', stay.freeCancellationDays ?? '');
@@ -5072,6 +5149,7 @@ function readStayFields(prefix) {
         serviceFeePercent: numberValue('service-percent') ?? 0,
         taxPercent: numberValue('tax-percent') ?? 0,
         taxLabel: textValue('tax-label') || 'VAT',
+        taxLabelAr: textValue('tax-label-ar'),
         breakfastIncluded: document.getElementById(`${prefix}-breakfast`)?.checked === true,
         addOns: [],
     };
@@ -5082,11 +5160,14 @@ function readStayFields(prefix) {
 
     document.querySelectorAll(`#${prefix}-stay-addons .stay-addon-row`).forEach((row) => {
         const title = row.querySelector('[data-addon="title"]')?.value.trim() || '';
+        const titleAr = row.querySelector('[data-addon="titleAr"]')?.value.trim() || '';
         const price = Number(row.querySelector('[data-addon="price"]')?.value);
-        if (!title || !Number.isFinite(price) || price < 0) return;
+        if ((!title && !titleAr) || !Number.isFinite(price) || price < 0) return;
         const addon = {
             title,
+            titleAr: row.querySelector('[data-addon="titleAr"]')?.value.trim() || '',
             description: row.querySelector('[data-addon="description"]')?.value.trim() || '',
+            descriptionAr: row.querySelector('[data-addon="descriptionAr"]')?.value.trim() || '',
             price,
             category: row.querySelector('[data-addon="category"]')?.value === 'meal' ? 'meal' : 'extra',
             active: true,
@@ -5247,6 +5328,7 @@ function openAddAdvertisementModal() {
     document.getElementById('advertisement-modal-title').textContent = t('addAdvertisement');
     document.getElementById('advertisement-form').reset();
     setHtmlEditor('ad-modal-description', '');
+    setHtmlEditor('ad-modal-description-ar', '');
     document.getElementById('ad-modal-active').checked = true;
     const flashInput = document.getElementById('ad-modal-flashsale');
     if (flashInput) flashInput.checked = false;
@@ -5284,11 +5366,14 @@ function openAddAdvertisementModal() {
 
 async function openEditAdvertisementModal(adId) {
     exitMapFullscreen();
-    const ad = state.advertisements.find(a => (a.id || a._id) === adId);
-    if (!ad) return;
+    const listed = state.advertisements.find(a => (a.id || a._id) === adId);
+    if (!listed) return;
+    const pair = await fetchLangPair(`/api/v1/admin/advertisements/${adId}`, (res) => res.data?.advertisement);
+    const ad = pair.en.id || pair.en._id ? pair.en : listed;
+    const ar = pair.ar.id || pair.ar._id ? pair.ar : {};
 
     state.editingAdvertisementId = adId;
-    document.getElementById('advertisement-modal-title').textContent = `${t('edit')}: ${ad.title}`;
+    document.getElementById('advertisement-modal-title').textContent = `${t('edit')}: ${ar.title || ad.title}`;
 
     populateLocationSelects();
     populateAdCategorySelect();
@@ -5296,9 +5381,13 @@ async function openEditAdvertisementModal(adId) {
     populateAdOwnerSelect(ad.owner?._id || ad.owner?.id || ad.owner || '');
 
     document.getElementById('ad-modal-title').value = ad.title || '';
+    document.getElementById('ad-modal-title-ar').value = ar.title || '';
     document.getElementById('ad-modal-location').value = ad.location || '';
+    document.getElementById('ad-modal-location-ar').value = ar.location || '';
     document.getElementById('ad-modal-address').value = ad.address || '';
+    document.getElementById('ad-modal-address-ar').value = ar.address || '';
     setHtmlEditor('ad-modal-description', descriptionForEditor(ad));
+    setHtmlEditor('ad-modal-description-ar', descriptionForEditor(ar));
     document.getElementById('ad-modal-active').checked = ad.active !== false;
     const flashInput = document.getElementById('ad-modal-flashsale');
     if (flashInput) flashInput.checked = ad.isFlashSale === true;
@@ -5357,12 +5446,13 @@ async function openEditAdvertisementModal(adId) {
     document.getElementById('ad-modal-discount-value').value = p.discountValue || 0;
     document.getElementById('ad-modal-pricing-unit').value = p.pricingUnit || 'per_night';
     document.getElementById('ad-modal-min-duration').value = p.minDuration || 1;
-    fillStayFields('ad-modal', ad.stay || {});
+    fillStayFields('ad-modal', mergeStayForForm(ad.stay || {}, ar.stay || {}));
     calculateAdFinalPrice();
 
     // Trigger dynamic attributes with existing values
     if (utId) {
-        await onAdUnitTypeChanged(ad.attributes || {});
+        const localizedAttrs = (state.lang === 'ar' ? ar.attributes : ad.attributes) || ad.attributes || {};
+        await onAdUnitTypeChanged(localizedAttrs);
     }
 
     const urlInput = document.getElementById('ad-modal-image-url');
@@ -5452,6 +5542,7 @@ function previewAdGalleryFiles(input) {
 async function handleAdvertisementFormSubmit(e) {
     e.preventDefault();
     const title = document.getElementById('ad-modal-title').value.trim();
+    const titleAr = document.getElementById('ad-modal-title-ar').value.trim();
     const category = document.getElementById('ad-modal-category').value || null;
     const unitType = document.getElementById('ad-modal-unit-type').value || null;
     const city = document.getElementById('ad-modal-city')?.value || null;
@@ -5464,13 +5555,16 @@ async function handleAdvertisementFormSubmit(e) {
     const minDuration = document.getElementById('ad-modal-min-duration').value || 1;
 
     const location = document.getElementById('ad-modal-location').value.trim();
+    const locationAr = document.getElementById('ad-modal-location-ar').value.trim();
     const address = document.getElementById('ad-modal-address').value.trim();
+    const addressAr = document.getElementById('ad-modal-address-ar').value.trim();
     const latVal = document.getElementById('ad-modal-latitude')?.value?.trim();
     const lngVal = document.getElementById('ad-modal-longitude')?.value?.trim();
     const latitude = (latVal !== '' && latVal !== undefined && !isNaN(Number(latVal))) ? Number(latVal) : null;
     const longitude = (lngVal !== '' && lngVal !== undefined && !isNaN(Number(lngVal))) ? Number(lngVal) : null;
 
     const description = readHtmlEditor('ad-modal-description');
+    const descriptionAr = readHtmlEditor('ad-modal-description-ar');
     const active = document.getElementById('ad-modal-active').checked;
     const isFlashSale = document.getElementById('ad-modal-flashsale')?.checked === true;
     const owner = document.getElementById('ad-modal-owner')?.value || null;
@@ -5531,6 +5625,7 @@ async function handleAdvertisementFormSubmit(e) {
     if (imageFile || galleryFiles.length > 0) {
         payload = new FormData();
         payload.append('title', title);
+        payload.append('titleAr', titleAr);
         if (category) payload.append('category', category);
         if (unitType) payload.append('unitType', unitType);
         if (city) payload.append('city', city);
@@ -5542,10 +5637,13 @@ async function handleAdvertisementFormSubmit(e) {
         payload.append('pricing[minDuration]', minDuration);
         payload.append('stay', JSON.stringify(stay));
         payload.append('location', location);
+        payload.append('locationAr', locationAr);
         payload.append('address', address);
+        payload.append('addressAr', addressAr);
         if (latitude !== null) payload.append('latitude', latitude);
         if (longitude !== null) payload.append('longitude', longitude);
         payload.append('description', description);
+        payload.append('descriptionAr', descriptionAr);
         payload.append('active', active);
         payload.append('isFlashSale', isFlashSale);
         if (owner) payload.append('owner', owner);
@@ -5558,6 +5656,7 @@ async function handleAdvertisementFormSubmit(e) {
     } else {
         const bodyObj = {
             title,
+            titleAr,
             owner: owner || null,
             category: category || null,
             unitType: unitType || null,
@@ -5566,10 +5665,13 @@ async function handleAdvertisementFormSubmit(e) {
             pricing,
             stay,
             location,
+            locationAr,
             address,
+            addressAr,
             latitude,
             longitude,
             description,
+            descriptionAr,
             active,
             isFlashSale,
             attributes,
@@ -6531,6 +6633,7 @@ async function handleCreateHotelRoomSubmit(e) {
     }
 
     const title = document.getElementById('hroom-title')?.value.trim();
+    const titleAr = document.getElementById('hroom-title-ar')?.value.trim() || '';
     const roomNumber = document.getElementById('hroom-number')?.value.trim();
     const roomType = document.getElementById('hroom-type')?.value || 'standard';
     const price = Number(document.getElementById('hroom-price')?.value || 0);
@@ -6538,7 +6641,11 @@ async function handleCreateHotelRoomSubmit(e) {
     const children = Number(document.getElementById('hroom-children')?.value || 0);
     const bedsCount = Number(document.getElementById('hroom-beds-count')?.value || 1);
     const bedType = document.getElementById('hroom-bed-type')?.value.trim() || 'King Bed';
+    const bedTypeAr = document.getElementById('hroom-bed-type-ar')?.value.trim() || '';
+    const description = document.getElementById('hroom-description')?.value.trim() || '';
+    const descriptionAr = document.getElementById('hroom-description-ar')?.value.trim() || '';
     const amenitiesStr = document.getElementById('hroom-amenities')?.value.trim() || '';
+    const amenitiesArStr = document.getElementById('hroom-amenities-ar')?.value.trim() || '';
     const areaRaw = document.getElementById('hroom-area')?.value;
 
     if (!title || price <= 0) {
@@ -6547,6 +6654,7 @@ async function handleCreateHotelRoomSubmit(e) {
     }
 
     const amenities = amenitiesStr ? amenitiesStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const amenitiesAr = amenitiesArStr ? amenitiesArStr.split(',').map(s => s.trim()).filter(Boolean) : [];
     const imageInput = document.getElementById('hroom-images');
     const imageFiles = Array.from(imageInput?.files || []);
 
@@ -6558,6 +6666,9 @@ async function handleCreateHotelRoomSubmit(e) {
     const payload = new FormData();
     payload.append('hotel', state.activeHotelId);
     payload.append('title', title);
+    payload.append('titleAr', titleAr);
+    payload.append('description', description);
+    payload.append('descriptionAr', descriptionAr);
     payload.append('roomNumber', roomNumber || '');
     payload.append('roomType', roomType);
     payload.append('price', String(price));
@@ -6575,8 +6686,10 @@ async function handleCreateHotelRoomSubmit(e) {
     payload.append('beds', JSON.stringify({
         count: bedsCount,
         bedType,
+        bedTypeAr,
     }));
     payload.append('amenities', JSON.stringify(amenities));
+    payload.append('amenitiesAr', JSON.stringify(amenitiesAr));
     if (areaRaw !== undefined && areaRaw !== '' && !Number.isNaN(Number(areaRaw))) {
         payload.append('area', String(Number(areaRaw)));
     }
@@ -6929,8 +7042,12 @@ function renderOwnerOverviewKPIs() {
 // ── OWNER TAB 2: LISTING EDITOR ──
 
 async function loadOwnerListingTab() {
-    const ad = getActiveOwnerAd();
-    if (!ad) return;
+    const current = getActiveOwnerAd();
+    if (!current) return;
+    const adId = current.id || current._id;
+    const pair = await fetchLangPair(`/api/v1/admin/advertisements/${adId}`, (res) => res.data?.advertisement);
+    const ad = pair.en.id || pair.en._id ? pair.en : current;
+    const ar = pair.ar.id || pair.ar._id ? pair.ar : {};
 
     populateOwnerCategories(ad.category?._id || ad.category?.id || ad.category);
     populateOwnerUnitTypes(ad.unitType?._id || ad.unitType?.id || ad.unitType);
@@ -6945,7 +7062,10 @@ async function loadOwnerListingTab() {
 
     const titleInput = document.getElementById('owner-form-title');
     if (titleInput) titleInput.value = ad.title || '';
+    const titleArInput = document.getElementById('owner-form-title-ar');
+    if (titleArInput) titleArInput.value = ar.title || '';
     setHtmlEditor('owner-form-description', descriptionForEditor(ad));
+    setHtmlEditor('owner-form-description-ar', descriptionForEditor(ar));
 
     const p = ad.pricing || {};
     const basePrice = document.getElementById('owner-form-base-price');
@@ -6959,13 +7079,14 @@ async function loadOwnerListingTab() {
     if (minDuration) minDuration.value = p.minDuration || 1;
     if (discountType) discountType.value = p.discountType || 'none';
     if (discountValue) discountValue.value = p.discountValue || 0;
-    fillStayFields('owner-form', ad.stay || {});
+    fillStayFields('owner-form', mergeStayForForm(ad.stay || {}, ar.stay || {}));
 
     calcOwnerFinalPrice();
 
     const utId = ad.unitType?._id || ad.unitType?.id || ad.unitType;
     if (utId) {
-        await onOwnerUnitTypeChanged(ad.attributes || {});
+        const localizedAttrs = (state.lang === 'ar' ? ar.attributes : ad.attributes) || ad.attributes || {};
+        await onOwnerUnitTypeChanged(localizedAttrs);
     }
 
     const locInput = document.getElementById('owner-form-location');
@@ -6975,6 +7096,10 @@ async function loadOwnerListingTab() {
 
     if (locInput) locInput.value = ad.location || '';
     if (addrInput) addrInput.value = ad.address || '';
+    const locArInput = document.getElementById('owner-form-location-ar');
+    const addrArInput = document.getElementById('owner-form-address-ar');
+    if (locArInput) locArInput.value = ar.location || '';
+    if (addrArInput) addrArInput.value = ar.address || '';
 
     const hasCoords = ad.latitude !== null && ad.latitude !== undefined && !isNaN(Number(ad.latitude)) &&
                       ad.longitude !== null && ad.longitude !== undefined && !isNaN(Number(ad.longitude));
@@ -7284,6 +7409,7 @@ async function handleOwnerListingSubmit(e) {
     const adId = ad.id || ad._id;
 
     const title = document.getElementById('owner-form-title')?.value.trim();
+    const titleAr = document.getElementById('owner-form-title-ar')?.value.trim() || '';
     if (!title) {
         showToast('عنوان الإعلان مطلوب', 'error');
         return;
@@ -7294,6 +7420,7 @@ async function handleOwnerListingSubmit(e) {
     const city = document.getElementById('owner-form-city')?.value || null;
     const region = document.getElementById('owner-form-region')?.value || null;
     const description = readHtmlEditor('owner-form-description');
+    const descriptionAr = readHtmlEditor('owner-form-description-ar');
 
     const basePrice = parseFloat(document.getElementById('owner-form-base-price')?.value) || 0;
     const pricingUnit = document.getElementById('owner-form-pricing-unit')?.value || 'per_night';
@@ -7302,7 +7429,9 @@ async function handleOwnerListingSubmit(e) {
     const discountValue = parseFloat(document.getElementById('owner-form-discount-value')?.value) || 0;
 
     const location = document.getElementById('owner-form-location')?.value.trim() || '';
+    const locationAr = document.getElementById('owner-form-location-ar')?.value.trim() || '';
     const address = document.getElementById('owner-form-address')?.value.trim() || '';
+    const addressAr = document.getElementById('owner-form-address-ar')?.value.trim() || '';
     const lat = document.getElementById('owner-form-latitude')?.value;
     const lng = document.getElementById('owner-form-longitude')?.value;
 
@@ -7326,13 +7455,17 @@ async function handleOwnerListingSubmit(e) {
 
     const payload = {
         title,
+        titleAr,
         description,
+        descriptionAr,
         category,
         unitType,
         city,
         region,
         location,
+        locationAr,
         address,
+        addressAr,
         active,
         basePrice,
         price: basePrice,
@@ -7363,7 +7496,6 @@ async function handleOwnerListingSubmit(e) {
             if (idx !== -1) {
                 state.ownerAds[idx] = { ...state.ownerAds[idx], ...updated };
             }
-            if (updated) setHtmlEditor('owner-form-description', descriptionForEditor(updated));
         }
 
         loadOwnerOverviewTab();

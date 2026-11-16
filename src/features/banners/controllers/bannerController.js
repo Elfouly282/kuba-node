@@ -20,6 +20,7 @@ const formatBanner = (doc) => {
                 ? {
                     id: obj.city._id.toString(),
                     name: obj.city.name,
+                    nameAr: obj.city.nameAr || '',
                     image: obj.city.image ? getImageUrl(obj.city.image) : '',
                 }
                 : obj.city.toString())
@@ -29,6 +30,7 @@ const formatBanner = (doc) => {
                 ? {
                     id: obj.region._id.toString(),
                     name: obj.region.name,
+                    nameAr: obj.region.nameAr || '',
                 }
                 : obj.region.toString())
             : null,
@@ -97,8 +99,8 @@ exports.getAll = async (req, res, next) => {
     const filter = andConditions.length > 0 ? { $and: andConditions } : {};
 
     const rawBanners = await Banner.find(filter)
-        .populate('city', 'name image')
-        .populate('region', 'name')
+        .populate('city', 'name nameAr image')
+        .populate('region', 'name nameAr')
         .sort({ createdAt: -1 });
 
     const banners = rawBanners.map(formatBanner);
@@ -115,8 +117,8 @@ exports.getOne = async (req, res, next) => {
     }
 
     const banner = await Banner.findById(req.params.id)
-        .populate('city', 'name image')
-        .populate('region', 'name');
+        .populate('city', 'name nameAr image')
+        .populate('region', 'name nameAr');
     if (!banner) {
         return next(new APIError('errors.bannerNotFound', 404));
     }
@@ -201,8 +203,8 @@ exports.create = async (req, res, next) => {
     });
 
     const populated = await Banner.findById(banner._id)
-        .populate('city', 'name image')
-        .populate('region', 'name');
+        .populate('city', 'name nameAr image')
+        .populate('region', 'name nameAr');
 
     SuccessResponse.created(res, {
         message: req.t ? req.t('messages.bannerCreated') : 'Banner created successfully.',
@@ -295,8 +297,8 @@ exports.update = async (req, res, next) => {
     await banner.save();
 
     const populated = await Banner.findById(banner._id)
-        .populate('city', 'name image')
-        .populate('region', 'name');
+        .populate('city', 'name nameAr image')
+        .populate('region', 'name nameAr');
 
     SuccessResponse.ok(res, {
         message: req.t ? req.t('messages.bannerUpdated') : 'Banner updated successfully.',

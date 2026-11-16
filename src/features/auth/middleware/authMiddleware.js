@@ -34,7 +34,7 @@ const protect = async (req, _res, next) => {
 
     if (decoded.id) {
         const userId = decompressId(decoded.id);
-        const user = await User.findById(userId).populate('city', 'name image').populate('region', 'name');
+        const user = await User.findById(userId).populate('city', 'name nameAr image').populate('region', 'name nameAr');
         if (!user) return next(new APIError('errors.userNotFound', 401));
         if (user.provider === 'local' && !user.isEmailVerified) {
             return next(new APIError('errors.emailNotVerified', 403));
@@ -47,8 +47,8 @@ const protect = async (req, _res, next) => {
         let user = await User.findOne({ firebaseUid: decoded.uid })
             .setOptions({ includeInactive: true })
             .select('+active')
-            .populate('city', 'name image')
-            .populate('region', 'name');
+            .populate('city', 'name nameAr image')
+            .populate('region', 'name nameAr');
 
         if (user?.active === false) return next(new APIError('errors.userDisabled', 403));
 
@@ -63,7 +63,7 @@ const protect = async (req, _res, next) => {
                     name: fbUser.displayName,
                     picture: fbUser.photoURL,
                 });
-                user = await User.findById(saved._id).populate('city', 'name image').populate('region', 'name');
+                user = await User.findById(saved._id).populate('city', 'name nameAr image').populate('region', 'name nameAr');
             } catch (err) {
                 if (err instanceof APIError) return next(err);
                 return next(new APIError('errors.invalidToken', 401));

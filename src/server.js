@@ -27,6 +27,7 @@ const morgan = require('morgan');
 const dbConnection = require('./config/database');
 const { getUploadsRoot } = require('./config/uploadsPath');
 const { i18nMiddleware } = require('../utils/i18n');
+const { localizeResponseMiddleware } = require('../utils/localize');
 const globalErrorHandler = require('./middleware/errorMiddleware');
 const APIError = require('./utils/apiError');
 const { SuccessResponse } = require('./utils/apiResponse');
@@ -84,6 +85,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 app.use(i18nMiddleware);
+app.use(localizeResponseMiddleware);
 
 app.use('/uploads', express.static(getUploadsRoot()));
 app.use('/images', express.static(path.join(__dirname, '..', 'images')));

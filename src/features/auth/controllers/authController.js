@@ -115,7 +115,7 @@ exports.login = async (req, res, next) => {
     if (!email || !password) return next(new APIError('errors.missingFields', 400));
 
     const normalizedEmail = email.toLowerCase().trim();
-    const user = await User.findOne({ email: normalizedEmail }).select('+password').populate('region', 'name');
+    const user = await User.findOne({ email: normalizedEmail }).select('+password').populate('region', 'name nameAr');
     if (!user || !(await user.comparePassword(password))) return next(new APIError('errors.invalidCredentials', 401));
     if (user.provider !== 'local') return next(new APIError('errors.useGoogleLogin', 400));
     if (!user.isEmailVerified) return next(new APIError('errors.emailNotVerified', 403));
@@ -139,7 +139,7 @@ exports.selectCity = async (req, res, next) => {
         req.user._id,
         { city: city._id },
         { new: true }
-    ).populate('city', 'name image').populate('region', 'name');
+    ).populate('city', 'name nameAr image').populate('region', 'name nameAr');
 
     if (!user) return next(new APIError('errors.userNotFound', 404));
 
@@ -173,7 +173,7 @@ exports.selectRegion = async (req, res, next) => {
         req.user._id,
         updateObj,
         { new: true }
-    ).populate('city', 'name image').populate('region', 'name');
+    ).populate('city', 'name nameAr image').populate('region', 'name nameAr');
 
     if (!user) return next(new APIError('errors.userNotFound', 404));
 
@@ -449,7 +449,7 @@ exports.googleLogin = async (req, res, next) => {
         const admin = require('../../../../admin/config/firebase');
         const decoded = await admin.auth().verifyIdToken(firebaseToken);
         const saved = await upsertGoogleUser(decoded, req.query.city || req.body.city || req.body.cityId);
-        const user = await User.findById(saved._id).populate('city', 'name image').populate('region', 'name');
+        const user = await User.findById(saved._id).populate('city', 'name nameAr image').populate('region', 'name nameAr');
         const presented = presentUser(user);
 
         SuccessResponse.ok(res, {

@@ -57,7 +57,7 @@ exports.getAll = async (req, res) => {
 
     SuccessResponse.ok(res, {
         results: bookings.length,
-        data: { bookings: bookings.map(formatBooking) },
+        data: { bookings: bookings.map((booking) => formatBooking(booking, req.locale, req.localeExact)) },
     });
 };
 
@@ -66,7 +66,7 @@ exports.getOne = async (req, res) => {
     const populated = await populateBooking(Booking.findById(booking._id));
 
     SuccessResponse.ok(res, {
-        data: { booking: formatBooking(populated) },
+        data: { booking: formatBooking(populated, req.locale, req.localeExact) },
     });
 };
 
@@ -90,7 +90,7 @@ exports.update = async (req, res) => {
 
     SuccessResponse.ok(res, {
         message: req.t('messages.bookingUpdated'),
-        data: { booking: formatBooking(populated) },
+        data: { booking: formatBooking(populated, req.locale, req.localeExact) },
     });
 };
 

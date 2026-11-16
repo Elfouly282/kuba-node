@@ -52,9 +52,20 @@ const detectLocale = (acceptLanguageHeader = '') => {
  * header (with an optional `?lang=` query override for easy manual testing),
  * then exposes `req.locale` and a `req.t(key, vars)` translation helper.
  */
+const normalizeLocale = (value) => {
+    const code = String(value || '').trim().toLowerCase().split(/[-_]/)[0];
+    return SUPPORTED_LOCALES.includes(code) ? code : null;
+};
+
+/**
+ * Locale priority: `lang` header, then `?lang=`, then `Accept-Language`.
+ * The mobile app sends `lang: ar` or `lang: en`.
+ */
 const i18nMiddleware = (req, res, next) => {
-    const queryLocale = SUPPORTED_LOCALES.includes(req.query?.lang) ? req.query.lang : null;
-    req.locale = queryLocale || detectLocale(req.headers['accept-language']);
+    const headerLocale = normalizeLocale(req.headers.lang || req.headers['x-lang']);
+    const queryLocale = normalizeLocale(req.query?.lang);
+    req.locale = headerLocale || queryLocale || detectLocale(req.headers['accept-language']);
+    req.localeExact = String(req.headers['x-locale-exact'] || '') === '1';
     req.t = (key, vars) => translate(req.locale, key, vars);
 
     res.setHeader('Content-Language', req.locale);
@@ -64,6 +75,7 @@ const i18nMiddleware = (req, res, next) => {
 module.exports = {
     translate,
     detectLocale,
+    normalizeLocale,
     i18nMiddleware,
     SUPPORTED_LOCALES,
     DEFAULT_LOCALE,

@@ -86,7 +86,7 @@ exports.checkBooking = async (req, res) => {
             startDate: start,
             endDate: end,
             ...price,
-            paymentMethods: paymentMethodOptions(),
+            paymentMethods: paymentMethodOptions(req.locale),
         },
     });
 };
@@ -120,7 +120,9 @@ exports.createBooking = async (req, res) => {
         addOns: price.quote.selectedAddOns.map((item) => ({
             addOn: item.id,
             title: item.title,
+            titleAr: item.titleAr || '',
             description: item.description,
+            descriptionAr: item.descriptionAr || '',
             price: item.price,
             category: item.category,
         })),
@@ -134,7 +136,7 @@ exports.createBooking = async (req, res) => {
 
     SuccessResponse.created(res, {
         message: req.t('messages.bookingCreated'),
-        data: { booking: formatBooking(populated) },
+        data: { booking: formatBooking(populated, req.locale, req.localeExact) },
     });
 };
 
@@ -146,13 +148,13 @@ exports.getMyBookings = async (req, res) => {
     if (req.query.status) filter.status = req.query.status;
 
     const bookings = await Booking.find(filter)
-        .populate('advertisement', 'title image location address')
-        .populate('room', 'title roomNumber image')
+        .populate('advertisement', 'title titleAr image location locationAr address addressAr')
+        .populate('room', 'title titleAr roomNumber image')
         .sort({ createdAt: -1 });
 
     SuccessResponse.ok(res, {
         results: bookings.length,
-        data: { bookings: bookings.map(formatBookingReceipt) },
+        data: { bookings: bookings.map((booking) => formatBookingReceipt(booking, req.locale)) },
     });
 };
 
@@ -164,7 +166,7 @@ exports.getMyBooking = async (req, res) => {
     const populated = await populateBooking(Booking.findById(booking._id));
 
     SuccessResponse.ok(res, {
-        data: { booking: formatBooking(populated) },
+        data: { booking: formatBooking(populated, req.locale, req.localeExact) },
     });
 };
 
@@ -186,6 +188,6 @@ exports.cancelMyBooking = async (req, res) => {
 
     SuccessResponse.ok(res, {
         message: req.t('messages.bookingCancelled'),
-        data: { booking: formatBooking(populated) },
+        data: { booking: formatBooking(populated, req.locale, req.localeExact) },
     });
 };

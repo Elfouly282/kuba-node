@@ -125,7 +125,7 @@ const mergeSearchInput = (req) => {
     return { ...req.query, ...body };
 };
 
-const presentAdvertisements = async (advertisements, availability) => {
+const presentAdvertisements = async (advertisements, availability, req) => {
     const list = advertisements.map((ad) => {
         const obj = formatAdvertisement(ad);
         const slot = availability && availability[String(ad._id)];
@@ -133,15 +133,15 @@ const presentAdvertisements = async (advertisements, availability) => {
         return obj;
     });
     await attachHasRooms(list);
-    await attachDetailsHtml(list);
+    await attachDetailsHtml(list, req);
     return list;
 };
 
-const presentOne = async (doc) => {
+const presentOne = async (doc, req) => {
     const obj = formatAdvertisement(doc);
     if (!obj) return null;
     await attachHasRooms([obj]);
-    await attachDetailsHtml([obj]);
+    await attachDetailsHtml([obj], req);
     return obj;
 };
 
@@ -171,7 +171,7 @@ exports.getAll = async (req, res) => {
         page: result.page,
         totalPages: result.totalPages,
         data: {
-            advertisements: await presentAdvertisements(result.advertisements, result.availability),
+            advertisements: await presentAdvertisements(result.advertisements, result.availability, req),
         },
     });
 };
@@ -202,7 +202,7 @@ exports.search = async (req, res) => {
         totalPages: result.totalPages,
         data: {
             filters: result.applied,
-            advertisements: await presentAdvertisements(result.advertisements, result.availability),
+            advertisements: await presentAdvertisements(result.advertisements, result.availability, req),
         },
     });
 };
@@ -213,10 +213,10 @@ exports.getOne = async (req, res, next) => {
     }
 
     const advertisement = await Advertisement.findById(req.params.id)
-        .populate('category', 'name image')
-        .populate('city', 'name image')
-        .populate('region', 'name')
-        .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+        .populate('category', 'name nameAr image')
+        .populate('city', 'name nameAr image')
+        .populate('region', 'name nameAr')
+        .populate('unitType', 'name nameAr description descriptionAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 
     if (!advertisement) {
@@ -231,7 +231,7 @@ exports.getOne = async (req, res, next) => {
     }
 
     SuccessResponse.ok(res, {
-        data: { advertisement: await presentOne(advertisement) },
+        data: { advertisement: await presentOne(advertisement, req) },
     });
 };
 
@@ -355,13 +355,17 @@ exports.create = async (req, res, next) => {
 
     const advertisement = await Advertisement.create({
         title: title.trim(),
+        titleAr: req.body.titleAr ? String(req.body.titleAr).trim() : '',
         description: normalizeDescriptionHtml(description),
+        descriptionAr: normalizeDescriptionHtml(req.body.descriptionAr),
         type: resolvedType,
         unitType: validUnitType,
         price: pricing.finalPrice,
         pricing,
         location: location ? location.trim() : '',
+        locationAr: req.body.locationAr ? String(req.body.locationAr).trim() : '',
         address: address ? address.trim() : '',
+        addressAr: req.body.addressAr ? String(req.body.addressAr).trim() : '',
         latitude: parsedLat,
         longitude: parsedLng,
         category: validCategory,
@@ -378,15 +382,15 @@ exports.create = async (req, res, next) => {
     });
 
     const populated = await Advertisement.findById(advertisement._id)
-        .populate('category', 'name image')
-        .populate('city', 'name image')
-        .populate('region', 'name')
-        .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+        .populate('category', 'name nameAr image')
+        .populate('city', 'name nameAr image')
+        .populate('region', 'name nameAr')
+        .populate('unitType', 'name nameAr description descriptionAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 
     SuccessResponse.created(res, {
         message: req.t ? req.t('messages.advertisementCreated') : 'Listing created successfully.',
-        data: { advertisement: await presentOne(populated) },
+        data: { advertisement: await presentOne(populated, req) },
     });
 };
 
@@ -420,6 +424,12 @@ exports.update = async (req, res, next) => {
     if (req.body.description !== undefined) {
         advertisement.description = normalizeDescriptionHtml(req.body.description);
     }
+    ['title', 'description', 'location', 'address'].forEach((field) => {
+        if (req.body[`${field}Ar`] !== undefined) {
+            const value = String(req.body[`${field}Ar`] || '').trim();
+            advertisement[`${field}Ar`] = field === 'description' ? normalizeDescriptionHtml(value) : value;
+        }
+    });
 
     if (req.body.latitude !== undefined) {
         advertisement.latitude = (req.body.latitude !== '' && req.body.latitude !== null && !isNaN(Number(req.body.latitude))) ? Number(req.body.latitude) : null;
@@ -599,15 +609,15 @@ exports.update = async (req, res, next) => {
     await advertisement.save();
 
     const populated = await Advertisement.findById(advertisement._id)
-        .populate('category', 'name image')
-        .populate('city', 'name image')
-        .populate('region', 'name')
-        .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+        .populate('category', 'name nameAr image')
+        .populate('city', 'name nameAr image')
+        .populate('region', 'name nameAr')
+        .populate('unitType', 'name nameAr description descriptionAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 
     SuccessResponse.ok(res, {
         message: req.t ? req.t('messages.advertisementUpdated') : 'Listing updated successfully.',
-        data: { advertisement: await presentOne(populated) },
+        data: { advertisement: await presentOne(populated, req) },
     });
 };
 
@@ -695,16 +705,16 @@ exports.assignOwner = async (req, res, next) => {
     await advertisement.save();
 
     const populated = await Advertisement.findById(advertisement._id)
-        .populate('category', 'name image')
-        .populate('city', 'name image')
-        .populate('region', 'name')
-        .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+        .populate('category', 'name nameAr image')
+        .populate('city', 'name nameAr image')
+        .populate('region', 'name nameAr')
+        .populate('unitType', 'name nameAr description descriptionAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 
     SuccessResponse.ok(res, {
         message: 'تم تعيين وربط حساب صاحب الإعلان بنجاح.',
         data: {
-            advertisement: await presentOne(populated),
+            advertisement: await presentOne(populated, req),
             owner: {
                 id: ownerUser._id,
                 name: ownerUser.name,
@@ -783,15 +793,15 @@ exports.addImages = async (req, res, next) => {
     await advertisement.save();
 
     const populated = await Advertisement.findById(advertisement._id)
-        .populate('category', 'name image')
-        .populate('city', 'name image')
-        .populate('region', 'name')
-        .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+        .populate('category', 'name nameAr image')
+        .populate('city', 'name nameAr image')
+        .populate('region', 'name nameAr')
+        .populate('unitType', 'name nameAr description descriptionAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 
     SuccessResponse.ok(res, {
         message: 'تم إضافة الصور بنجاح.',
-        data: { advertisement: await presentOne(populated) },
+        data: { advertisement: await presentOne(populated, req) },
     });
 };
 
@@ -832,15 +842,15 @@ exports.deleteImage = async (req, res, next) => {
     await advertisement.save();
 
     const populated = await Advertisement.findById(advertisement._id)
-        .populate('category', 'name image')
-        .populate('city', 'name image')
-        .populate('region', 'name')
-        .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+        .populate('category', 'name nameAr image')
+        .populate('city', 'name nameAr image')
+        .populate('region', 'name nameAr')
+        .populate('unitType', 'name nameAr description descriptionAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 
     SuccessResponse.ok(res, {
         message: 'تم حذف الصورة بنجاح.',
-        data: { advertisement: await presentOne(populated) },
+        data: { advertisement: await presentOne(populated, req) },
     });
 };
 
@@ -882,15 +892,15 @@ exports.setMainImage = async (req, res, next) => {
     await advertisement.save();
 
     const populated = await Advertisement.findById(advertisement._id)
-        .populate('category', 'name image')
-        .populate('city', 'name image')
-        .populate('region', 'name')
-        .populate('unitType', 'name nameAr slug icon pricingUnits defaultPricingUnit')
+        .populate('category', 'name nameAr image')
+        .populate('city', 'name nameAr image')
+        .populate('region', 'name nameAr')
+        .populate('unitType', 'name nameAr description descriptionAr slug icon pricingUnits defaultPricingUnit')
         .populate('owner', 'name email phone avatar');
 
     SuccessResponse.ok(res, {
         message: 'تم تعيين الصورة الرئيسية بنجاح.',
-        data: { advertisement: await presentOne(populated) },
+        data: { advertisement: await presentOne(populated, req) },
     });
 };
 
