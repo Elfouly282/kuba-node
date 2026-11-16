@@ -43,7 +43,8 @@
         "bookingCancelled": "Booking cancelled successfully.",
         "bookingConfirmed": "Booking confirmed successfully.",
         "bookingCompleted": "Booking completed successfully.",
-        "bookingDeleted": "Booking deleted successfully."
+        "bookingDeleted": "Booking deleted successfully.",
+        "privacyPolicyUpdated": "Privacy policy updated successfully."
     },
     "errors": {
         "somethingWentWrong": "Something went wrong. Please try again later.",

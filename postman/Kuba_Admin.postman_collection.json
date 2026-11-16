@@ -2759,6 +2759,47 @@
           }
         }
       ]
+    },
+    {
+      "name": "Privacy Policy",
+      "description": "Public store URL: https://kuba-app.com/privacy-policy (also /privacy and /policy). English: ?lang=en. Arabic: ?lang=ar. JSON: GET {{baseUrl}}/privacy-policy. Dashboard edits use the admin routes below and require an admin token.",
+      "item": [
+        {
+          "name": "Get Privacy Policy",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/privacy-policy",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "privacy-policy"]
+            },
+            "description": "Returns the saved policy plus url, urlEn, and urlAr for Google Play and the App Store."
+          }
+        },
+        {
+          "name": "Update Privacy Policy",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titleEn\": \"Privacy Policy\",\n  \"titleAr\": \"سياسة الخصوصية\",\n  \"contentEn\": \"Kuba Tours privacy policy text.\",\n  \"contentAr\": \"نص سياسة خصوصية كوبا.\",\n  \"contactEmail\": \"KUBA.tours@gmail.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/privacy-policy",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "privacy-policy"]
+            },
+            "description": "Admin only. Updates the public page at /privacy-policy."
+          }
+        }
+      ]
     }
   ]
 }

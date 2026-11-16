@@ -34,7 +34,8 @@ const content = {
     contactBtn: "محادثة واتساب مباشرة",
 
     // Footer
-    copyright: "جميع الحقوق محفوظة © كوبا تورز (Kuba Tours) 2026"
+    copyright: "جميع الحقوق محفوظة © كوبا تورز (Kuba Tours) 2026",
+    privacyPolicy: "سياسة الخصوصية"
   },
 
   en: {
@@ -67,7 +68,8 @@ const content = {
     contactBtn: "Direct WhatsApp Chat",
 
     // Footer
-    copyright: "All Rights Reserved © Kuba Tours 2026"
+    copyright: "All Rights Reserved © Kuba Tours 2026",
+    privacyPolicy: "Privacy Policy"
   }
 };
 

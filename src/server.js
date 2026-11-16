@@ -44,6 +44,9 @@ const unitTypeRoutes = require('./features/unit-types/routes/unitTypeRoutes');
 const bookingRoutes = require('./features/bookings/routes/bookingRoutes');
 const wishlistRoutes = require('./features/wishlist/routes/wishlistRoutes');
 const roomRoutes = require('./features/rooms/routes/roomRoutes');
+const policyRoutes = require('./features/policies/routes/policyRoutes');
+const adminPolicyRoutes = require('../admin/features/policies/routes/policyRoutes');
+const { renderPrivacyPage } = require('./features/policies/controllers/policyController');
 
 const adminAuthRoutes = require('../admin/features/auth/routes/authRoutes');
 const adminOnboardingRoutes = require('../admin/features/onboarding/routes/onboardingRoutes');
@@ -106,6 +109,7 @@ app.use('/api/v1/unit-types', unitTypeRoutes);
 app.use('/api/v1/bookings', bookingRoutes);
 app.use('/api/v1/wishlist', wishlistRoutes);
 app.use('/api/v1/rooms', roomRoutes);
+app.use('/api/v1/privacy-policy', policyRoutes);
 
 // Admin APIs
 app.use('/api/v1/admin/auth', adminAuthRoutes);
@@ -119,6 +123,9 @@ app.use('/api/v1/admin/cities', adminCityRoutes);
 app.use('/api/v1/admin/regions', adminRegionRoutes);
 app.use('/api/v1/admin/unit-types', adminUnitTypeRoutes);
 app.use('/api/v1/admin/bookings', adminBookingRoutes);
+app.use('/api/v1/admin/privacy-policy', adminPolicyRoutes);
+
+app.get(['/privacy-policy', '/privacy', '/policy'], renderPrivacyPage);
 
 // Root Route - Serves Luxury Landing Page or JSON Healthcheck
 app.get(['/', '/index.html'], (req, res) => {

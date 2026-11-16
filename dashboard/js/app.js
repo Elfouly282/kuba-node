@@ -26,6 +26,15 @@ const I18N = {
         kpiOnboardingHint: 'شاشات البداية',
         users: 'إدارة المستخدمين',
         onboarding: 'شاشات الترحيب',
+        privacyPolicy: 'سياسة الخصوصية',
+        privacyPolicySubtitle: 'الرابط العام المطلوب في Google Play و App Store. الصفحة مفتوحة بدون تسجيل دخول.',
+        privacyStoreLink: 'رابط المتاجر',
+        privacyStoreHint: 'الصق هذا الرابط في Google Play Console و App Store Connect.',
+        privacyContentAr: 'النص (باللغة العربية)',
+        privacyContentEn: 'النص (باللغة الإنجليزية)',
+        copy: 'نسخ',
+        open: 'فتح',
+        privacyUpdatedAt: 'آخر تحديث',
         categoriesBanners: 'الفئات والبانرات',
         systemStatus: 'فحص النظام والـ APIs',
         logout: 'تسجيل الخروج',
@@ -172,6 +181,15 @@ const I18N = {
         kpiOnboardingHint: 'Welcome screens',
         users: 'Users Management',
         onboarding: 'Onboarding Screens',
+        privacyPolicy: 'Privacy Policy',
+        privacyPolicySubtitle: 'Public URL required by Google Play and the App Store. The page is open without login.',
+        privacyStoreLink: 'Store URL',
+        privacyStoreHint: 'Paste this URL in Google Play Console and App Store Connect.',
+        privacyContentAr: 'Content (Arabic)',
+        privacyContentEn: 'Content (English)',
+        copy: 'Copy',
+        open: 'Open',
+        privacyUpdatedAt: 'Last updated',
         categoriesBanners: 'Categories & Banners',
         systemStatus: 'System & API Console',
         logout: 'Logout',
@@ -574,6 +592,7 @@ const PAGE_TITLES = {
     advertisements: 'advertisements',
     'unit-types': 'unitTypes',
     onboarding: 'onboarding',
+    privacy: 'privacyPolicy',
     categories: 'categoriesTitle',
     banners: 'bannersTitle',
     flashsale: 'flashsaleTitle',
@@ -623,6 +642,8 @@ function loadCurrentTab() {
         loadAdvertisementsTab();
     } else if (state.currentTab === 'onboarding') {
         loadOnboarding();
+    } else if (state.currentTab === 'privacy') {
+        loadPrivacyPolicy();
     } else if (state.currentTab === 'categories') {
         loadCategories();
     } else if (state.currentTab === 'banners') {
@@ -639,6 +660,62 @@ function loadCurrentTab() {
         loadOwnerBookingsTab();
     } else if (state.currentTab === 'owner-profile') {
         loadOwnerProfileTab();
+    }
+}
+
+async function loadPrivacyPolicy() {
+    const data = await apiFetch('/api/v1/admin/privacy-policy');
+    const policy = data.data?.policy || {};
+    const url = policy.url || 'https://kuba-app.com/privacy-policy';
+    const urlInput = document.getElementById('privacy-url');
+    const openLink = document.getElementById('privacy-open');
+    if (urlInput) urlInput.value = url;
+    if (openLink) openLink.href = url;
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value || '';
+    };
+    setValue('privacy-email', policy.contactEmail);
+    setValue('privacy-title-ar', policy.titleAr);
+    setValue('privacy-title-en', policy.titleEn);
+    setValue('privacy-content-ar', policy.contentAr);
+    setValue('privacy-content-en', policy.contentEn);
+    const updatedEl = document.getElementById('privacy-updated');
+    if (updatedEl) {
+        updatedEl.textContent = policy.updatedAt
+            ? `${t('privacyUpdatedAt')}: ${new Date(policy.updatedAt).toLocaleString(state.lang === 'ar' ? 'ar-EG' : 'en-GB')}`
+            : '';
+    }
+}
+
+async function savePrivacyPolicy(e) {
+    e.preventDefault();
+    const data = await apiFetch('/api/v1/admin/privacy-policy', {
+        method: 'PUT',
+        body: JSON.stringify({
+            titleAr: document.getElementById('privacy-title-ar').value,
+            titleEn: document.getElementById('privacy-title-en').value,
+            contentAr: document.getElementById('privacy-content-ar').value,
+            contentEn: document.getElementById('privacy-content-en').value,
+            contactEmail: document.getElementById('privacy-email').value,
+        }),
+    });
+    const policy = data.data?.policy;
+    if (policy?.url) {
+        document.getElementById('privacy-url').value = policy.url;
+        document.getElementById('privacy-open').href = policy.url;
+    }
+    showToast(data.message || (state.lang === 'ar' ? 'تم حفظ سياسة الخصوصية' : 'Privacy policy saved'), 'success');
+    loadPrivacyPolicy();
+}
+
+async function copyPrivacyLink() {
+    const url = document.getElementById('privacy-url')?.value || 'https://kuba-app.com/privacy-policy';
+    try {
+        await navigator.clipboard.writeText(url);
+        showToast(state.lang === 'ar' ? 'تم نسخ رابط السياسة' : 'Policy link copied', 'success');
+    } catch (_) {
+        showToast(url, 'warning');
     }
 }
 

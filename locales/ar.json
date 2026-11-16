@@ -43,7 +43,8 @@
         "bookingCancelled": "تم إلغاء الحجز بنجاح.",
         "bookingConfirmed": "تم تأكيد الحجز بنجاح.",
         "bookingCompleted": "تم إكمال الحجز بنجاح.",
-        "bookingDeleted": "تم حذف الحجز بنجاح."
+        "bookingDeleted": "تم حذف الحجز بنجاح.",
+        "privacyPolicyUpdated": "تم تحديث سياسة الخصوصية بنجاح."
     },
     "errors": {
         "somethingWentWrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.",
