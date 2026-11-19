@@ -54,6 +54,12 @@
       "type": "string"
     },
     {
+      "key": "blockedPeriodId",
+      "value": "",
+      "type": "string",
+      "description": "يتحفظ بعد Close Days."
+    },
+    {
       "key": "cityId",
       "value": "",
       "type": "string"
@@ -661,6 +667,104 @@
                 }
               }
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Closed Times",
+      "description": "مقدم الخدمة يقفل أيام أو شهر أو ساعات. العميل يشوفها في Booked Dates داخل calendar و closedPeriods، والحجز على الموعد المقفول يترفض.\nنفس المسارات موجودة على API العميل: /advertisements/:id/blocked-periods.\nمن غير room الإغلاق على الإعلان كله. مع room الإغلاق على الغرفة دي بس، وإغلاق الإعلان كله يفضل ساري عليها.",
+      "item": [
+        {
+          "name": "List Closed Times",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/{{advertisementId}}/blocked-periods",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "advertisements", "{{advertisementId}}", "blocked-periods"]
+            },
+            "description": "صاحب الإعلان أو الأدمن. بيرجع الفترات اللي لسه سارية."
+          }
+        },
+        {
+          "name": "Close Days",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/{{advertisementId}}/blocked-periods",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "advertisements", "{{advertisementId}}", "blocked-periods"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kind\": \"days\",\n  \"startDay\": \"2026-12-24\",\n  \"endDay\": \"2026-12-26\",\n  \"note\": \"ضغط حجوزات\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "kind: days. startDay و endDay بصيغة YYYY-MM-DD وشاملين. يوم واحد: نفس التاريخ في الاتنين. room اختياري لغرفة فندق."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const block = pm.response.json()?.data?.blockedPeriod;",
+                  "if (block?.id) pm.collectionVariables.set('blockedPeriodId', block.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Close a Month",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/{{advertisementId}}/blocked-periods",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "advertisements", "{{advertisementId}}", "blocked-periods"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kind\": \"month\",\n  \"month\": \"2026-12\",\n  \"note\": \"الشهر مقفول\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "kind: month. month بصيغة YYYY-MM. يقفل الشهر كله بتوقيت القاهرة."
+          }
+        },
+        {
+          "name": "Close Hours",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/{{advertisementId}}/blocked-periods",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "advertisements", "{{advertisementId}}", "blocked-periods"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kind\": \"hours\",\n  \"date\": \"2026-12-20\",\n  \"startTime\": \"14:00\",\n  \"endTime\": \"18:00\",\n  \"note\": \"الساعات دي مش متاحة\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "kind: hours. date و startTime و endTime في نفس اليوم بتوقيت القاهرة. في تقويم الحجز بالساعة اليوم يفضل متاح وclosedHours تتقفل."
+          }
+        },
+        {
+          "name": "Reopen a Closed Time",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/advertisements/{{advertisementId}}/blocked-periods/{{blockedPeriodId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "advertisements", "{{advertisementId}}", "blocked-periods", "{{blockedPeriodId}}"]
+            },
+            "description": "يمسح فترة إغلاق واحدة. الموعد يرجع يظهر متاح لو مفيش حجز عليه."
           }
         }
       ]

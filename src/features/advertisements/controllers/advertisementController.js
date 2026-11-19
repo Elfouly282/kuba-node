@@ -111,6 +111,10 @@ const formatAdvertisement = (doc) => {
         };
     }
 
+    const policies = publicPolicies(obj.policies);
+    if (policies) obj.policies = policies;
+    else delete obj.policies;
+
     obj.hasRooms = false;
     obj.booking = resolveBooking(obj, { requiresRoom: false });
 
@@ -119,6 +123,7 @@ const formatAdvertisement = (doc) => {
 
 const { validateAttributes, buildPricingData } = require('../middleware/advertisementMiddleware');
 const { normalizeStay } = require('../stayOptions');
+const { publicPolicies, normalizeListingPolicies, mergeListingPolicies } = require('../listingPolicies');
 
 const mergeSearchInput = (req) => {
     const body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};
@@ -379,6 +384,7 @@ exports.create = async (req, res, next) => {
         active: active !== undefined ? (String(active) === 'true' || active === true) : true,
         isFlashSale: req.body.isFlashSale === true || req.body.isFlashSale === 'true',
         stay: normalizeStay(req.body.stay),
+        policies: mergeListingPolicies(undefined, normalizeListingPolicies(req.body.policies)),
     });
 
     const populated = await Advertisement.findById(advertisement._id)
@@ -450,6 +456,14 @@ exports.update = async (req, res, next) => {
                 : (advertisement.stay || {});
             advertisement.stay = { ...current, ...nextStay };
             advertisement.markModified('stay');
+        }
+    }
+
+    if (req.body.policies !== undefined) {
+        const nextPolicies = normalizeListingPolicies(req.body.policies);
+        if (nextPolicies !== undefined) {
+            advertisement.policies = mergeListingPolicies(advertisement.policies, nextPolicies);
+            advertisement.markModified('policies');
         }
     }
 

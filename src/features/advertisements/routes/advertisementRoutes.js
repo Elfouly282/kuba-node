@@ -12,6 +12,7 @@ const {
 
 const { uploadFields } = require('../../../middleware/uploadMiddleware');
 const { protect, restrictTo } = require('../../auth/middleware/authMiddleware');
+const buildBlockedPeriodRoutes = require('../../bookings/routes/blockedPeriodRoutes');
 const {
     validateAdvertisementId,
     validateCreateAdvertisement,
@@ -30,6 +31,7 @@ router.get('/', getAll);
 router.get('/search', search);
 router.post('/search', search);
 router.get('/:id', validateAdvertisementId, getOne);
+router.use(buildBlockedPeriodRoutes(protect));
 
 router.post('/:id/wishlist', protect, validateAdvertisementId, toggleWishlist);
 router.post('/:id/wishlist/toggle', protect, validateAdvertisementId, toggleWishlist);

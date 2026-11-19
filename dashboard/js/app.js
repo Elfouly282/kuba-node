@@ -102,6 +102,8 @@ const I18N = {
         bannersTitle: 'البانرات الإعلانية',
         flashsaleTitle: 'عروض الفلاش',
         flashsaleSubtitle: 'اختر من الإعلانات الموجودة ما يظهر في عروض الفلاش',
+        paymentMethodsTitle: 'طرق الدفع',
+        paymentMethodsSubtitle: 'التطبيق يعرض «عند الوصول» دائمًا. أضف منصة دفع هنا لما تجهز، وهتظهر في خطوة الدفع.',
         kpiFlashSaleHint: 'إعلانات اخترتها لعروض الفلاش',
         categoryName: 'اسم التصنيف',
         categoryImage: 'صورة التصنيف',
@@ -151,6 +153,7 @@ const I18N = {
         ownerListing: 'بيانات وتفاصيل الإعلان',
         ownerGallery: 'معرض صور الإعلان',
         ownerBookings: 'الحجوزات والطلبات',
+        ownerClosures: 'إغلاق المواعيد',
         ownerProfile: 'بيانات حسابي والأمان',
         manageOwner: 'إدارة حساب المالك',
         createOwner: 'تعيين مالك للإعلان',
@@ -257,6 +260,8 @@ const I18N = {
         bannersTitle: 'Promotional Banners',
         flashsaleTitle: 'Flash Sale',
         flashsaleSubtitle: 'Pick existing listings to show in the home flash sale',
+        paymentMethodsTitle: 'Payment methods',
+        paymentMethodsSubtitle: 'The app always offers pay on arrival. Add a payment platform here when you are ready and it will show up at checkout.',
         kpiFlashSaleHint: 'Listings you marked as flash sale',
         categoryName: 'Category Name',
         categoryImage: 'Category Image',
@@ -306,6 +311,7 @@ const I18N = {
         ownerListing: 'Listing Details',
         ownerGallery: 'Photo Gallery',
         ownerBookings: 'Bookings & Orders',
+        ownerClosures: 'Close Availability',
         ownerProfile: 'My Profile & Security',
         manageOwner: 'Manage Owner',
         createOwner: 'Assign Owner',
@@ -351,6 +357,7 @@ const state = {
     ownerAds: [],
     activeOwnerAdId: null,
     ownerBookings: [],
+    ownerClosureMonth: '',
     ownerCurrentBookingFilter: 'all',
     selectedAdForOwnerModal: null,
     ownerMapInstance: null,
@@ -419,6 +426,38 @@ async function fetchLangPair(endpoint, pick) {
         en: (pick ? pick(enRes) : enRes) || {},
         ar: (pick ? pick(arRes) : arRes) || {},
     };
+}
+
+const POLICY_FIELDS = [
+    { key: 'booking', id: 'booking' },
+    { key: 'cancellation', id: 'cancellation' },
+    { key: 'houseRules', id: 'house-rules' },
+    { key: 'checkIn', id: 'check-in' },
+    { key: 'payment', id: 'payment' },
+];
+
+function mergePoliciesForForm(enPolicies = {}, arPolicies = {}) {
+    const merged = {};
+    POLICY_FIELDS.forEach((field) => {
+        merged[field.key] = {
+            content: enPolicies[field.key]?.content || '',
+            contentAr: arPolicies[field.key]?.content || '',
+        };
+    });
+    const english = Array.isArray(enPolicies.extras) ? enPolicies.extras : [];
+    const arabic = Array.isArray(arPolicies.extras) ? arPolicies.extras : [];
+    const arabicById = new Map(arabic.map((item) => [String(item.id || item._id || ''), item]));
+    merged.extras = english.map((item, index) => {
+        const match = arabicById.get(String(item.id || item._id || '')) || arabic[index] || {};
+        return {
+            ...item,
+            title: item.title || '',
+            titleAr: match.title || '',
+            content: item.content || '',
+            contentAr: match.content || '',
+        };
+    });
+    return merged;
 }
 
 function mergeStayForForm(enStay = {}, arStay = {}) {
@@ -641,6 +680,7 @@ const PAGE_TITLES = {
     'unit-types': 'unitTypes',
     onboarding: 'onboarding',
     privacy: 'privacyPolicy',
+    'payment-methods': 'paymentMethodsTitle',
     categories: 'categoriesTitle',
     banners: 'bannersTitle',
     flashsale: 'flashsaleTitle',
@@ -649,6 +689,7 @@ const PAGE_TITLES = {
     'owner-listing': 'ownerListing',
     'owner-gallery': 'ownerGallery',
     'owner-bookings': 'ownerBookings',
+    'owner-closures': 'ownerClosures',
     'owner-profile': 'ownerProfile',
 };
 
@@ -692,6 +733,8 @@ function loadCurrentTab() {
         loadOnboarding();
     } else if (state.currentTab === 'privacy') {
         loadPrivacyPolicy();
+    } else if (state.currentTab === 'payment-methods') {
+        loadPaymentMethods();
     } else if (state.currentTab === 'categories') {
         loadCategories();
     } else if (state.currentTab === 'banners') {
@@ -706,6 +749,8 @@ function loadCurrentTab() {
         loadOwnerGalleryTab();
     } else if (state.currentTab === 'owner-bookings') {
         loadOwnerBookingsTab();
+    } else if (state.currentTab === 'owner-closures') {
+        loadOwnerClosuresTab();
     } else if (state.currentTab === 'owner-profile') {
         loadOwnerProfileTab();
     }
@@ -5044,7 +5089,8 @@ function escapeHtmlText(value) {
 }
 
 const PAYMENT_METHOD_LABELS = {
-    cash: 'كاش عند الوصول',
+    cash: 'عند الوصول',
+    on_arrival: 'عند الوصول',
     card: 'بطاقة',
     wallet: 'محفظة',
     online: 'دفع أونلاين',
@@ -5053,8 +5099,128 @@ const PAYMENT_METHOD_LABELS = {
     meeza: 'Meeza',
 };
 
-function paymentMethodLabel(method) {
-    return PAYMENT_METHOD_LABELS[method] || method || 'كاش عند الوصول';
+function paymentMethodLabel(bookingOrMethod) {
+    const booking = bookingOrMethod && typeof bookingOrMethod === 'object' ? bookingOrMethod : null;
+    const method = booking ? booking.paymentMethod : bookingOrMethod;
+    const stored = booking?.confirmation?.payment?.methodLabel || booking?.paymentMethodLabel;
+    if (stored) return stored;
+    return PAYMENT_METHOD_LABELS[method] || method || 'عند الوصول';
+}
+
+async function loadPaymentMethods() {
+    const list = document.getElementById('payment-methods-list');
+    try {
+        const res = await apiFetch('/api/v1/admin/payment-methods');
+        state.paymentMethods = res.data?.paymentMethods || [];
+        renderPaymentMethods();
+    } catch (err) {
+        if (list) list.innerHTML = `<div class="card p-6 text-center text-xs text-rose-500">${escapeHtmlText(err.message)}</div>`;
+    }
+}
+
+function renderPaymentMethods() {
+    const list = document.getElementById('payment-methods-list');
+    if (!list) return;
+    const methods = state.paymentMethods || [];
+    if (!methods.length) {
+        list.innerHTML = '<div class="card p-6 text-center text-xs text-slate-400">لسه مفيش طرق دفع.</div>';
+        return;
+    }
+
+    list.innerHTML = methods.map((method) => {
+        const id = method.id || method._id;
+        const builtin = method.builtin || method.kind === 'on_arrival';
+        const name = method.name || method.key;
+        const note = method.subtitle ? `<div class="text-[11px] text-slate-500 mt-0.5">${escapeHtmlText(method.subtitle)}</div>` : '';
+        const status = method.active
+            ? '<span class="badge badge-brand text-[10px]">ظاهرة في التطبيق</span>'
+            : '<span class="badge text-[10px] bg-slate-100 text-slate-500">مخفية</span>';
+        const actions = builtin
+            ? `<button type="button" onclick="editPaymentMethod('${id}')" class="btn-secondary text-xs">تعديل الاسم</button>`
+            : `<button type="button" onclick="editPaymentMethod('${id}')" class="btn-secondary text-xs">تعديل</button>
+               <button type="button" onclick="togglePaymentMethod('${id}', ${method.active ? 'false' : 'true'})" class="btn-secondary text-xs">${method.active ? 'إخفاء' : 'إظهار'}</button>
+               <button type="button" onclick="deletePaymentMethod('${id}')" class="btn-secondary text-xs text-rose-600">حذف</button>`;
+        return `
+            <div class="card p-4 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-bold text-slate-900 text-sm">${escapeHtmlText(name)}</h3>
+                        ${builtin ? '<span class="badge text-[10px] bg-amber-50 text-amber-700">أساسية</span>' : status}
+                    </div>
+                    ${note}
+                    <div class="text-[10px] text-slate-400 mt-1">${builtin ? 'بتظهر دايمًا في التطبيق' : escapeHtmlText(method.key || '')}${method.requiresTerms ? ' · تتطلب موافقة على الشروط' : ''}</div>
+                </div>
+                <div class="flex items-center gap-2">${actions}</div>
+            </div>`;
+    }).join('');
+}
+
+function resetPaymentMethodForm() {
+    document.getElementById('payment-method-form')?.reset();
+    const idInput = document.getElementById('payment-method-id');
+    const title = document.getElementById('payment-method-form-title');
+    const terms = document.getElementById('payment-method-terms');
+    if (idInput) idInput.value = '';
+    if (title) title.textContent = 'إضافة منصة دفع';
+    if (terms) terms.disabled = false;
+}
+
+async function editPaymentMethod(id) {
+    const pair = await fetchLangPair('/api/v1/admin/payment-methods', (res) => findRecord(res.data?.paymentMethods, id));
+    const method = pair.en?.id ? pair.en : (state.paymentMethods || []).find((item) => String(item.id || item._id) === String(id));
+    if (!method) return;
+    const builtin = method.builtin || method.kind === 'on_arrival';
+    document.getElementById('payment-method-id').value = id;
+    document.getElementById('payment-method-name').value = pair.en?.name || method.name || '';
+    document.getElementById('payment-method-name-ar').value = pair.ar?.name || '';
+    document.getElementById('payment-method-subtitle').value = pair.en?.subtitle || '';
+    document.getElementById('payment-method-subtitle-ar').value = pair.ar?.subtitle || '';
+    const terms = document.getElementById('payment-method-terms');
+    terms.checked = Boolean(method.requiresTerms);
+    terms.disabled = builtin;
+    document.getElementById('payment-method-form-title').textContent = builtin ? 'تعديل الدفع عند الوصول' : 'تعديل منصة الدفع';
+    document.getElementById('payment-method-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function savePaymentMethod(event) {
+    event.preventDefault();
+    const id = document.getElementById('payment-method-id').value;
+    const body = {
+        name: document.getElementById('payment-method-name').value.trim(),
+        nameAr: document.getElementById('payment-method-name-ar').value.trim(),
+        subtitle: document.getElementById('payment-method-subtitle').value.trim(),
+        subtitleAr: document.getElementById('payment-method-subtitle-ar').value.trim(),
+        requiresTerms: document.getElementById('payment-method-terms').checked,
+    };
+    if (!body.name && !body.nameAr) {
+        showToast('اكتب اسم طريقة الدفع', 'warning');
+        return;
+    }
+    if (id) {
+        await apiFetch(`/api/v1/admin/payment-methods/${id}`, { method: 'PATCH', body: JSON.stringify(body) });
+    } else {
+        await apiFetch('/api/v1/admin/payment-methods', { method: 'POST', body: JSON.stringify(body) });
+    }
+    showToast('تم حفظ طريقة الدفع', 'success');
+    resetPaymentMethodForm();
+    loadPaymentMethods();
+}
+
+async function togglePaymentMethod(id, active) {
+    await apiFetch(`/api/v1/admin/payment-methods/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ active }),
+    });
+    showToast(active ? 'المنصة ظهرت في التطبيق' : 'المنصة اتأخفت من التطبيق', 'success');
+    loadPaymentMethods();
+}
+
+async function deletePaymentMethod(id) {
+    if (!confirm('حذف منصة الدفع دي؟ مش هتظهر في التطبيق بعد كده.')) return;
+    await apiFetch(`/api/v1/admin/payment-methods/${id}`, { method: 'DELETE' });
+    showToast('تم حذف منصة الدفع', 'success');
+    if (document.getElementById('payment-method-id')?.value === id) resetPaymentMethodForm();
+    loadPaymentMethods();
 }
 
 function bookingMoney(amount) {
@@ -5178,6 +5344,90 @@ function readStayFields(prefix) {
     });
 
     return stay;
+}
+
+function addPolicyExtraRow(prefix, extra = {}) {
+    const box = document.getElementById(`${prefix}-policy-extras`);
+    if (!box) return;
+    const row = document.createElement('div');
+    row.className = 'policy-extra-row grid grid-cols-1 sm:grid-cols-12 gap-2';
+    row.innerHTML = `
+        <input data-policy="title" class="form-input text-xs sm:col-span-3" dir="ltr" placeholder="Title (English)" value="${escapeHtmlText(extra.title || '')}">
+        <input data-policy="titleAr" class="form-input text-xs sm:col-span-3" placeholder="العنوان (عربي)" value="${escapeHtmlText(extra.titleAr || '')}">
+        <input data-policy="content" class="form-input text-xs sm:col-span-3" dir="ltr" placeholder="Policy (English)" value="${escapeHtmlText(extra.content || '')}">
+        <input data-policy="contentAr" class="form-input text-xs sm:col-span-3" placeholder="السياسة (عربي)" value="${escapeHtmlText(extra.contentAr || '')}">
+        <input type="hidden" data-policy="id" value="${escapeHtmlText(extra.id || extra._id || '')}">
+        <button type="button" class="btn-secondary text-[11px] sm:col-span-12" onclick="this.closest('.policy-extra-row').remove()">حذف</button>
+    `;
+    box.appendChild(row);
+}
+
+function fillPolicyFields(prefix, policies = {}) {
+    POLICY_FIELDS.forEach((field) => {
+        const text = policies[field.key] || {};
+        const en = document.getElementById(`${prefix}-policy-${field.id}`);
+        const ar = document.getElementById(`${prefix}-policy-${field.id}-ar`);
+        if (en) en.value = text.content || '';
+        if (ar) ar.value = text.contentAr || '';
+    });
+    const box = document.getElementById(`${prefix}-policy-extras`);
+    if (box) box.innerHTML = '';
+    (policies.extras || []).forEach((extra) => addPolicyExtraRow(prefix, extra));
+}
+
+function readPolicyFields(prefix) {
+    const policies = { extras: [] };
+    POLICY_FIELDS.forEach((field) => {
+        policies[field.key] = {
+            content: document.getElementById(`${prefix}-policy-${field.id}`)?.value.trim() || '',
+            contentAr: document.getElementById(`${prefix}-policy-${field.id}-ar`)?.value.trim() || '',
+        };
+    });
+    document.querySelectorAll(`#${prefix}-policy-extras .policy-extra-row`).forEach((row) => {
+        const extra = {
+            title: row.querySelector('[data-policy="title"]')?.value.trim() || '',
+            titleAr: row.querySelector('[data-policy="titleAr"]')?.value.trim() || '',
+            content: row.querySelector('[data-policy="content"]')?.value.trim() || '',
+            contentAr: row.querySelector('[data-policy="contentAr"]')?.value.trim() || '',
+        };
+        if (!extra.title && !extra.titleAr && !extra.content && !extra.contentAr) return;
+        const id = row.querySelector('[data-policy="id"]')?.value;
+        if (id) extra.id = id;
+        policies.extras.push(extra);
+    });
+    return policies;
+}
+
+function bookingPoliciesHtml(policies) {
+    if (!policies || typeof policies !== 'object') return '';
+    const named = [
+        ['booking', 'سياسة الحجز'],
+        ['cancellation', 'سياسة الإلغاء'],
+        ['houseRules', 'قواعد الإقامة'],
+        ['checkIn', 'تعليمات الوصول'],
+        ['payment', 'سياسة الدفع'],
+    ];
+    const blocks = [];
+    named.forEach(([key, label]) => {
+        const text = policies[key]?.content;
+        if (!text) return;
+        blocks.push(`<div><div class="font-bold text-slate-800">${label}</div><div class="text-slate-600 whitespace-pre-line">${escapeHtmlText(text)}</div></div>`);
+    });
+    (policies.extras || []).forEach((item) => {
+        const title = item.title || 'سياسة إضافية';
+        const text = item.content || '';
+        if (!text && !item.title) return;
+        blocks.push(`<div><div class="font-bold text-slate-800">${escapeHtmlText(title)}</div>${text ? `<div class="text-slate-600 whitespace-pre-line">${escapeHtmlText(text)}</div>` : ''}</div>`);
+    });
+    if (!blocks.length) return '';
+    return `
+        <div class="p-4 bg-white border border-slate-200 rounded-xl space-y-2">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fas fa-file-contract text-[#2D4F2E]"></i>
+                <span>سياسات صاحب الإعلان</span>
+            </div>
+            <div class="space-y-2 text-xs">${blocks.join('')}</div>
+        </div>`;
 }
 
 function htmlEditorIsEmpty(area) {
@@ -5349,6 +5599,7 @@ function openAddAdvertisementModal() {
     document.getElementById('ad-attributes-wrapper')?.classList.add('hidden');
     document.getElementById('ad-dynamic-attributes-container').innerHTML = '';
     fillStayFields('ad-modal', {});
+    fillPolicyFields('ad-modal', {});
     calculateAdFinalPrice();
 
     // Reset coordinates and map picker
@@ -5447,6 +5698,7 @@ async function openEditAdvertisementModal(adId) {
     document.getElementById('ad-modal-pricing-unit').value = p.pricingUnit || 'per_night';
     document.getElementById('ad-modal-min-duration').value = p.minDuration || 1;
     fillStayFields('ad-modal', mergeStayForForm(ad.stay || {}, ar.stay || {}));
+    fillPolicyFields('ad-modal', mergePoliciesForForm(ad.policies || {}, ar.policies || {}));
     calculateAdFinalPrice();
 
     // Trigger dynamic attributes with existing values
@@ -5618,6 +5870,7 @@ async function handleAdvertisementFormSubmit(e) {
         minDuration: Number(minDuration),
     };
     const stay = readStayFields('ad-modal');
+    const policies = readPolicyFields('ad-modal');
 
     let payload;
     const galleryPayload = JSON.stringify(galleryKeep);
@@ -5636,6 +5889,7 @@ async function handleAdvertisementFormSubmit(e) {
         payload.append('pricing[pricingUnit]', pricingUnit);
         payload.append('pricing[minDuration]', minDuration);
         payload.append('stay', JSON.stringify(stay));
+        payload.append('policies', JSON.stringify(policies));
         payload.append('location', location);
         payload.append('locationAr', locationAr);
         payload.append('address', address);
@@ -5664,6 +5918,7 @@ async function handleAdvertisementFormSubmit(e) {
             region: region || null,
             pricing,
             stay,
+            policies,
             location,
             locationAr,
             address,
@@ -6429,7 +6684,7 @@ async function openBookingDetailsModal(bookingId) {
                     <div class="font-bold ${booking.paymentStatus === 'paid' ? 'text-emerald-700' : 'text-amber-700'}">
                         ${booking.paymentStatus === 'paid' ? 'مدفوع بالكامل' : (booking.paymentStatus === 'refunded' ? 'مسترجع' : 'غير مدفوع (عند الوصول)')}
                     </div>
-                    <div class="text-[10px] text-slate-400 mt-0.5">طريقة الدفع: ${escapeHtmlText(paymentMethodLabel(booking.paymentMethod))}</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">طريقة الدفع: ${escapeHtmlText(paymentMethodLabel(booking))}</div>
                     <div class="mt-2">
                         ${booking.paymentStatus === 'paid'
                             ? `<button type="button" onclick="changeBookingPayment('${bId}', 'refunded')" class="btn-secondary text-[11px] py-1 px-2">تسجيل استرجاع</button>`
@@ -6440,6 +6695,8 @@ async function openBookingDetailsModal(bookingId) {
             ${linesHtml ? `<div class="mt-3 p-3 rounded-lg bg-white border border-slate-200 space-y-1.5">${linesHtml}</div>` : ''}
             ${cancelText ? `<div class="text-[11px] text-slate-500 mt-2">إلغاء مجاني حتى ${escapeHtmlText(cancelText)}</div>` : ''}
         </div>
+
+        ${bookingPoliciesHtml(confirmation.policies || booking.staySnapshot?.policies)}
 
         ${booking.notes || booking.cancellationReason ? `
             <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs space-y-1">
@@ -7080,6 +7337,7 @@ async function loadOwnerListingTab() {
     if (discountType) discountType.value = p.discountType || 'none';
     if (discountValue) discountValue.value = p.discountValue || 0;
     fillStayFields('owner-form', mergeStayForForm(ad.stay || {}, ar.stay || {}));
+    fillPolicyFields('owner-form', mergePoliciesForForm(ad.policies || {}, ar.policies || {}));
 
     calcOwnerFinalPrice();
 
@@ -7475,6 +7733,7 @@ async function handleOwnerListingSubmit(e) {
         discountValue,
         attributes,
         stay: readStayFields('owner-form'),
+        policies: readPolicyFields('owner-form'),
     };
 
     if (lat !== '' && lng !== '' && !isNaN(Number(lat)) && !isNaN(Number(lng))) {
@@ -7859,7 +8118,7 @@ function renderOwnerBookings() {
                         </div>
                         <div class="text-xl font-black text-[#2D4F2E]">${Number(b.totalPrice || 0).toLocaleString()} ج.م</div>
                         <div class="text-[11px] text-slate-500">حالة الدفع: <span class="font-bold ${b.paymentStatus === 'paid' ? 'text-emerald-600' : 'text-amber-600'}">${b.paymentStatus === 'paid' ? 'مدفوع' : (b.paymentStatus === 'refunded' ? 'مسترجع' : 'غير مدفوع')}</span></div>
-                        <div class="text-[11px] text-slate-500">الطريقة: <span class="font-bold text-slate-700">${escapeHtmlText(paymentMethodLabel(b.paymentMethod))}</span></div>
+                        <div class="text-[11px] text-slate-500">الطريقة: <span class="font-bold text-slate-700">${escapeHtmlText(paymentMethodLabel(b))}</span></div>
                         ${linesHtml ? `<div class="pt-2 space-y-1">${linesHtml}</div>` : ''}
                         ${b.notes ? `<div class="text-[11px] text-slate-500 italic mt-1">ملاحظات: "${escapeHtmlText(b.notes)}"</div>` : ''}
                     </div>
@@ -8075,3 +8334,244 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+function currentYearMonth() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function shiftMonthValue(month, delta) {
+    const [year, monthNumber] = String(month || currentYearMonth()).split('-').map(Number);
+    const next = new Date(Date.UTC(year, (monthNumber || 1) - 1 + delta, 1));
+    return `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+function formatClosureMonth(month) {
+    const [year, monthNumber] = String(month).split('-').map(Number);
+    if (!year || !monthNumber) return month || '';
+    return new Date(Date.UTC(year, monthNumber - 1, 1)).toLocaleDateString('ar-EG', {
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC',
+    });
+}
+
+function ownerAdIsHotel(ad) {
+    return Boolean(ad && (ad.isHotel || ad.type === 'hotel' || ad.unitType?.slug === 'hotel' || ad.unitType?.slug === 'hotel_room'));
+}
+
+function setOwnerClosureKind(kind) {
+    state.ownerClosureKind = kind;
+    document.querySelectorAll('.owner-closure-kind').forEach((button) => {
+        const selected = button.dataset.closureKind === kind;
+        button.className = `owner-closure-kind px-3 py-1.5 rounded-lg text-xs cursor-pointer ${selected ? 'font-bold bg-[#2D4F2E] text-white' : 'font-semibold bg-slate-100 text-slate-700'}`;
+    });
+
+    const show = (id, visible) => document.getElementById(id)?.classList.toggle('hidden', !visible);
+    show('owner-closure-days', kind === 'days');
+    show('owner-closure-month-wrap', kind === 'month');
+    show('owner-closure-hours', kind === 'hours');
+
+    const requireField = (id, required) => {
+        const field = document.getElementById(id);
+        if (field) field.required = required;
+    };
+    requireField('owner-closure-start-day', kind === 'days');
+    requireField('owner-closure-end-day', kind === 'days');
+    requireField('owner-closure-month-input', kind === 'month');
+    requireField('owner-closure-hour-date', kind === 'hours');
+    requireField('owner-closure-start-time', kind === 'hours');
+    requireField('owner-closure-end-time', kind === 'hours');
+}
+
+function pickOwnerClosureDay(date) {
+    setOwnerClosureKind('days');
+    const start = document.getElementById('owner-closure-start-day');
+    const end = document.getElementById('owner-closure-end-day');
+    if (start) start.value = date;
+    if (end) end.value = date;
+}
+
+function describeClosure(block) {
+    if (block.kind === 'hours') return `${block.date} من ${block.startTime} إلى ${block.endTime}`;
+    if (block.kind === 'month') return block.month;
+    if (block.startDay && block.startDay === block.endDay) return block.startDay;
+    return `${block.startDay || ''} → ${block.endDay || ''}`;
+}
+
+function renderOwnerClosureCalendar(calendar) {
+    const grid = document.getElementById('owner-closure-calendar');
+    if (!grid) return;
+    const days = Array.isArray(calendar?.days) ? calendar.days : [];
+    const heads = ['سبت', 'أحد', 'إثن', 'ثلا', 'أرب', 'خمي', 'جمع'];
+    const tone = {
+        available: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+        closed: 'bg-rose-100 text-rose-800 border-rose-200',
+        booked: 'bg-amber-100 text-amber-900 border-amber-200',
+        partial: 'bg-orange-50 text-orange-800 border-orange-200',
+        past: 'bg-slate-50 text-slate-300 border-transparent',
+    };
+
+    let offset = 0;
+    if (days[0] && /^\d{4}-\d{2}-\d{2}$/.test(days[0].date)) {
+        const first = new Date(`${days[0].date}T12:00:00Z`);
+        offset = (first.getUTCDay() + 1) % 7;
+    }
+
+    const cells = heads.map((label) => `<div class="text-center text-[10px] font-bold text-slate-400 py-1">${label}</div>`);
+    for (let i = 0; i < offset; i += 1) cells.push('<div></div>');
+    days.forEach((day) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(day.date || '')) return;
+        const status = tone[day.status] ? day.status : 'available';
+        const clickable = status !== 'past';
+        cells.push(`<button type="button" data-date="${day.date}" data-status="${status}" class="h-9 rounded-lg border text-xs font-bold ${tone[status]} ${clickable ? 'cursor-pointer hover:brightness-95' : 'cursor-default'}" ${clickable ? '' : 'disabled'}>${Number(day.date.slice(8))}</button>`);
+    });
+    grid.innerHTML = cells.join('');
+    grid.onclick = (event) => {
+        const cell = event.target.closest('[data-date]');
+        if (!cell || cell.dataset.status === 'past') return;
+        pickOwnerClosureDay(cell.dataset.date);
+    };
+}
+
+function renderOwnerClosureList(blocks) {
+    const list = document.getElementById('owner-closure-list');
+    if (!list) return;
+    if (!blocks.length) {
+        list.innerHTML = '<div class="text-xs text-slate-400">مفيش مواعيد مقفولة حالياً. كل الأيام المتاحة ظاهرة للعميل.</div>';
+        return;
+    }
+
+    const rooms = state.ownerClosureRooms || {};
+    const kindLabel = { hours: 'ساعات', days: 'أيام', month: 'شهر' };
+    list.innerHTML = blocks.map((block) => {
+        const roomName = block.roomId ? (rooms[block.roomId] || 'غرفة') : 'الإعلان كله';
+        const note = block.note ? `<div class="text-[11px] text-slate-400 mt-0.5">${escapeHtmlText(block.note)}</div>` : '';
+        return `<div class="flex items-center justify-between gap-3 rounded-xl border border-slate-100 px-3 py-2">
+            <div class="min-w-0">
+                <div class="text-xs font-bold text-slate-800">${kindLabel[block.kind] || 'إغلاق'} · ${escapeHtmlText(describeClosure(block))}</div>
+                <div class="text-[11px] text-slate-500">${escapeHtmlText(roomName)}</div>
+                ${note}
+            </div>
+            <button type="button" onclick="deleteOwnerClosure('${block.id}')" class="text-xs text-rose-600 font-bold cursor-pointer">فتح</button>
+        </div>`;
+    }).join('');
+}
+
+async function loadOwnerClosuresTab() {
+    const ad = getActiveOwnerAd();
+    const list = document.getElementById('owner-closure-list');
+    if (!ad) {
+        if (list) list.innerHTML = '<div class="text-xs text-slate-400">اختار إعلان الأول.</div>';
+        return;
+    }
+
+    if (!state.ownerClosureMonth) state.ownerClosureMonth = currentYearMonth();
+    setOwnerClosureKind(state.ownerClosureKind || 'days');
+
+    const label = document.getElementById('owner-closure-month-label');
+    if (label) label.textContent = formatClosureMonth(state.ownerClosureMonth);
+
+    const adId = ad.id || ad._id;
+    const roomSelect = document.getElementById('owner-closure-room');
+    const roomWrap = document.getElementById('owner-closure-room-wrap');
+    const selectedRoom = roomSelect?.value || '';
+
+    if (ownerAdIsHotel(ad)) {
+        roomWrap?.classList.remove('hidden');
+        try {
+            const roomsRes = await apiFetch(`/api/v1/advertisements/${adId}/rooms`, { silent: true });
+            const rooms = roomsRes.data?.rooms || [];
+            state.ownerClosureRooms = Object.fromEntries(rooms.map((room) => [room.id || room._id, room.title || room.roomNumber || 'غرفة']));
+            if (roomSelect) {
+                roomSelect.innerHTML = `<option value="">الإعلان كله</option>${rooms.map((room) => {
+                    const id = room.id || room._id;
+                    return `<option value="${id}">${escapeHtmlText(room.title || room.roomNumber || 'غرفة')}</option>`;
+                }).join('')}`;
+                roomSelect.value = state.ownerClosureRooms[selectedRoom] ? selectedRoom : '';
+            }
+        } catch (err) {
+            roomWrap?.classList.add('hidden');
+        }
+    } else if (roomWrap) {
+        roomWrap.classList.add('hidden');
+        if (roomSelect) roomSelect.innerHTML = '<option value=""></option>';
+        state.ownerClosureRooms = {};
+    }
+
+    const roomId = roomSelect?.value || '';
+    const calendarQuery = `month=${encodeURIComponent(state.ownerClosureMonth)}${roomId ? `&room=${encodeURIComponent(roomId)}` : ''}`;
+
+    try {
+        const [periodsRes, calendarRes] = await Promise.all([
+            apiFetch(`/api/v1/admin/advertisements/${adId}/blocked-periods`, { silent: true }),
+            apiFetch(`/api/v1/bookings/booked-dates/${adId}?${calendarQuery}`, { silent: true }),
+        ]);
+        renderOwnerClosureList(periodsRes.data?.blockedPeriods || []);
+        renderOwnerClosureCalendar(calendarRes.data?.calendar);
+    } catch (err) {
+        if (list) list.innerHTML = `<div class="text-xs text-rose-500">${escapeHtmlText(err.message || 'تعذر تحميل المواعيد')}</div>`;
+    }
+}
+
+async function submitOwnerClosure(event) {
+    event.preventDefault();
+    const ad = getActiveOwnerAd();
+    if (!ad) return;
+
+    const kind = state.ownerClosureKind || 'days';
+    const payload = {
+        kind,
+        note: document.getElementById('owner-closure-note')?.value || '',
+    };
+    const roomId = document.getElementById('owner-closure-room')?.value;
+    if (roomId) payload.room = roomId;
+
+    if (kind === 'days') {
+        payload.startDay = document.getElementById('owner-closure-start-day')?.value;
+        payload.endDay = document.getElementById('owner-closure-end-day')?.value;
+    } else if (kind === 'month') {
+        payload.month = document.getElementById('owner-closure-month-input')?.value;
+    } else {
+        payload.date = document.getElementById('owner-closure-hour-date')?.value;
+        payload.startTime = document.getElementById('owner-closure-start-time')?.value;
+        payload.endTime = document.getElementById('owner-closure-end-time')?.value;
+    }
+
+    const res = await apiFetch(`/api/v1/admin/advertisements/${ad.id || ad._id}/blocked-periods`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+    showToast(res.message || 'تم قفل الموعد', 'success');
+    const note = document.getElementById('owner-closure-note');
+    if (note) note.value = '';
+    if (kind === 'month' && payload.month) state.ownerClosureMonth = payload.month;
+    if (kind === 'days' && payload.startDay) state.ownerClosureMonth = payload.startDay.slice(0, 7);
+    if (kind === 'hours' && payload.date) state.ownerClosureMonth = payload.date.slice(0, 7);
+    await loadOwnerClosuresTab();
+}
+
+async function deleteOwnerClosure(id) {
+    const ad = getActiveOwnerAd();
+    if (!ad || !id) return;
+    if (!window.confirm('تفتح الموعد ده تاني للحجز؟')) return;
+
+    const res = await apiFetch(`/api/v1/admin/advertisements/${ad.id || ad._id}/blocked-periods/${id}`, {
+        method: 'DELETE',
+    });
+    showToast(res.message || 'تم فتح الموعد', 'success');
+    await loadOwnerClosuresTab();
+}
+
+function shiftOwnerClosureMonth(delta) {
+    state.ownerClosureMonth = shiftMonthValue(state.ownerClosureMonth, delta);
+    loadOwnerClosuresTab();
+}
+
+window.setOwnerClosureKind = setOwnerClosureKind;
+window.pickOwnerClosureDay = pickOwnerClosureDay;
+window.submitOwnerClosure = submitOwnerClosure;
+window.deleteOwnerClosure = deleteOwnerClosure;
+window.shiftOwnerClosureMonth = shiftOwnerClosureMonth;
+window.loadOwnerClosuresTab = loadOwnerClosuresTab;
+

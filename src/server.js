@@ -60,6 +60,7 @@ const adminCityRoutes = require('../admin/features/cities/routes/cityRoutes');
 const adminRegionRoutes = require('../admin/features/regions/routes/regionRoutes');
 const adminUnitTypeRoutes = require('../admin/features/unit-types/routes/unitTypeRoutes');
 const adminBookingRoutes = require('../admin/features/bookings/routes/bookingRoutes');
+const adminPaymentMethodRoutes = require('../admin/features/payments/routes/paymentMethodRoutes');
 
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('DB_URI exists:', Boolean(process.env.DB_URI));
@@ -125,6 +126,7 @@ app.use('/api/v1/admin/cities', adminCityRoutes);
 app.use('/api/v1/admin/regions', adminRegionRoutes);
 app.use('/api/v1/admin/unit-types', adminUnitTypeRoutes);
 app.use('/api/v1/admin/bookings', adminBookingRoutes);
+app.use('/api/v1/admin/payment-methods', adminPaymentMethodRoutes);
 app.use('/api/v1/admin/privacy-policy', adminPolicyRoutes);
 
 app.get(['/privacy-policy', '/privacy', '/policy'], renderPrivacyPage);

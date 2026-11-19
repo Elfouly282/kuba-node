@@ -44,7 +44,12 @@
         "bookingConfirmed": "Booking confirmed successfully.",
         "bookingCompleted": "Booking completed successfully.",
         "bookingDeleted": "Booking deleted successfully.",
-        "privacyPolicyUpdated": "Privacy policy updated successfully."
+        "blockedPeriodCreated": "This time is now closed and will show as unavailable on the booking calendar.",
+        "blockedPeriodDeleted": "This time is open for booking again.",
+        "privacyPolicyUpdated": "Privacy policy updated successfully.",
+        "paymentMethodCreated": "Payment platform added.",
+        "paymentMethodUpdated": "Payment method updated.",
+        "paymentMethodDeleted": "Payment platform removed."
     },
     "errors": {
         "somethingWentWrong": "Something went wrong. Please try again later.",
@@ -102,9 +107,13 @@
         "roomDoesNotBelongToHotel": "This room does not belong to the specified hotel.",
         "bookingDateConflict": "The selected dates or times are already booked. Please choose another slot.",
         "bookingNotFound": "The requested booking was not found.",
+        "paymentMethodNotFound": "Payment method not found.",
+        "paymentMethodLocked": "Pay on arrival stays available and cannot be removed.",
         "invalidBookingId": "Invalid booking ID provided.",
         "advertisementInactive": "This listing is currently not available for booking.",
-        "bookingCannotBeCancelled": "Only pending or confirmed bookings can be cancelled."
+        "bookingCannotBeCancelled": "Only pending or confirmed bookings can be cancelled.",
+        "bookingClosed": "The provider has closed this time. Please choose another day or time.",
+        "blockedPeriodNotFound": "That closed period was not found."
     },
     "validation": {
         "nameRequired": "Name is required.",
@@ -141,7 +150,12 @@
         "tooManyGuests": "This room allows up to {{maxGuests}} guests.",
         "invalidAddOn": "One of the selected add-ons is not available for this stay.",
         "invalidPaymentMethod": "Invalid payment method.",
+        "paymentMethodNameRequired": "Enter a name for the payment platform.",
+        "paymentMethodKeyTaken": "A payment platform with this name already exists.",
         "termsRequired": "Please agree to the booking conditions and cancellation policy before paying.",
-        "invalidArrivalTime": "Please provide a valid estimated arrival window."
+        "invalidArrivalTime": "Please provide a valid estimated arrival window.",
+        "invalidBlockKind": "Choose what to close: hours, days, or a month.",
+        "invalidMonth": "Month must look like YYYY-MM, for example 2026-12.",
+        "blockInPast": "That period has already ended. Choose a time that is still ahead."
     }
 }

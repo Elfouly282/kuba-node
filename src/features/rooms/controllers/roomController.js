@@ -8,6 +8,7 @@ const { getImageUrl, getRelativeImagePath, deleteImageFile } = require('../../..
 const { buildRoomDetails, buildRoomDetailsHtml } = require('../roomDetails');
 const { resolveBooking } = require('../../bookings/bookingMode');
 const { priceStay } = require('../../bookings/services/bookingService');
+const { roomsClosedForStay } = require('../../bookings/blockedPeriods');
 const { normalizeStay } = require('../../advertisements/stayOptions');
 const { normalizeDescriptionHtml, stripHtml } = require('../../../utils/descriptionHtml');
 const { pickText } = require('../../../../utils/localize');
@@ -280,8 +281,12 @@ exports.getAvailableRoomsForHotel = async (req, res, next) => {
                 .filter(Boolean)
         );
 
-        // 3. Filter available rooms
-        let availableRooms = allRooms.filter((room) => !bookedRoomIds.has(String(room._id)));
+        const closed = await roomsClosedForStay({ advertisementId: hotelId, start, end });
+
+        // 3. Filter available rooms. A listing-wide closure closes every room.
+        let availableRooms = closed.listingClosed
+            ? []
+            : allRooms.filter((room) => !bookedRoomIds.has(String(room._id)) && !closed.roomIds.has(String(room._id)));
 
         // Filter by guests capacity if provided
         const guests = req.query.guests || req.query.guestsCount;

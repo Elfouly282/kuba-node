@@ -1130,7 +1130,7 @@
                 }
               ]
             },
-            "description": "Returns the listing. `booking` tells the app which screen to open: mode stay | hourly | trip, requiresRoom (true only for a hotel), pricingUnit, minDuration. Same field is on list, search, and each room. `stay` is the checkout setup used by the booking quote: cleaningFee, serviceFeePercent, taxPercent, taxLabel, checkInTime, checkOutTime, freeCancellationDays, breakfastIncluded, and addOns (meals and extras). A room without its own stay inherits the hotel stay."
+            "description": "Returns the listing. `booking` tells the app which screen to open: mode stay | hourly | trip, requiresRoom (true only for a hotel), pricingUnit, minDuration. Same field is on list, search, and each room. `stay` is the checkout setup used by the booking quote: cleaningFee, serviceFeePercent, taxPercent, taxLabel, checkInTime, checkOutTime, freeCancellationDays, breakfastIncluded, and addOns (meals and extras). A room without its own stay inherits the hotel stay. `policies` is the owner's text for this listing: booking, cancellation, houseRules, checkIn, payment, and extras. Each text is `content` in the requested language. Empty sections are omitted."
           }
         },
         {
@@ -1361,7 +1361,7 @@
     },
     {
       "name": "Bookings",
-      "description": "نظام حجز واحد لكل الأنواع (شاليه، فيلا، شقة، يخت، جولف كار، أوضة فندق).\n\nالتطبيق يقرأ advertisement.booking (ونفس الحقل على الغرفة) عشان يفتح الشاشة:\n- mode=stay: تاريخ وصول وتاريخ مغادرة (per_night / per_day). فندق، غرفة، شاليه، شقة، أو يخت/جولف كار سعره باليوم.\n- mode=hourly: نفس اليوم + ساعة بداية وساعة نهاية (per_hour). booking.sameDay=true، فيوم البداية هو يوم النهاية. جولف كار بكرة من 5 لـ 7: date=2026-11-13&startTime=17:00&endTime=19:00 (توقيت القاهرة). ينفع كمان startDate و endDate وفيهم الوقت حتى لو اليوم واحد.\n- mode=trip: حجز واحد من غير مدة (per_trip / fixed).\n- requiresRoom=true: على الفندق بس. اختار غرفة، وبعدين نفس شاشة stay.\n\nالترتيب:\n1) Booked Dates: المواعيد المحجوزة عشان تقفلها في الكالندر.\n2) Check: راجع الإقامة. quote.lines و quote.total هما سعر المراجعة والوجبات والدفع والتأكيد. ابعت adults و addOns عشان تشوف الإجمالي بعد الإضافة من غير ما تتحفظ.\n3) Create Booking: السيرفر يعيد الحساب. totalPrice و priceBreakdown.total و confirmation.price.total و confirmation.payment.amount رقم واحد. guestDetails فيها صاحب الحجز والإيميل والموبايل ووقت الوصول. addOns نفس المعرفات اللي رجعت من Check. instapay و fawry و meeza لازم acceptedTerms=true.\n4) My Bookings / Get One: confirmation هي شاشة التأكيد (reference و guest و stay و price و cancellation).\n5) Cancel.\n\nرسوم الإقامة والإضافات على advertisement.stay، والغرفة تورثها إلا لو ليها stay خاص. للإقامة: startDate و endDate بتاريخ ووقت كامل (ISO). للحجز بالساعة: date + startTime + endTime في نفس اليوم، أو startDate و endDate وفيهم الوقت.\nللفندق: هات الأوض المتاحة من Advertisements > Get Hotel Available Rooms، وابعت room بدل advertisement.",
+      "description": "نظام حجز واحد لكل الأنواع (شاليه، فيلا، شقة، يخت، جولف كار، أوضة فندق).\n\nالتطبيق يقرأ advertisement.booking (ونفس الحقل على الغرفة) عشان يفتح الشاشة:\n- mode=stay: تاريخ وصول وتاريخ مغادرة (per_night / per_day). فندق، غرفة، شاليه، شقة، أو يخت/جولف كار سعره باليوم.\n- mode=hourly: نفس اليوم + ساعة بداية وساعة نهاية (per_hour). booking.sameDay=true، فيوم البداية هو يوم النهاية. جولف كار بكرة من 5 لـ 7: date=2026-11-13&startTime=17:00&endTime=19:00 (توقيت القاهرة). ينفع كمان startDate و endDate وفيهم الوقت حتى لو اليوم واحد.\n- mode=trip: حجز واحد من غير مدة (per_trip / fixed).\n- requiresRoom=true: على الفندق بس. اختار غرفة، وبعدين نفس شاشة stay.\n\nالترتيب:\n1) Booked Dates: المواعيد المحجوزة والمقفولة من مقدم الخدمة، ومعاها calendar.days عشان تقفل المتاح وغير المتاح في الكالندر. status: available | partial | closed | booked | past.\n2) Check: راجع الإقامة. quote.lines و quote.total هما سعر المراجعة والوجبات والدفع والتأكيد. ابعت adults و addOns عشان تشوف الإجمالي بعد الإضافة من غير ما تتحفظ.\n3) Create Booking: السيرفر يعيد الحساب. totalPrice و priceBreakdown.total و confirmation.price.total و confirmation.payment.amount رقم واحد. guestDetails فيها صاحب الحجز والإيميل والموبايل ووقت الوصول. addOns نفس المعرفات اللي رجعت من Check. paymentMethod الافتراضي on_arrival (عند الوصول)، و cash بنفس المعنى. أي منصة تتضاف من الداشبورد بتتقبل بمفتاحها، ولو requiresTerms=true لازم acceptedTerms=true.\n4) My Bookings / Get One: confirmation هي شاشة التأكيد (reference و guest و stay و price و cancellation).\n5) Cancel.\n\nرسوم الإقامة والإضافات على advertisement.stay، والغرفة تورثها إلا لو ليها stay خاص. للإقامة: startDate و endDate بتاريخ ووقت كامل (ISO). للحجز بالساعة: date + startTime + endTime في نفس اليوم، أو startDate و endDate وفيهم الوقت.\nللفندق: هات الأوض المتاحة من Advertisements > Get Hotel Available Rooms، وابعت room بدل advertisement.",
       "item": [
         {
           "name": "1. Booked Dates (المواعيد المحجوزة)",
@@ -1382,12 +1382,18 @@
                 {
                   "key": "room",
                   "value": "<ROOM_ID>",
-                  "description": "For hotels: booked dates of one room",
+                  "description": "For hotels: booked dates and closures of one room. Listing-wide closures are included.",
+                  "disabled": true
+                },
+                {
+                  "key": "month",
+                  "value": "2026-12",
+                  "description": "Calendar month, YYYY-MM. Defaults to the current month in Cairo.",
                   "disabled": true
                 }
               ]
             },
-            "description": "Public. Returns upcoming taken slots `[{ startDate, endDate }]`, `pricingUnit`, and `booking` `{ mode, requiresRoom, pricingUnit, minDuration }`. mode is stay | hourly | trip. Pass ?room= for one hotel room; then booking.requiresRoom is false and pricingUnit comes from the room."
+            "description": "Public. Returns upcoming taken slots in `bookedDates`, provider closures in `closedPeriods`, both merged in `unavailable` (`reason` is booked or closed), and `calendar.days` for the requested month. Each day has `date`, `status` (available, partial, closed, booked, past) and `available`. partial means the day can still be opened but `closedHours` or `bookedHours` must be disabled. Pass ?month=2026-12 or ?from=2026-12-01&to=2026-12-31. Pass ?room= for one hotel room; listing-wide closures still apply, and booking.requiresRoom is false."
           }
         },
         {
@@ -1456,7 +1462,7 @@
                 }
               ]
             },
-            "description": "Public. Same pricing as Create Booking, without saving. `totalPrice` and `quote.total` are the amount every step must show (review, meals, payment, confirmation). `quote.lines` is the breakdown: room, discount, cleaning, service fee, VAT, selected add-ons. Pass `adults` and `addOns` (comma-separated ids) to preview the meals step. `paymentMethods` lists InstaPay, Fawry and Meeza."
+            "description": "Public. Same pricing as Create Booking, without saving. `totalPrice` and `quote.total` are the amount every step must show (review, meals, payment, confirmation). `quote.lines` is the breakdown: room, discount, cleaning, service fee, VAT, selected add-ons. Pass `adults` and `addOns` (comma-separated ids) to preview the meals step. `paymentMethods` lists the active methods. Pay on arrival (`on_arrival`) is always included. A platform appears only after an admin adds it. `policies` is the listing owner's booking, cancellation, house rules, check-in, payment text, and any extras, in the requested language."
           }
         },
         {
@@ -1496,14 +1502,14 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"room\": \"<ROOM_ID>\",\n  \"startDate\": \"2026-09-25T12:00:00.000Z\",\n  \"endDate\": \"2026-09-28T09:00:00.000Z\",\n  \"guestDetails\": {\n    \"adults\": 2,\n    \"children\": 0,\n    \"bookingFor\": \"me\",\n    \"email\": \"nadia.hassan@example.com\",\n    \"phoneCountryCode\": \"+20\",\n    \"phone\": \"1258966\",\n    \"firstName\": \"Nadia\",\n    \"lastName\": \"Hassan\",\n    \"arrivalFrom\": \"15:00\",\n    \"arrivalTo\": \"16:00\"\n  },\n  \"addOns\": [\"<ADDON_ID>\"],\n  \"paymentMethod\": \"instapay\",\n  \"acceptedTerms\": true,\n  \"notes\": \"\"\n}",
+              "raw": "{\n  \"room\": \"<ROOM_ID>\",\n  \"startDate\": \"2026-09-25T12:00:00.000Z\",\n  \"endDate\": \"2026-09-28T09:00:00.000Z\",\n  \"guestDetails\": {\n    \"adults\": 2,\n    \"children\": 0,\n    \"bookingFor\": \"me\",\n    \"email\": \"nadia.hassan@example.com\",\n    \"phoneCountryCode\": \"+20\",\n    \"phone\": \"1258966\",\n    \"firstName\": \"Nadia\",\n    \"lastName\": \"Hassan\",\n    \"arrivalFrom\": \"15:00\",\n    \"arrivalTo\": \"16:00\"\n  },\n  \"addOns\": [\"<ADDON_ID>\"],\n  \"paymentMethod\": \"on_arrival\",\n  \"acceptedTerms\": true,\n  \"notes\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "Requires login. For a hotel send `room` instead of `advertisement`. The server recalculates the quote, so the saved `totalPrice`, `priceBreakdown.total` and `confirmation.price.total` match Check for the same dates, guests and add-ons. `confirmation` is the confirmation screen: reference, guest, stay, payment amount and the same lines. paymentMethod: instapay | fawry | meeza (these require acceptedTerms) | cash | card | wallet | online. Saved as pending / unpaid until the owner confirms."
+            "description": "Requires login. For a hotel send `room` instead of `advertisement`. The server recalculates the quote, so the saved `totalPrice`, `priceBreakdown.total` and `confirmation.price.total` match Check for the same dates, guests and add-ons. `confirmation` is the confirmation screen: reference, guest, stay, payment amount, the same lines, and `policies` copied from the listing at booking time. paymentMethod: `on_arrival` (pay on arrival; `cash` is accepted as the same method) or the `key` of a platform added in the dashboard. A platform with `requiresTerms` needs `acceptedTerms`. Saved as pending / unpaid until the owner confirms."
           }
         },
         {
@@ -1557,7 +1563,7 @@
                 "{{bookingId}}"
               ]
             },
-            "description": "Requires login. Only the user who made the booking can see it. confirmation is the confirmation screen: reference, guest, stay, cancellation, and price.lines. confirmation.payment.amount equals totalPrice and does not change if the listing price changes later."
+            "description": "Requires login. Only the user who made the booking can see it. confirmation is the confirmation screen: reference, guest, stay, cancellation, price.lines, and policies. confirmation.policies is the owner's booking and cancellation text saved with this booking. confirmation.payment.amount equals totalPrice and does not change if the listing price or policies change later."
           }
         },
         {

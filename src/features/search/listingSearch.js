@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { escapeRegExp, groupBy } = require('lodash');
 const Advertisement = require('../advertisements/models/advertisementModel');
 const Booking = require('../bookings/models/bookingModel');
+const BlockedPeriod = require('../bookings/models/blockedPeriodModel');
 const Category = require('../categories/models/categoryModel');
 const City = require('../cities/models/cityModel');
 const Region = require('../regions/models/regionModel');
@@ -480,16 +481,32 @@ const searchAdvertisements = async (query, options = {}) => {
 
     if (params.startDate) {
         const ids = candidates.map((ad) => ad._id);
-        const bookings = ids.length
-            ? await Booking.find({
-                advertisement: { $in: ids },
-                status: { $in: ['pending', 'confirmed'] },
-                startDate: { $lt: params.endDate },
-                endDate: { $gt: params.startDate },
-            }).select('advertisement startDate endDate').lean()
-            : [];
+        const [bookings, closures] = ids.length
+            ? await Promise.all([
+                Booking.find({
+                    advertisement: { $in: ids },
+                    status: { $in: ['pending', 'confirmed'] },
+                    startDate: { $lt: params.endDate },
+                    endDate: { $gt: params.startDate },
+                }).select('advertisement startDate endDate').lean(),
+                BlockedPeriod.find({
+                    advertisement: { $in: ids },
+                    room: null,
+                    startsAt: { $lt: params.endDate },
+                    endsAt: { $gt: params.startDate },
+                }).select('advertisement startsAt endsAt').lean(),
+            ])
+            : [[], []];
 
-        bookingsByAd = groupBy(bookings, (booking) => String(booking.advertisement));
+        const occupied = [
+            ...bookings,
+            ...closures.map((closure) => ({
+                advertisement: closure.advertisement,
+                startDate: closure.startsAt,
+                endDate: closure.endsAt,
+            })),
+        ];
+        bookingsByAd = groupBy(occupied, (booking) => String(booking.advertisement));
     }
 
     const availability = {};

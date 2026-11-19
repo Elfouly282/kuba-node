@@ -7,6 +7,7 @@ const {
     ACTIVE_STATUSES,
     isValidId,
     prepareBooking,
+    buildAvailability,
     populateBooking,
     formatBooking,
     formatBookingReceipt,
@@ -14,7 +15,9 @@ const {
     staySnapshotFor,
 } = require('../services/bookingService');
 const { resolveBooking } = require('../bookingMode');
-const { paymentMethodOptions, normalizeGuest, assertPayment } = require('../quote');
+const { normalizeGuest } = require('../quote');
+const { listActive, resolvePayment } = require('../../payments/paymentMethods');
+const { publicPolicies } = require('../../advertisements/listingPolicies');
 
 const findMyBooking = async (req) => {
     if (!isValidId(req.params.id)) throw new APIError('errors.invalidBookingId', 400);
@@ -27,8 +30,8 @@ const findMyBooking = async (req) => {
 };
 
 /**
- * GET /bookings/booked-dates/:advertisementId?room=
- * Upcoming taken slots, so the app can disable them in its calendar.
+ * GET /bookings/booked-dates/:advertisementId?room=&month=
+ * Upcoming bookings and provider closures, plus a calendar of available days.
  */
 exports.getBookedDates = async (req, res) => {
     const { advertisementId } = req.params;
@@ -48,26 +51,16 @@ exports.getBookedDates = async (req, res) => {
 
     const hasRooms = Boolean(await Room.exists({ hotel: ad._id, active: true }));
     const booking = resolveBooking(room || ad, { requiresRoom: hasRooms && !room });
-
-    const bookings = await Booking.find({
-        advertisement: ad._id,
-        room: roomId,
-        status: { $in: ACTIVE_STATUSES },
-        endDate: { $gt: new Date() },
-    })
-        .select('startDate endDate')
-        .sort({ startDate: 1 });
-
-    SuccessResponse.ok(res, {
-        data: {
-            advertisementId: ad._id,
-            hasRooms,
-            roomId,
-            pricingUnit: booking.pricingUnit,
-            booking,
-            bookedDates: bookings.map((b) => ({ startDate: b.startDate, endDate: b.endDate })),
-        },
+    const data = await buildAvailability({
+        ad,
+        roomDoc: room,
+        booking,
+        roomId,
+        hasRooms,
+        query: req.query,
     });
+
+    SuccessResponse.ok(res, { data });
 };
 
 /**
@@ -76,17 +69,20 @@ exports.getBookedDates = async (req, res) => {
  * Tells whether the slot is free and what it would cost. Saves nothing.
  */
 exports.checkBooking = async (req, res) => {
-    const { ad, room, start, end, price, available } = await prepareBooking(req.query);
+    const { ad, room, start, end, price, available, unavailableReason } = await prepareBooking(req.query);
+    const policies = publicPolicies(ad.policies);
 
     SuccessResponse.ok(res, {
         data: {
             available,
+            unavailableReason,
             advertisementId: ad._id,
             roomId: room ? room._id : null,
             startDate: start,
             endDate: end,
             ...price,
-            paymentMethods: paymentMethodOptions(req.locale),
+            ...(policies ? { policies } : {}),
+            paymentMethods: await listActive(req.locale),
         },
     });
 };
@@ -96,9 +92,11 @@ exports.checkBooking = async (req, res) => {
  */
 exports.createBooking = async (req, res) => {
     const guestDetails = normalizeGuest(req.body, req.user);
-    const payment = assertPayment(req.body);
-    const { ad, room, start, end, price, available } = await prepareBooking({ ...req.body, guestDetails });
-    if (!available) throw new APIError('errors.bookingDateConflict', 400);
+    const payment = await resolvePayment(req.body);
+    const { ad, room, start, end, price, available, unavailableReason } = await prepareBooking({ ...req.body, guestDetails });
+    if (!available) {
+        throw new APIError(unavailableReason === 'closed' ? 'errors.bookingClosed' : 'errors.bookingDateConflict', 400);
+    }
 
     const { notes } = req.body;
 
@@ -129,6 +127,8 @@ exports.createBooking = async (req, res) => {
         guestDetails,
         acceptedTerms: payment.accepted,
         paymentMethod: payment.method,
+        paymentMethodLabel: payment.label,
+        paymentMethodLabelAr: payment.labelAr,
         notes: notes ? String(notes).trim() : '',
     });
 

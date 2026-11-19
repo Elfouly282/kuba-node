@@ -1,6 +1,13 @@
 const http = require('http');
 const path = require('path');
+const dns = require('dns');
 const dotenv = require('dotenv');
+
+try {
+    dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch (_) {
+    // The booking script can still use the system resolver.
+}
 
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 dotenv.config({ path: path.join(__dirname, '..', 'config.env') });
@@ -20,17 +27,24 @@ const { i18nMiddleware } = require('../utils/i18n');
 const globalErrorHandler = require('../src/middleware/errorMiddleware');
 const bookingRoutes = require('../src/features/bookings/routes/bookingRoutes');
 const adminBookingRoutes = require('../admin/features/bookings/routes/bookingRoutes');
+const buildBlockedPeriodRoutes = require('../src/features/bookings/routes/blockedPeriodRoutes');
+const { protect } = require('../src/features/auth/middleware/authMiddleware');
+const { protectAdmin } = require('../admin/middleware/authMiddleware');
+const BlockedPeriod = require('../src/features/bookings/models/blockedPeriodModel');
+const PaymentMethod = require('../src/features/payments/models/paymentMethodModel');
 
 const app = express();
 app.use(express.json());
 app.use(i18nMiddleware);
 app.use('/api/v1/bookings', bookingRoutes);
 app.use('/api/v1/admin/bookings', adminBookingRoutes);
+app.use('/api/v1/advertisements', buildBlockedPeriodRoutes(protect));
+app.use('/api/v1/admin/advertisements', buildBlockedPeriodRoutes(protectAdmin));
 app.use(globalErrorHandler);
 
 let baseUrl;
 let passed = 0;
-const created = { users: [], ads: [], rooms: [] };
+const created = { users: [], ads: [], rooms: [], paymentMethods: [] };
 
 const request = (method, urlPath, { body, token } = {}) => new Promise((resolve, reject) => {
     const url = new URL(baseUrl + urlPath);
@@ -250,6 +264,22 @@ const run = async () => {
                     category: 'meal',
                 }],
             },
+            policies: {
+                booking: {
+                    content: 'Full payment is due when the booking is confirmed.',
+                    contentAr: 'يُدفع المبلغ كاملًا عند تأكيد الحجز.',
+                },
+                cancellation: {
+                    content: 'Free cancellation until 5 days before check-in.',
+                    contentAr: 'إلغاء مجاني حتى 5 أيام قبل الوصول.',
+                },
+                extras: [{
+                    title: 'Pets',
+                    titleAr: 'الحيوانات',
+                    content: 'Pets are not allowed.',
+                    contentAr: 'غير مسموح بالحيوانات.',
+                }],
+            },
         });
         const seaView = await Room.create({
             hotel: resort._id,
@@ -266,7 +296,11 @@ const run = async () => {
         const stayEnd = at(83, 12);
 
         res = await request('GET', `/api/v1/bookings/check?room=${seaView._id}&startDate=${stayStart}&endDate=${stayEnd}&adults=2`);
+        const arrivalMethod = (res.body.data.paymentMethods || []).find((method) => method.key === 'on_arrival');
         expect(res.status === 200 && res.body.data.totalPrice === 27510, 'Review: 7800 x 3 + cleaning 600 + 5% + VAT 10% = 27510', res);
+        expect(arrivalMethod && arrivalMethod.requiresTerms === false && arrivalMethod.label === 'Pay on arrival', 'Payment: pay on arrival is offered before checkout', res);
+        expect(res.body.data.policies.booking.content === 'Full payment is due when the booking is confirmed.', 'Check: owner booking policy is shown before payment', res);
+        expect(res.body.data.policies.cancellation.contentAr === 'إلغاء مجاني حتى 5 أيام قبل الوصول.', 'Check: owner cancellation policy is shown in Arabic too', res);
         expect(res.body.data.quote.total === 27510 && res.body.data.quote.summary.beforeAddOns === 27510, 'Review: footer total matches the breakdown before meals', res);
 
         res = await request('GET', `/api/v1/bookings/check?room=${seaView._id}&startDate=${stayStart}&endDate=${stayEnd}&adults=2&addOns=${breakfastId}`);
@@ -278,6 +312,17 @@ const run = async () => {
         res = await request('GET', `/api/v1/bookings/check?room=${seaView._id}&startDate=${stayStart}&endDate=${stayEnd}&adults=5`);
         expect(res.status === 400, 'Review: more guests than the room allows is rejected', res);
 
+        const platform = await PaymentMethod.create({
+            key: `testpay${Date.now()}`,
+            name: 'Test Pay',
+            nameAr: 'دفع تجريبي',
+            kind: 'platform',
+            active: true,
+            requiresTerms: true,
+            sortOrder: 9,
+        });
+        created.paymentMethods.push(platform._id);
+
         res = await request('POST', '/api/v1/bookings', {
             token: customer.token,
             body: {
@@ -285,7 +330,7 @@ const run = async () => {
                 startDate: stayStart,
                 endDate: stayEnd,
                 addOns: [breakfastId],
-                paymentMethod: 'instapay',
+                paymentMethod: 'not-a-real-platform',
                 guestDetails: {
                     adults: 2,
                     bookingFor: 'me',
@@ -299,7 +344,27 @@ const run = async () => {
                 },
             },
         });
-        expect(res.status === 400, 'Payment: InstaPay without accepting the terms is rejected', res);
+        expect(res.status === 400, 'Payment: a platform that was not added is rejected', res);
+
+        res = await request('POST', '/api/v1/bookings', {
+            token: customer.token,
+            body: {
+                room: seaView._id,
+                startDate: at(110, 15),
+                endDate: at(113, 12),
+                paymentMethod: platform.key,
+                guestDetails: {
+                    adults: 2,
+                    bookingFor: 'me',
+                    email: 'nadia.hassan@example.com',
+                    phoneCountryCode: '+20',
+                    phone: '1258966',
+                    firstName: 'Nadia',
+                    lastName: 'Hassan',
+                },
+            },
+        });
+        expect(res.status === 400, 'Payment: a platform that asks for terms is rejected until they are accepted', res);
 
         res = await request('POST', '/api/v1/bookings', {
             token: customer.token,
@@ -308,8 +373,7 @@ const run = async () => {
                 startDate: stayStart,
                 endDate: stayEnd,
                 addOns: [breakfastId],
-                paymentMethod: 'instapay',
-                acceptedTerms: true,
+                paymentMethod: 'on_arrival',
                 guestDetails: {
                     adults: 2,
                     bookingFor: 'me',
@@ -331,12 +395,13 @@ const run = async () => {
         expect(confirmation.guest.phoneCountryCode === '+20' && confirmation.guest.arrivalFrom === '15:00' && confirmation.guest.arrivalTo === '16:00', 'Confirmation: phone and arrival window are stored', res);
         expect(confirmation.stay.title === 'Deluxe Sea-View' && confirmation.stay.propertyTitle === 'Azure Bay Resort', 'Confirmation: stay name matches the room that was booked', res);
         expect(confirmation.stay.breakfastIncluded === true && confirmation.stay.area === 42 && confirmation.stay.bedType === 'King Bed', 'Confirmation: room facts match the review step', res);
-        expect(confirmation.payment.method === 'instapay' && confirmation.payment.methodLabel === 'InstaPay', 'Confirmation: payment method is InstaPay', res);
+        expect(confirmation.payment.method === 'on_arrival' && confirmation.payment.methodLabel === 'Pay on arrival', 'Confirmation: payment method is pay on arrival', res);
         expect(String(stayed.reference).startsWith('AZR-') && confirmation.reference === stayed.reference, 'Confirmation: booking reference is saved', res);
         const expectedFreeUntil = new Date(stayStart);
         expectedFreeUntil.setUTCDate(expectedFreeUntil.getUTCDate() - 5);
         expectedFreeUntil.setUTCHours(21, 59, 0, 0);
         expect(new Date(confirmation.cancellation.freeUntil).getTime() === expectedFreeUntil.getTime(), 'Confirmation: free cancellation is 5 days before check-in at 11:59 PM', res);
+        expect(confirmation.policies.booking.content === 'Full payment is due when the booking is confirmed.' && confirmation.policies.extras[0].titleAr === 'الحيوانات', 'Confirmation: owner policies are saved with the booking', res);
 
         res = await request('GET', `/api/v1/bookings/${stayed.id}`, { token: customer.token });
         expect(res.status === 200 && res.body.data.booking.confirmation.price.total === 27930, 'Get booking: confirmation total is unchanged', res);
@@ -355,17 +420,19 @@ const run = async () => {
         res = await request('GET', '/api/v1/bookings/my', { token: customer.token });
         const mine = res.body.data && res.body.data.bookings;
         const stayedReceipt = mine && mine.find((item) => item.id === stayed.id);
-        expect(res.status === 200 && res.body.results === 4, 'My bookings: returns my 4 bookings', res);
+        expect(res.status === 200 && res.body.results === 5, 'My bookings: returns my 5 bookings', res);
         expect(
             stayedReceipt
                 && stayedReceipt.reference === stayed.reference
                 && stayedReceipt.payment.amount === 27930
-                && stayedReceipt.payment.methodLabel === 'InstaPay'
+                && stayedReceipt.payment.method === 'on_arrival'
+                && stayedReceipt.payment.methodLabel === 'Pay on arrival'
                 && stayedReceipt.guest.name === 'Nadia Hassan'
                 && stayedReceipt.guest.email === 'nadia.hassan@example.com'
                 && stayedReceipt.stay.title === 'Deluxe Sea-View'
                 && stayedReceipt.property.title === 'Azure Bay Resort'
                 && stayedReceipt.lines.some((line) => line.label && line.amount !== undefined)
+                && stayedReceipt.policies.cancellation.content === 'Free cancellation until 5 days before check-in.'
                 && stayedReceipt.priceBreakdown === undefined
                 && stayedReceipt.user === undefined
                 && stayedReceipt.confirmation === undefined
@@ -379,7 +446,7 @@ const run = async () => {
 
         console.log('\n--- Owner (dashboard) ---');
         res = await request('GET', '/api/v1/admin/bookings', { token: owner.token });
-        expect(res.status === 200 && res.body.results === 4, 'Owner sees the 4 bookings on their listings', res);
+        expect(res.status === 200 && res.body.results === 5, 'Owner sees the 5 bookings on their listings', res);
 
         res = await request('PATCH', `/api/v1/admin/bookings/${chaletBookingId}`, { token: owner.token, body: { status: 'confirmed' } });
         expect(res.status === 200 && res.body.data.booking.status === 'confirmed', 'Owner confirms the chalet booking', res);
@@ -397,8 +464,99 @@ const run = async () => {
         res = await request('GET', `/api/v1/bookings/check?advertisement=${chalet._id}&startDate=${at(30, 14)}&endDate=${at(33, 12)}`);
         expect(res.status === 200 && res.body.data.available === true, 'Cancelled dates are available again', res);
 
+        console.log('\n--- Provider closures ---');
+        res = await request('POST', `/api/v1/advertisements/${chalet._id}/blocked-periods`, {
+            token: customer.token,
+            body: { kind: 'days', startDay: '2027-01-10', endDay: '2027-01-12' },
+        });
+        expect(res.status === 403, 'A customer cannot close the provider calendar', res);
+
+        res = await request('POST', `/api/v1/advertisements/${chalet._id}/blocked-periods`, {
+            token: owner.token,
+            body: { kind: 'days', startDay: '2020-01-01', endDay: '2020-01-02' },
+        });
+        expect(res.status === 400, 'A closure that already ended is rejected', res);
+
+        res = await request('POST', `/api/v1/admin/advertisements/${chalet._id}/blocked-periods`, {
+            token: owner.token,
+            body: { kind: 'days', startDay: '2027-01-10', endDay: '2027-01-12', note: 'ضغط حجوزات' },
+        });
+        expect(res.status === 201 && res.body.data.blockedPeriod.kind === 'days', 'Owner closes three days', res);
+        const blockId = res.body.data.blockedPeriod.id;
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${chalet._id}&startDate=2027-01-10T12:00:00.000Z&endDate=2027-01-12T12:00:00.000Z`);
+        expect(res.status === 200 && res.body.data.available === false && res.body.data.unavailableReason === 'closed', 'Check: closed days are unavailable', res);
+
+        res = await request('POST', '/api/v1/bookings', {
+            token: customer.token,
+            body: { advertisement: chalet._id, startDate: '2027-01-10T12:00:00.000Z', endDate: '2027-01-12T12:00:00.000Z' },
+        });
+        expect(res.status === 400, 'Create: a closed range is rejected', res);
+
+        res = await request('GET', `/api/v1/bookings/booked-dates/${chalet._id}?month=2027-01`);
+        const closedDay = res.body.data.calendar.days.find((day) => day.date === '2027-01-10');
+        const openDay = res.body.data.calendar.days.find((day) => day.date === '2027-01-20');
+        expect(closedDay && closedDay.available === false && closedDay.status === 'closed', 'Calendar: a closed day is unavailable', res);
+        expect(openDay && openDay.available === true && openDay.status === 'available', 'Calendar: an open day stays available', res);
+        expect(res.body.data.closedPeriods.length === 1 && res.body.data.unavailable.some((item) => item.reason === 'closed'), 'Calendar payload includes the closure', res);
+
+        res = await request('POST', `/api/v1/advertisements/${golf._id}/blocked-periods`, {
+            token: owner.token,
+            body: { kind: 'hours', date: '2027-02-02', startTime: '17:00', endTime: '19:00' },
+        });
+        expect(res.status === 201, 'Owner closes two hours', res);
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${golf._id}&date=2027-02-02&startTime=17:00&endTime=19:00`);
+        expect(res.status === 200 && res.body.data.available === false && res.body.data.unavailableReason === 'closed', 'Check: closed hours are unavailable', res);
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${golf._id}&date=2027-02-02&startTime=19:00&endTime=21:00`);
+        expect(res.status === 200 && res.body.data.available === true, 'Check: the hours after a closure stay available', res);
+
+        res = await request('GET', `/api/v1/bookings/booked-dates/${golf._id}?month=2027-02`);
+        const partialDay = res.body.data.calendar.days.find((day) => day.date === '2027-02-02');
+        expect(
+            partialDay && partialDay.status === 'partial' && partialDay.available === true && partialDay.closedHours.some((hour) => hour.startTime === '17:00' && hour.endTime === '19:00'),
+            'Calendar: an hourly closure leaves the day open and lists the closed hours',
+            res
+        );
+
+        res = await request('POST', `/api/v1/advertisements/${yacht._id}/blocked-periods`, {
+            token: owner.token,
+            body: { kind: 'month', month: '2027-03' },
+        });
+        expect(res.status === 201 && res.body.data.blockedPeriod.kind === 'month', 'Owner closes a whole month', res);
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${yacht._id}&date=2027-03-15&startTime=10:00&endTime=12:00`);
+        expect(res.status === 200 && res.body.data.available === false && res.body.data.unavailableReason === 'closed', 'Check: a day inside a closed month is unavailable', res);
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${yacht._id}&date=2027-04-02&startTime=10:00&endTime=12:00`);
+        expect(res.status === 200 && res.body.data.available === true, 'Check: the next month stays available', res);
+
+        res = await request('POST', `/api/v1/advertisements/${hotel._id}/blocked-periods`, {
+            token: owner.token,
+            body: { kind: 'days', startDay: '2027-04-01', endDay: '2027-04-03', room: String(roomA._id) },
+        });
+        expect(res.status === 201, 'Owner closes one hotel room', res);
+
+        res = await request('GET', `/api/v1/bookings/check?room=${roomA._id}&startDate=2027-04-01T12:00:00.000Z&endDate=2027-04-03T10:00:00.000Z`);
+        expect(res.status === 200 && res.body.data.available === false && res.body.data.unavailableReason === 'closed', 'Check: the closed room is unavailable', res);
+
+        res = await request('GET', `/api/v1/bookings/check?room=${roomB._id}&startDate=2027-04-01T12:00:00.000Z&endDate=2027-04-03T10:00:00.000Z`);
+        expect(res.status === 200 && res.body.data.available === true, 'Check: another room in the same hotel stays available', res);
+
+        res = await request('DELETE', `/api/v1/advertisements/${chalet._id}/blocked-periods/${blockId}`, { token: customer.token });
+        expect(res.status === 403, 'A customer cannot reopen a closure', res);
+
+        res = await request('DELETE', `/api/v1/advertisements/${chalet._id}/blocked-periods/${blockId}`, { token: owner.token });
+        expect(res.status === 200, 'Owner reopens the closed days', res);
+
+        res = await request('GET', `/api/v1/bookings/check?advertisement=${chalet._id}&startDate=2027-01-10T12:00:00.000Z&endDate=2027-01-12T12:00:00.000Z`);
+        expect(res.status === 200 && res.body.data.available === true && res.body.data.unavailableReason === null, 'Check: reopened days are available again', res);
+
         console.log(`\n🎉 All ${passed} booking checks passed.\n`);
     } finally {
+        await PaymentMethod.deleteMany({ _id: { $in: created.paymentMethods } });
+        await BlockedPeriod.deleteMany({ advertisement: { $in: created.ads } });
         await Booking.deleteMany({ user: { $in: created.users } });
         await Room.deleteMany({ _id: { $in: created.rooms } });
         await Advertisement.deleteMany({ _id: { $in: created.ads } });

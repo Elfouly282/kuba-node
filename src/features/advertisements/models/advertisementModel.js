@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { staySchema } = require('../stayOptions');
+const { listingPoliciesSchema } = require('../listingPolicies');
 
 const advertisementSchema = new mongoose.Schema(
     {
@@ -112,6 +113,10 @@ const advertisementSchema = new mongoose.Schema(
         },
         stay: {
             type: staySchema,
+            default: undefined,
+        },
+        policies: {
+            type: listingPoliciesSchema,
             default: undefined,
         },
         location: {

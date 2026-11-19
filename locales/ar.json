@@ -44,7 +44,12 @@
         "bookingConfirmed": "تم تأكيد الحجز بنجاح.",
         "bookingCompleted": "تم إكمال الحجز بنجاح.",
         "bookingDeleted": "تم حذف الحجز بنجاح.",
-        "privacyPolicyUpdated": "تم تحديث سياسة الخصوصية بنجاح."
+        "blockedPeriodCreated": "تم قفل الموعد، وهيظهر غير متاح في تقويم الحجز.",
+        "blockedPeriodDeleted": "تم فتح الموعد تاني للحجز.",
+        "privacyPolicyUpdated": "تم تحديث سياسة الخصوصية بنجاح.",
+        "paymentMethodCreated": "تمت إضافة منصة الدفع.",
+        "paymentMethodUpdated": "تم تحديث طريقة الدفع.",
+        "paymentMethodDeleted": "تم حذف منصة الدفع."
     },
     "errors": {
         "somethingWentWrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.",
@@ -102,9 +107,13 @@
         "roomDoesNotBelongToHotel": "هذه الغرفة لا تنتمي إلى الفندق المحدد.",
         "bookingDateConflict": "التواريخ أو الأوقات المحددة محجوزة مسبقاً، يرجى اختيار موعد آخر.",
         "bookingNotFound": "طلب الحجز المحدد غير موجود.",
+        "paymentMethodNotFound": "طريقة الدفع غير موجودة.",
+        "paymentMethodLocked": "الدفع عند الوصول يفضل متاح ومش بيتشال.",
         "invalidBookingId": "معرف الحجز المحدد غير صالح.",
         "advertisementInactive": "هذا الإعلان غير متاح للحجز حالياً.",
-        "bookingCannotBeCancelled": "يمكن إلغاء الحجوزات قيد الانتظار أو المؤكدة فقط."
+        "bookingCannotBeCancelled": "يمكن إلغاء الحجوزات قيد الانتظار أو المؤكدة فقط.",
+        "bookingClosed": "مقدم الخدمة قفل الموعد ده. اختار يوم أو ساعة تانية.",
+        "blockedPeriodNotFound": "فترة الإغلاق دي مش موجودة."
     },
     "validation": {
         "nameRequired": "الاسم مطلوب.",
@@ -141,7 +150,12 @@
         "tooManyGuests": "هذه الغرفة تستوعب {{maxGuests}} ضيوف كحد أقصى.",
         "invalidAddOn": "إحدى الإضافات المختارة غير متاحة لهذه الإقامة.",
         "invalidPaymentMethod": "طريقة الدفع غير صالحة.",
+        "paymentMethodNameRequired": "اكتب اسم منصة الدفع.",
+        "paymentMethodKeyTaken": "في منصة دفع بنفس الاسم بالفعل.",
         "termsRequired": "يرجى الموافقة على شروط الحجز وسياسة الإلغاء قبل الدفع.",
-        "invalidArrivalTime": "يرجى إدخال فترة وصول متوقعة صالحة."
+        "invalidArrivalTime": "يرجى إدخال فترة وصول متوقعة صالحة.",
+        "invalidBlockKind": "اختار نوع الإغلاق: ساعات أو أيام أو شهر.",
+        "invalidMonth": "الشهر لازم يكون بالشكل YYYY-MM، زي 2026-12.",
+        "blockInPast": "الفترة دي خلّصت. اختار ميعاد لسه جاي."
     }
 }

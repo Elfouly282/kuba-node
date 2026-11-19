@@ -17,11 +17,13 @@ const {
 
 const { uploadMultiple, uploadFields } = require('../../../middleware/uploadMiddleware');
 const { protectAdmin, requireAdmin, maybeAuth } = require('../../../middleware/authMiddleware');
+const buildBlockedPeriodRoutes = require('../../../../src/features/bookings/routes/blockedPeriodRoutes');
 
 router.get('/', maybeAuth, getAll);
 router.get('/search', maybeAuth, search);
 router.post('/search', maybeAuth, search);
 router.get('/:id', maybeAuth, getOne);
+router.use(buildBlockedPeriodRoutes(protectAdmin));
 const advertisementUploads = uploadFields([
     { name: 'image', maxCount: 1 },
     { name: 'images', maxCount: 4 },

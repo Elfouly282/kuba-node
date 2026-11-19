@@ -1749,7 +1749,7 @@
             "description": "title مطلوب. owner اختياري للأدمن. لو فيه ملف صورة استخدم form-data والحقول pricing[basePrice] و attributes كنص JSON.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"شاليه على البحر\",\n  \"owner\": null,\n  \"category\": \"{{categoryId}}\",\n  \"unitType\": \"{{unitTypeId}}\",\n  \"city\": \"{{cityId}}\",\n  \"region\": \"{{regionId}}\",\n  \"pricing\": {\n    \"basePrice\": 2500,\n    \"discountType\": \"none\",\n    \"discountValue\": 0,\n    \"pricingUnit\": \"per_night\",\n    \"minDuration\": 1\n  },\n  \"stay\": {\n    \"cleaningFee\": 150,\n    \"serviceFeePercent\": 5,\n    \"taxPercent\": 14,\n    \"taxLabel\": \"VAT\",\n    \"breakfastIncluded\": false,\n    \"freeCancellationDays\": 2,\n    \"checkInTime\": \"14:00\",\n    \"checkOutTime\": \"12:00\",\n    \"addOns\": [\n      {\n        \"title\": \"Airport transfer\",\n        \"description\": \"\",\n        \"price\": 300,\n        \"category\": \"extra\",\n        \"active\": true\n      }\n    ]\n  },\n  \"location\": \"سهل حشيش\",\n  \"address\": \"الكورنيش\",\n  \"latitude\": 27.041086,\n  \"longitude\": 33.891272,\n  \"description\": \"<p>وصف الإعلان</p>\",\n  \"active\": true,\n  \"isFlashSale\": false,\n  \"attributes\": {}\n}",
+              "raw": "{\n  \"title\": \"شاليه على البحر\",\n  \"owner\": null,\n  \"category\": \"{{categoryId}}\",\n  \"unitType\": \"{{unitTypeId}}\",\n  \"city\": \"{{cityId}}\",\n  \"region\": \"{{regionId}}\",\n  \"pricing\": {\n    \"basePrice\": 2500,\n    \"discountType\": \"none\",\n    \"discountValue\": 0,\n    \"pricingUnit\": \"per_night\",\n    \"minDuration\": 1\n  },\n  \"stay\": {\n    \"cleaningFee\": 150,\n    \"serviceFeePercent\": 5,\n    \"taxPercent\": 14,\n    \"taxLabel\": \"VAT\",\n    \"breakfastIncluded\": false,\n    \"freeCancellationDays\": 2,\n    \"checkInTime\": \"14:00\",\n    \"checkOutTime\": \"12:00\",\n    \"addOns\": [\n      {\n        \"title\": \"Airport transfer\",\n        \"description\": \"\",\n        \"price\": 300,\n        \"category\": \"extra\",\n        \"active\": true\n      }\n    ]\n  },\n  \"policies\": {\n    \"booking\": { \"content\": \"Full payment is due when the booking is confirmed.\", \"contentAr\": \"يُدفع المبلغ كاملًا عند تأكيد الحجز.\" },\n    \"cancellation\": { \"content\": \"Free cancellation until 2 days before check-in.\", \"contentAr\": \"إلغاء مجاني حتى يومين قبل الوصول.\" },\n    \"houseRules\": { \"content\": \"No parties.\", \"contentAr\": \"ممنوع الحفلات.\" },\n    \"checkIn\": { \"content\": \"Host meets guests at the gate.\", \"contentAr\": \"المالك يستقبل النزلاء عند البوابة.\" },\n    \"payment\": { \"content\": \"InstaPay or cash on arrival.\", \"contentAr\": \"إنستا باي أو كاش عند الوصول.\" },\n    \"extras\": [{ \"title\": \"Pets\", \"titleAr\": \"الحيوانات\", \"content\": \"Pets are not allowed.\", \"contentAr\": \"غير مسموح بالحيوانات.\" }]\n  },\n  \"location\": \"سهل حشيش\",\n  \"address\": \"الكورنيش\",\n  \"latitude\": 27.041086,\n  \"longitude\": 33.891272,\n  \"description\": \"<p>وصف الإعلان</p>\",\n  \"active\": true,\n  \"isFlashSale\": false,\n  \"attributes\": {}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1788,7 +1788,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"شاليه على البحر\",\n  \"category\": \"{{categoryId}}\",\n  \"unitType\": \"{{unitTypeId}}\",\n  \"city\": \"{{cityId}}\",\n  \"region\": \"{{regionId}}\",\n  \"pricing\": {\n    \"basePrice\": 2800,\n    \"discountType\": \"percent\",\n    \"discountValue\": 10,\n    \"pricingUnit\": \"per_night\",\n    \"minDuration\": 1\n  },\n  \"stay\": {\n    \"cleaningFee\": 150,\n    \"serviceFeePercent\": 5,\n    \"taxPercent\": 14,\n    \"taxLabel\": \"VAT\",\n    \"breakfastIncluded\": false,\n    \"freeCancellationDays\": 2,\n    \"checkInTime\": \"14:00\",\n    \"checkOutTime\": \"12:00\",\n    \"addOns\": [\n      {\n        \"title\": \"Airport transfer\",\n        \"description\": \"\",\n        \"price\": 300,\n        \"category\": \"extra\",\n        \"active\": true\n      }\n    ]\n  },\n  \"location\": \"سهل حشيش\",\n  \"address\": \"الكورنيش\",\n  \"latitude\": 27.041086,\n  \"longitude\": 33.891272,\n  \"description\": \"<p>وصف محدّث</p>\",\n  \"active\": true,\n  \"isFlashSale\": false,\n  \"attributes\": {}\n}",
+              "raw": "{\n  \"title\": \"شاليه على البحر\",\n  \"category\": \"{{categoryId}}\",\n  \"unitType\": \"{{unitTypeId}}\",\n  \"city\": \"{{cityId}}\",\n  \"region\": \"{{regionId}}\",\n  \"pricing\": {\n    \"basePrice\": 2800,\n    \"discountType\": \"percent\",\n    \"discountValue\": 10,\n    \"pricingUnit\": \"per_night\",\n    \"minDuration\": 1\n  },\n  \"stay\": {\n    \"cleaningFee\": 150,\n    \"serviceFeePercent\": 5,\n    \"taxPercent\": 14,\n    \"taxLabel\": \"VAT\",\n    \"breakfastIncluded\": false,\n    \"freeCancellationDays\": 2,\n    \"checkInTime\": \"14:00\",\n    \"checkOutTime\": \"12:00\",\n    \"addOns\": [\n      {\n        \"title\": \"Airport transfer\",\n        \"description\": \"\",\n        \"price\": 300,\n        \"category\": \"extra\",\n        \"active\": true\n      }\n    ]\n  },\n  \"policies\": {\n    \"booking\": { \"content\": \"Full payment is due when the booking is confirmed.\", \"contentAr\": \"يُدفع المبلغ كاملًا عند تأكيد الحجز.\" },\n    \"cancellation\": { \"content\": \"Free cancellation until 2 days before check-in.\", \"contentAr\": \"إلغاء مجاني حتى يومين قبل الوصول.\" },\n    \"houseRules\": { \"content\": \"No parties.\", \"contentAr\": \"ممنوع الحفلات.\" },\n    \"checkIn\": { \"content\": \"Host meets guests at the gate.\", \"contentAr\": \"المالك يستقبل النزلاء عند البوابة.\" },\n    \"payment\": { \"content\": \"InstaPay or cash on arrival.\", \"contentAr\": \"إنستا باي أو كاش عند الوصول.\" },\n    \"extras\": [{ \"title\": \"Pets\", \"titleAr\": \"الحيوانات\", \"content\": \"Pets are not allowed.\", \"contentAr\": \"غير مسموح بالحيوانات.\" }]\n  },\n  \"location\": \"سهل حشيش\",\n  \"address\": \"الكورنيش\",\n  \"latitude\": 27.041086,\n  \"longitude\": 33.891272,\n  \"description\": \"<p>وصف محدّث</p>\",\n  \"active\": true,\n  \"isFlashSale\": false,\n  \"attributes\": {}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2756,6 +2756,84 @@
               ]
             },
             "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payment Methods",
+      "description": "طرق الدفع في التطبيق. «عند الوصول» موجودة دايمًا ومش بتتحذف. أي منصة تتضاف هنا وهي active بتظهر في Check Booking تحت paymentMethods، والحجز يقبل مفتاحها.",
+      "item": [
+        {
+          "name": "List Payment Methods",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/payment-methods",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "payment-methods"]
+            },
+            "description": "Requires admin. Returns on_arrival plus any platforms. Active methods are what the app shows."
+          }
+        },
+        {
+          "name": "Add Payment Platform",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"InstaPay\",\n  \"nameAr\": \"إنستاباي\",\n  \"subtitle\": \"Transfer from the app\",\n  \"subtitleAr\": \"تحويل من التطبيق\",\n  \"requiresTerms\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/payment-methods",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "payment-methods"]
+            },
+            "description": "Requires admin. The key is generated from the English name. The platform shows in the app only while active."
+          }
+        },
+        {
+          "name": "Update Payment Method",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/payment-methods/{{paymentMethodId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "payment-methods", "{{paymentMethodId}}"]
+            },
+            "description": "Requires admin. Hide a platform with active:false. Pay on arrival cannot be hidden or deleted."
+          }
+        },
+        {
+          "name": "Delete Payment Platform",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/payment-methods/{{paymentMethodId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "payment-methods", "{{paymentMethodId}}"]
+            },
+            "description": "Requires admin. Pay on arrival cannot be deleted."
           }
         }
       ]

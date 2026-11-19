@@ -12,14 +12,20 @@ const {
     assertCapacity,
     buildQuote,
     presentConfirmation,
-    normalizeTime,
 } = require('../quote');
 const { presentReceiptLine } = require('../../../../utils/localize');
+const { snapshotPolicies } = require('../../advertisements/listingPolicies');
+const { DATE_ONLY, cairoDay, zonedDate } = require('../cairoTime');
+const {
+    findOverlappingClosure,
+    listUpcomingBlocks,
+    formatBlock,
+    resolveCalendarWindow,
+    buildCalendar,
+} = require('../blockedPeriods');
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
-const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
-const CAIRO = 'Africa/Cairo';
 
 // Bookings in these statuses block their time slot
 const ACTIVE_STATUSES = ['pending', 'confirmed'];
@@ -39,37 +45,6 @@ const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 const text = (value) => (value === undefined || value === null ? '' : String(value).trim());
 
 const isDateOnly = (value) => DATE_ONLY.test(text(value));
-
-const cairoDay = (date) => new Intl.DateTimeFormat('en-CA', {
-    timeZone: CAIRO,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-}).format(date);
-
-// Wall-clock time in Africa/Cairo, so 17:00 is 5pm in Egypt.
-const zonedDate = (day, time) => {
-    const datePart = text(day).slice(0, 10);
-    const clock = normalizeTime(text(time).replace(/^(\d{1,2}:\d{2}):\d{2}$/, '$1'));
-    if (!DATE_ONLY.test(datePart) || !clock) return null;
-
-    const utcGuess = new Date(`${datePart}T${clock}:00Z`);
-    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
-        timeZone: CAIRO,
-        hourCycle: 'h23',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-    }).formatToParts(utcGuess).map((part) => [part.type, part.value]));
-
-    const hour = parts.hour === '24' ? 0 : Number(parts.hour);
-    const asUtc = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), hour, Number(parts.minute), Number(parts.second));
-    const parsed = new Date(utcGuess.getTime() - (asUtc - utcGuess.getTime()));
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
 
 const assertFutureRange = (start, end) => {
     if (!(start instanceof Date) || !(end instanceof Date) || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
@@ -273,9 +248,71 @@ const prepareBooking = async (input) => {
         });
     }
 
-    const available = !(await isSlotTaken({ ad, room, start, end }));
+    const closure = await findOverlappingClosure({ ad, room, start, end });
+    const taken = await isSlotTaken({ ad, room, start, end });
+    const available = !closure && !taken;
 
-    return { ad, room, start, end, price, available };
+    return {
+        ad,
+        room,
+        start,
+        end,
+        price,
+        available,
+        unavailableReason: available ? null : (closure ? 'closed' : 'booked'),
+    };
+};
+
+/**
+ * Booked ranges, provider closures, and a month calendar for the booking screen.
+ * Pass ?month=YYYY-MM or ?from=&to= to move the calendar. Defaults to the current month.
+ * ?room= limits both bookings and closures to that room, and still includes listing-wide closures.
+ */
+const buildAvailability = async ({ ad, roomDoc, booking, roomId, hasRooms, query }) => {
+    const scopeRoom = roomDoc ? roomDoc._id : null;
+    const bookings = await Booking.find({
+        advertisement: ad._id,
+        room: roomId || null,
+        status: { $in: ACTIVE_STATUSES },
+        endDate: { $gt: new Date() },
+    })
+        .select('startDate endDate')
+        .sort({ startDate: 1 });
+
+    const closed = await listUpcomingBlocks(ad._id, scopeRoom);
+    const window = resolveCalendarWindow(query);
+    const closedPeriods = closed.map(formatBlock);
+
+    return {
+        advertisementId: ad._id,
+        hasRooms,
+        roomId: scopeRoom,
+        pricingUnit: booking.pricingUnit,
+        booking,
+        bookedDates: bookings.map((item) => ({ startDate: item.startDate, endDate: item.endDate })),
+        closedPeriods,
+        unavailable: [
+            ...bookings.map((item) => ({
+                startDate: item.startDate,
+                endDate: item.endDate,
+                reason: 'booked',
+            })),
+            ...closedPeriods.map((item) => ({
+                startDate: item.startsAt,
+                endDate: item.endsAt,
+                reason: 'closed',
+                kind: item.kind,
+                id: item.id,
+            })),
+        ],
+        calendar: buildCalendar({
+            fromDay: window.from,
+            toDay: window.to,
+            blocks: closed,
+            bookings,
+            mode: booking.mode,
+        }),
+    };
 };
 
 const populateBooking = (query) => query
@@ -385,6 +422,7 @@ const formatBookingReceipt = (doc, locale = 'en') => {
         cancellation: confirmation.cancellation?.freeUntil
             ? { freeUntil: confirmation.cancellation.freeUntil }
             : null,
+        policies: confirmation.policies || undefined,
     };
 
     if (obj.notes) receipt.notes = obj.notes;
@@ -419,12 +457,14 @@ const staySnapshotFor = ({ ad, room, quote }) => ({
     breakfastIncluded: Boolean(quote.breakfastIncluded),
     checkInTime: quote.schedule?.checkInTime || '',
     checkOutTime: quote.schedule?.checkOutTime || '',
+    policies: snapshotPolicies(ad.policies),
 });
 
 module.exports = {
     ACTIVE_STATUSES,
     isValidId,
     prepareBooking,
+    buildAvailability,
     populateBooking,
     formatBooking,
     formatBookingReceipt,

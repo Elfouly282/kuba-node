@@ -163,8 +163,19 @@ const bookingSchema = new mongoose.Schema(
         },
         paymentMethod: {
             type: String,
-            enum: ['cash', 'card', 'wallet', 'online', 'instapay', 'fawry', 'meeza'],
-            default: 'cash',
+            trim: true,
+            lowercase: true,
+            default: 'on_arrival',
+        },
+        paymentMethodLabel: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+        paymentMethodLabelAr: {
+            type: String,
+            trim: true,
+            default: '',
         },
         notes: {
             type: String,

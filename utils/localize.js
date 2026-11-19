@@ -229,7 +229,8 @@ const UNIT_NAMES = {
 };
 
 const PAYMENT_LABELS = {
-    cash: { en: 'Cash', ar: 'كاش' },
+    cash: { en: 'Pay on arrival', ar: 'عند الوصول' },
+    on_arrival: { en: 'Pay on arrival', ar: 'عند الوصول' },
     card: { en: 'Card', ar: 'بطاقة' },
     wallet: { en: 'Wallet', ar: 'محفظة' },
     online: { en: 'Online', ar: 'أونلاين' },
@@ -309,7 +310,11 @@ const relabelKnownCopy = (obj, locale) => {
     }
 
     if (obj && obj.method && PAYMENT_LABELS[obj.method] && Object.prototype.hasOwnProperty.call(obj, 'methodLabel')) {
-        obj.methodLabel = PAYMENT_LABELS[obj.method][lang];
+        const known = PAYMENT_LABELS[obj.method];
+        const current = obj.methodLabel;
+        if (!current || current === known.en || current === known.ar || current === obj.method) {
+            obj.methodLabel = known[lang];
+        }
     }
 
     if (obj && PAYMENT_SUBTITLES[obj.key] && Object.prototype.hasOwnProperty.call(obj, 'subtitle')) {

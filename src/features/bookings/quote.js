@@ -1,7 +1,5 @@
 const APIError = require('../../utils/apiError');
 
-const PAYMENT_METHODS = ['cash', 'card', 'wallet', 'online', 'instapay', 'fawry', 'meeza'];
-const TERMS_REQUIRED = new Set(['instapay', 'fawry', 'meeza']);
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const normalizeTime = (value) => {
@@ -37,7 +35,8 @@ const clockInZone = (date, timeZone = 'Africa/Cairo') => {
 };
 
 const PAYMENT_LABELS = {
-    cash: { en: 'Cash', ar: 'كاش' },
+    cash: { en: 'Pay on arrival', ar: 'عند الوصول' },
+    on_arrival: { en: 'Pay on arrival', ar: 'عند الوصول' },
     card: { en: 'Card', ar: 'بطاقة' },
     wallet: { en: 'Wallet', ar: 'محفظة' },
     online: { en: 'Online', ar: 'أونلاين' },
@@ -53,15 +52,6 @@ const paymentLabel = (method, locale = 'en') => {
 };
 
 const money = (value) => Math.round((Number(value) || 0) * 100) / 100;
-
-const paymentMethodOptions = (locale = 'en') => {
-    const ar = locale === 'ar';
-    return [
-        { key: 'instapay', label: 'InstaPay', subtitle: '' },
-        { key: 'fawry', label: 'Fawry', subtitle: ar ? 'كاش ومنفذ دفع' : 'Cash & retail' },
-        { key: 'meeza', label: 'Meeza', subtitle: ar ? 'محفظة' : 'Wallet' },
-    ];
-};
 
 const pickNumber = (...values) => {
     const found = values.find((value) => value !== undefined && value !== null && value !== '');
@@ -169,16 +159,6 @@ const assertCapacity = (room, guests) => {
     if (guests.adults + guests.children > maxGuests) {
         throw new APIError('validation.tooManyGuests', 400, { maxGuests });
     }
-};
-
-const assertPayment = (body = {}) => {
-    const method = body.paymentMethod || 'cash';
-    if (!PAYMENT_METHODS.includes(method)) throw new APIError('validation.invalidPaymentMethod', 400);
-
-    const accepted = body.acceptedTerms === true || body.acceptedTerms === 'true';
-    if (TERMS_REQUIRED.has(method) && !accepted) throw new APIError('validation.termsRequired', 400);
-
-    return { method, accepted };
 };
 
 const normalizeGuest = (input = {}, user = {}) => {
@@ -447,7 +427,8 @@ const presentConfirmation = (booking) => {
         payment: {
             status: booking.paymentStatus,
             method: booking.paymentMethod,
-            methodLabel: paymentLabel(booking.paymentMethod),
+            methodLabel: booking.paymentMethodLabel || paymentLabel(booking.paymentMethod, 'en'),
+            methodLabelAr: booking.paymentMethodLabelAr || paymentLabel(booking.paymentMethod, 'ar'),
             amount: quote.total,
             currency: quote.currency || 'EGP',
         },
@@ -487,17 +468,16 @@ const presentConfirmation = (booking) => {
         },
         price: quote,
         cancellation: quote.cancellation || null,
+        policies: stay.policies || undefined,
     };
 };
 
 module.exports = {
-    PAYMENT_METHODS,
-    paymentMethodOptions,
     normalizeTime,
+    clockInZone,
     readGuests,
     parseAddOnIds,
     assertCapacity,
-    assertPayment,
     normalizeGuest,
     buildQuote,
     presentConfirmation,

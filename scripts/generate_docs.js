@@ -1008,7 +1008,7 @@ const htmlContent = `<!DOCTYPE html>
     "adults": 2,
     "children": 1
   },
-  "paymentMethod": "cash", // "cash", "credit_card", "wallet"
+  "paymentMethod": "on_arrival", // عند الوصول. cash بنفس المعنى. أي منصة تتضاف من لوحة التحكم بمفتاحها
   "notes": "يرجى توفير سرير إضافي للأطفال"
 }</code></pre>
       <p>يعود السيرفر بـ <code>201 Created</code> مع كائن الحجز ورقم المرجع، وحالته المبدئية <code>pending</code>.</p>
