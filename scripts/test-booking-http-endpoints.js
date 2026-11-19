@@ -273,12 +273,6 @@ const run = async () => {
                     content: 'Free cancellation until 5 days before check-in.',
                     contentAr: 'إلغاء مجاني حتى 5 أيام قبل الوصول.',
                 },
-                extras: [{
-                    title: 'Pets',
-                    titleAr: 'الحيوانات',
-                    content: 'Pets are not allowed.',
-                    contentAr: 'غير مسموح بالحيوانات.',
-                }],
             },
         });
         const seaView = await Room.create({
@@ -403,7 +397,7 @@ const run = async () => {
         expectedFreeUntil.setUTCDate(expectedFreeUntil.getUTCDate() - 5);
         expectedFreeUntil.setUTCHours(21, 59, 0, 0);
         expect(new Date(confirmation.cancellation.freeUntil).getTime() === expectedFreeUntil.getTime(), 'Confirmation: free cancellation is 5 days before check-in at 11:59 PM', res);
-        expect(confirmation.policies.booking.content === '<p>Full payment is due when the booking is confirmed.</p>' && confirmation.policies.extras[0].titleAr === 'الحيوانات' && confirmation.policies.html.includes('Booking policy'), 'Confirmation: owner policies are saved as organized HTML', res);
+        expect(confirmation.policies.booking.content === '<p>Full payment is due when the booking is confirmed.</p>' && confirmation.policies.html.includes('Booking policy') && !confirmation.policies.extras, 'Confirmation: owner policies are saved as organized HTML', res);
 
         res = await request('GET', `/api/v1/bookings/${stayed.id}`, { token: customer.token });
         expect(res.status === 200 && res.body.data.booking.confirmation.price.total === 27930, 'Get booking: confirmation total is unchanged', res);

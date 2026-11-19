@@ -444,19 +444,6 @@ function mergePoliciesForForm(enPolicies = {}, arPolicies = {}) {
             contentAr: arPolicies[field.key]?.content || '',
         };
     });
-    const english = Array.isArray(enPolicies.extras) ? enPolicies.extras : [];
-    const arabic = Array.isArray(arPolicies.extras) ? arPolicies.extras : [];
-    const arabicById = new Map(arabic.map((item) => [String(item.id || item._id || ''), item]));
-    merged.extras = english.map((item, index) => {
-        const match = arabicById.get(String(item.id || item._id || '')) || arabic[index] || {};
-        return {
-            ...item,
-            title: item.title || '',
-            titleAr: match.title || '',
-            content: item.content || '',
-            contentAr: match.content || '',
-        };
-    });
     return merged;
 }
 
@@ -5348,77 +5335,21 @@ function readStayFields(prefix) {
     return stay;
 }
 
-function policyEditorMarkup(id, dir) {
-    return `
-        <div class="html-editor is-compact sm:col-span-6" data-html-editor="${id}">
-            <div class="html-editor-toolbar">
-                <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
-                <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
-                <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
-                <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
-                <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
-            </div>
-            <div class="html-editor-area" contenteditable="true" dir="${dir}" data-placeholder="${dir === 'rtl' ? 'نص السياسة' : 'Policy text'}"></div>
-            <textarea id="${id}" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
-        </div>`;
-}
-
-let policyExtraSeq = 0;
-
-function addPolicyExtraRow(prefix, extra = {}) {
-    const box = document.getElementById(`${prefix}-policy-extras`);
-    if (!box) return;
-    const seq = ++policyExtraSeq;
-    const contentId = `${prefix}-policy-extra-${seq}`;
-    const contentArId = `${prefix}-policy-extra-${seq}-ar`;
-    const row = document.createElement('div');
-    row.className = 'policy-extra-row grid grid-cols-1 sm:grid-cols-12 gap-2';
-    row.innerHTML = `
-        <input data-policy="title" class="form-input text-xs sm:col-span-5" dir="ltr" placeholder="Title (English)" value="${escapeHtmlText(extra.title || '')}">
-        <input data-policy="titleAr" class="form-input text-xs sm:col-span-5" placeholder="العنوان (عربي)" value="${escapeHtmlText(extra.titleAr || '')}">
-        <button type="button" class="btn-secondary text-[11px] sm:col-span-2" onclick="this.closest('.policy-extra-row').remove()">حذف</button>
-        ${policyEditorMarkup(contentId, 'ltr')}
-        ${policyEditorMarkup(contentArId, 'rtl')}
-        <input type="hidden" data-policy="id" value="${escapeHtmlText(extra.id || extra._id || '')}">
-    `;
-    box.appendChild(row);
-    initHtmlEditors();
-    setHtmlEditor(contentId, extra.content || '');
-    setHtmlEditor(contentArId, extra.contentAr || '');
-}
-
 function fillPolicyFields(prefix, policies = {}) {
     POLICY_FIELDS.forEach((field) => {
         const text = policies[field.key] || {};
         setHtmlEditor(`${prefix}-policy-${field.id}`, text.content || '');
         setHtmlEditor(`${prefix}-policy-${field.id}-ar`, text.contentAr || '');
     });
-    const box = document.getElementById(`${prefix}-policy-extras`);
-    if (box) box.innerHTML = '';
-    (policies.extras || []).forEach((extra) => addPolicyExtraRow(prefix, extra));
 }
 
 function readPolicyFields(prefix) {
-    const policies = { extras: [] };
+    const policies = {};
     POLICY_FIELDS.forEach((field) => {
         policies[field.key] = {
             content: readHtmlEditor(`${prefix}-policy-${field.id}`),
             contentAr: readHtmlEditor(`${prefix}-policy-${field.id}-ar`),
         };
-    });
-    document.querySelectorAll(`#${prefix}-policy-extras .policy-extra-row`).forEach((row) => {
-        const contentId = row.querySelector('[dir="ltr"].html-editor-area')?.closest('[data-html-editor]')?.getAttribute('data-html-editor');
-        const contentArId = row.querySelector('[dir="rtl"].html-editor-area')?.closest('[data-html-editor]')?.getAttribute('data-html-editor');
-        const extra = {
-            title: row.querySelector('[data-policy="title"]')?.value.trim() || '',
-            titleAr: row.querySelector('[data-policy="titleAr"]')?.value.trim() || '',
-            content: contentId ? readHtmlEditor(contentId) : '',
-            contentAr: contentArId ? readHtmlEditor(contentArId) : '',
-        };
-        if (!extra.title && !extra.titleAr && !extra.content && !extra.contentAr) return;
-        const id = row.querySelector('[data-policy="id"]')?.value;
-        if (id) extra.id = id;
-        policies.extras.push(extra);
     });
     return policies;
 }

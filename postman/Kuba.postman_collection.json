@@ -1177,7 +1177,7 @@
                 }
               ]
             },
-            "description": "Returns the listing. `booking` tells the app which screen to open: mode stay | hourly | trip, requiresRoom (true only for a hotel), pricingUnit, minDuration. Same field is on list, search, and each room. `stay` is the checkout setup used by the booking quote: cleaningFee, serviceFeePercent, taxPercent, taxLabel, checkInTime, checkOutTime, freeCancellationDays, breakfastIncluded, and addOns (meals and extras). A room without its own stay inherits the hotel stay. `policies` is the owner's HTML for this listing: booking, cancellation, houseRules, checkIn, payment, and extras. `content` is sanitized HTML in the requested language. `html` is one organized article with a heading for each section. Empty sections are omitted."
+            "description": "Returns the listing. `booking` tells the app which screen to open: mode stay | hourly | trip, requiresRoom (true only for a hotel), pricingUnit, minDuration. Same field is on list, search, and each room. `stay` is the checkout setup used by the booking quote: cleaningFee, serviceFeePercent, taxPercent, taxLabel, checkInTime, checkOutTime, freeCancellationDays, breakfastIncluded, and addOns (meals and extras). A room without its own stay inherits the hotel stay. `policies` is the owner's HTML for this listing: booking, cancellation, houseRules, checkIn, and payment. `content` is sanitized HTML in the requested language. `html` is one organized article with a heading for each section. Empty sections are omitted."
           }
         },
         {
@@ -1509,7 +1509,7 @@
                 }
               ]
             },
-            "description": "Public. Same pricing as Create Booking, without saving. `totalPrice` and `quote.total` are the amount every step must show (review, meals, payment, confirmation). `quote.lines` is the breakdown: room, discount, cleaning, service fee, VAT, selected add-ons. Pass `adults` and `addOns` (comma-separated ids) to preview the meals step. `paymentMethods` lists the active methods. Pay on arrival (`on_arrival`) is always included. A platform appears only after an admin adds it. `policies` is the listing owner's booking, cancellation, house rules, check-in, payment, and any extras. `content` is sanitized HTML and `html` is one organized article, both in the requested language."
+            "description": "Public. Same pricing as Create Booking, without saving. `totalPrice` and `quote.total` are the amount every step must show (review, meals, payment, confirmation). `quote.lines` is the breakdown: room, discount, cleaning, service fee, VAT, selected add-ons. Pass `adults` and `addOns` (comma-separated ids) to preview the meals step. `paymentMethods` lists the active methods. Pay on arrival (`on_arrival`) is always included. A platform appears only after an admin adds it. `policies` is the listing owner's booking, cancellation, house rules, check-in, and payment. `content` is sanitized HTML and `html` is one organized article, both in the requested language."
           }
         },
         {

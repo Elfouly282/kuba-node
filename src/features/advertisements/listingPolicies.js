@@ -3,8 +3,6 @@ const { escapeHtml, normalizeDescriptionHtml, stripHtml, styleDescription } = re
 
 const TEXT_KEYS = ['booking', 'cancellation', 'houseRules', 'checkIn', 'payment'];
 const TEXT_MAX = 20000;
-const TITLE_MAX = 200;
-const EXTRA_MAX = 8;
 
 const policyTextSchema = new mongoose.Schema(
     {
@@ -14,16 +12,6 @@ const policyTextSchema = new mongoose.Schema(
     { _id: false }
 );
 
-const extraPolicySchema = new mongoose.Schema(
-    {
-        title: { type: String, trim: true, default: '', maxlength: TITLE_MAX },
-        titleAr: { type: String, trim: true, default: '', maxlength: TITLE_MAX },
-        content: { type: String, trim: true, default: '', maxlength: TEXT_MAX },
-        contentAr: { type: String, trim: true, default: '', maxlength: TEXT_MAX },
-    },
-    { _id: true }
-);
-
 const listingPoliciesSchema = new mongoose.Schema(
     {
         booking: { type: policyTextSchema, default: undefined },
@@ -31,12 +19,9 @@ const listingPoliciesSchema = new mongoose.Schema(
         houseRules: { type: policyTextSchema, default: undefined },
         checkIn: { type: policyTextSchema, default: undefined },
         payment: { type: policyTextSchema, default: undefined },
-        extras: { type: [extraPolicySchema], default: undefined },
     },
     { _id: false }
 );
-
-const clip = (value, max) => String(value || '').trim().slice(0, max);
 
 const LABELS = {
     booking: { en: 'Booking policy', ar: 'سياسة الحجز' },
@@ -74,14 +59,6 @@ const buildPoliciesHtml = (policies, locale) => {
         .map((key) => sectionHtml(LABELS[key][lang], localizeBody(policies[key], lang)))
         .filter(Boolean);
 
-    (policies.extras || []).forEach((extra) => {
-        const title = isAr
-            ? (extra.titleAr || extra.title || 'سياسة إضافية')
-            : (extra.title || extra.titleAr || 'Additional policy');
-        const section = sectionHtml(title, localizeBody(extra, lang));
-        if (section) sections.push(section);
-    });
-
     if (!sections.length) return '';
     const dir = isAr ? 'rtl' : 'ltr';
     const align = isAr ? 'right' : 'left';
@@ -112,20 +89,6 @@ const readTextPolicy = (source) => ({
     contentAr: asPolicyHtml(source?.contentAr),
 });
 
-const readExtra = (item) => {
-    if (!item || typeof item !== 'object') return null;
-    const extra = {
-        title: clip(item.title, TITLE_MAX),
-        titleAr: clip(item.titleAr, TITLE_MAX),
-        content: asPolicyHtml(item.content),
-        contentAr: asPolicyHtml(item.contentAr),
-    };
-    if (!extra.title && !extra.titleAr && !extra.content && !extra.contentAr) return null;
-    const id = item._id || item.id;
-    if (id && mongoose.Types.ObjectId.isValid(id)) extra._id = id;
-    return extra;
-};
-
 // A patch: a text key set to null means "clear it". Missing keys are left alone.
 const normalizeListingPolicies = (input) => {
     const source = parseInput(input);
@@ -144,11 +107,6 @@ const normalizeListingPolicies = (input) => {
         policies[key] = (text.content || text.contentAr) ? text : null;
     });
 
-    if (source.extras !== undefined) {
-        const list = Array.isArray(source.extras) ? source.extras : [];
-        policies.extras = list.map(readExtra).filter(Boolean).slice(0, EXTRA_MAX);
-    }
-
     return policies;
 };
 
@@ -162,10 +120,7 @@ const mergeListingPolicies = (current, next) => {
         if (next[key] == null) delete merged[key];
         else merged[key] = next[key];
     });
-    if (Object.prototype.hasOwnProperty.call(next, 'extras')) {
-        if (next.extras.length) merged.extras = next.extras;
-        else delete merged.extras;
-    }
+    delete merged.extras;
     return compactPolicies(merged);
 };
 
@@ -182,11 +137,6 @@ const compactPolicies = (policies) => {
         };
         if (text.content || text.contentAr) compact[key] = text;
     });
-    const extras = (Array.isArray(policies.extras) ? policies.extras : [])
-        .map(readExtra)
-        .filter(Boolean)
-        .slice(0, EXTRA_MAX);
-    if (extras.length) compact.extras = extras;
     return Object.keys(compact).length ? compact : undefined;
 };
 
@@ -207,12 +157,6 @@ listingPoliciesSchema.pre('validate', function (next) {
         item.content = asPolicyHtml(item.content);
         item.contentAr = asPolicyHtml(item.contentAr);
     });
-    if (Array.isArray(this.extras)) {
-        this.extras.forEach((extra) => {
-            extra.content = asPolicyHtml(extra.content);
-            extra.contentAr = asPolicyHtml(extra.contentAr);
-        });
-    }
     next();
 });
 
