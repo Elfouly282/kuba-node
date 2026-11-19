@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
+const { escapeHtml, normalizeDescriptionHtml, stripHtml, styleDescription } = require('../../utils/descriptionHtml');
 
 const TEXT_KEYS = ['booking', 'cancellation', 'houseRules', 'checkIn', 'payment'];
-const TEXT_MAX = 5000;
+const TEXT_MAX = 20000;
 const TITLE_MAX = 200;
 const EXTRA_MAX = 8;
 
@@ -37,6 +38,56 @@ const listingPoliciesSchema = new mongoose.Schema(
 
 const clip = (value, max) => String(value || '').trim().slice(0, max);
 
+const LABELS = {
+    booking: { en: 'Booking policy', ar: 'سياسة الحجز' },
+    cancellation: { en: 'Cancellation policy', ar: 'سياسة الإلغاء' },
+    houseRules: { en: 'House rules', ar: 'قواعد الإقامة' },
+    checkIn: { en: 'Arrival instructions', ar: 'تعليمات الوصول' },
+    payment: { en: 'Payment policy', ar: 'سياسة الدفع' },
+};
+
+const BLOCK_HTML = /^(<p\b|<ul\b|<ol\b|<h[2-4]\b|<blockquote\b|<div\b)/i;
+
+const asPolicyHtml = (value) => {
+    let html = normalizeDescriptionHtml(value);
+    if (!html) return '';
+    if (!BLOCK_HTML.test(html)) html = `<p>${html}</p>`;
+    if (html.length <= TEXT_MAX) return html;
+    return normalizeDescriptionHtml(stripHtml(html).slice(0, 4000));
+};
+
+const localizeBody = (policy, locale) => {
+    if (!policy) return '';
+    return locale === 'ar' ? (policy.contentAr || '') : (policy.content || '');
+};
+
+const sectionHtml = (title, body) => {
+    const html = styleDescription(body);
+    if (!html) return '';
+    return `<section style="margin:0 0 16px;"><h2 style="margin:0 0 8px;font-size:16px;font-weight:700;color:#2D4F2E;">${escapeHtml(title)}</h2><div>${html}</div></section>`;
+};
+
+const buildPoliciesHtml = (policies, locale) => {
+    const isAr = locale === 'ar';
+    const lang = isAr ? 'ar' : 'en';
+    const sections = TEXT_KEYS
+        .map((key) => sectionHtml(LABELS[key][lang], localizeBody(policies[key], lang)))
+        .filter(Boolean);
+
+    (policies.extras || []).forEach((extra) => {
+        const title = isAr
+            ? (extra.titleAr || extra.title || 'سياسة إضافية')
+            : (extra.title || extra.titleAr || 'Additional policy');
+        const section = sectionHtml(title, localizeBody(extra, lang));
+        if (section) sections.push(section);
+    });
+
+    if (!sections.length) return '';
+    const dir = isAr ? 'rtl' : 'ltr';
+    const align = isAr ? 'right' : 'left';
+    return `<article dir="${dir}" style="font-family:Cairo,Tahoma,sans-serif;direction:${dir};text-align:${align};color:#0f172a;line-height:1.7;">${sections.join('')}</article>`;
+};
+
 const asPlain = (value) => {
     if (!value || typeof value !== 'object') return null;
     if (typeof value.toObject === 'function') return value.toObject();
@@ -57,8 +108,8 @@ const parseInput = (input) => {
 };
 
 const readTextPolicy = (source) => ({
-    content: clip(source?.content, TEXT_MAX),
-    contentAr: clip(source?.contentAr, TEXT_MAX),
+    content: asPolicyHtml(source?.content),
+    contentAr: asPolicyHtml(source?.contentAr),
 });
 
 const readExtra = (item) => {
@@ -66,8 +117,8 @@ const readExtra = (item) => {
     const extra = {
         title: clip(item.title, TITLE_MAX),
         titleAr: clip(item.titleAr, TITLE_MAX),
-        content: clip(item.content, TEXT_MAX),
-        contentAr: clip(item.contentAr, TEXT_MAX),
+        content: asPolicyHtml(item.content),
+        contentAr: asPolicyHtml(item.contentAr),
     };
     if (!extra.title && !extra.titleAr && !extra.content && !extra.contentAr) return null;
     const id = item._id || item.id;
@@ -124,12 +175,12 @@ const compactPolicies = (policies) => {
     if (!policies || typeof policies !== 'object') return undefined;
     const compact = {};
     TEXT_KEYS.forEach((key) => {
-        if (hasText(policies[key])) {
-            compact[key] = {
-                content: clip(policies[key].content, TEXT_MAX),
-                contentAr: clip(policies[key].contentAr, TEXT_MAX),
-            };
-        }
+        if (!hasText(policies[key])) return;
+        const text = {
+            content: asPolicyHtml(policies[key].content),
+            contentAr: asPolicyHtml(policies[key].contentAr),
+        };
+        if (text.content || text.contentAr) compact[key] = text;
     });
     const extras = (Array.isArray(policies.extras) ? policies.extras : [])
         .map(readExtra)
@@ -139,7 +190,31 @@ const compactPolicies = (policies) => {
     return Object.keys(compact).length ? compact : undefined;
 };
 
-const publicPolicies = (policies) => compactPolicies(asPlain(policies));
+const publicPolicies = (policies) => {
+    const compact = compactPolicies(asPlain(policies));
+    if (!compact) return undefined;
+    const html = buildPoliciesHtml(compact, 'en');
+    const htmlAr = buildPoliciesHtml(compact, 'ar');
+    if (html) compact.html = html;
+    if (htmlAr) compact.htmlAr = htmlAr;
+    return compact;
+};
+
+listingPoliciesSchema.pre('validate', function (next) {
+    TEXT_KEYS.forEach((key) => {
+        const item = this[key];
+        if (!item) return;
+        item.content = asPolicyHtml(item.content);
+        item.contentAr = asPolicyHtml(item.contentAr);
+    });
+    if (Array.isArray(this.extras)) {
+        this.extras.forEach((extra) => {
+            extra.content = asPolicyHtml(extra.content);
+            extra.contentAr = asPolicyHtml(extra.contentAr);
+        });
+    }
+    next();
+});
 
 const snapshotPolicies = (policies) => publicPolicies(policies);
 

@@ -1055,6 +1055,7 @@ function renderOverviewRecentUsers(users) {
         const dateStr = u.createdAt ? new Date(u.createdAt).toLocaleDateString(state.lang === 'ar' ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
         const isActive = u.active !== false;
         const isGoogle = u.provider === 'google';
+        const isApple = u.provider === 'apple';
         const regionName = u.region?.name || null;
 
         return `
@@ -1067,6 +1068,7 @@ function renderOverviewRecentUsers(users) {
                         <div class="flex items-center gap-2">
                             <span class="font-bold text-sm text-slate-900 truncate">${name}</span>
                             ${isGoogle ? `<span class="inline-flex items-center gap-1 text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-100"><i class="fab fa-google text-[9px]"></i> Google</span>` : ''}
+                            ${isApple ? `<span class="inline-flex items-center gap-1 text-[10px] bg-slate-900 text-white px-1.5 py-0.5 rounded"><i class="fab fa-apple text-[9px]"></i> Apple</span>` : ''}
                             ${regionName ? `<span class="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium truncate max-w-[100px]"><i class="fas fa-location-dot text-[8px] text-[#2D4F2E]"></i> ${regionName}</span>` : ''}
                         </div>
                         <div class="text-xs text-slate-500 font-mono truncate mt-0.5">${contact}</div>
@@ -1143,8 +1145,8 @@ function renderUsersTable() {
                 <div class="text-xs text-slate-400">${u.phone || '—'}</div>
             </td>
             <td>
-                <span class="badge ${u.provider === 'google' ? 'badge-info' : 'badge-warning'}">
-                    <i class="fab fa-${u.provider === 'google' ? 'google' : 'key'}"></i> ${u.provider}
+                <span class="badge ${u.provider === 'google' ? 'badge-info' : u.provider === 'apple' ? 'badge-brand' : 'badge-warning'}">
+                    <i class="fab fa-${u.provider === 'google' ? 'google' : u.provider === 'apple' ? 'apple' : 'key'}"></i> ${u.provider}
                 </span>
             </td>
             <td>
@@ -5346,29 +5348,50 @@ function readStayFields(prefix) {
     return stay;
 }
 
+function policyEditorMarkup(id, dir) {
+    return `
+        <div class="html-editor is-compact sm:col-span-6" data-html-editor="${id}">
+            <div class="html-editor-toolbar">
+                <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+            </div>
+            <div class="html-editor-area" contenteditable="true" dir="${dir}" data-placeholder="${dir === 'rtl' ? 'نص السياسة' : 'Policy text'}"></div>
+            <textarea id="${id}" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+        </div>`;
+}
+
+let policyExtraSeq = 0;
+
 function addPolicyExtraRow(prefix, extra = {}) {
     const box = document.getElementById(`${prefix}-policy-extras`);
     if (!box) return;
+    const seq = ++policyExtraSeq;
+    const contentId = `${prefix}-policy-extra-${seq}`;
+    const contentArId = `${prefix}-policy-extra-${seq}-ar`;
     const row = document.createElement('div');
     row.className = 'policy-extra-row grid grid-cols-1 sm:grid-cols-12 gap-2';
     row.innerHTML = `
-        <input data-policy="title" class="form-input text-xs sm:col-span-3" dir="ltr" placeholder="Title (English)" value="${escapeHtmlText(extra.title || '')}">
-        <input data-policy="titleAr" class="form-input text-xs sm:col-span-3" placeholder="العنوان (عربي)" value="${escapeHtmlText(extra.titleAr || '')}">
-        <input data-policy="content" class="form-input text-xs sm:col-span-3" dir="ltr" placeholder="Policy (English)" value="${escapeHtmlText(extra.content || '')}">
-        <input data-policy="contentAr" class="form-input text-xs sm:col-span-3" placeholder="السياسة (عربي)" value="${escapeHtmlText(extra.contentAr || '')}">
+        <input data-policy="title" class="form-input text-xs sm:col-span-5" dir="ltr" placeholder="Title (English)" value="${escapeHtmlText(extra.title || '')}">
+        <input data-policy="titleAr" class="form-input text-xs sm:col-span-5" placeholder="العنوان (عربي)" value="${escapeHtmlText(extra.titleAr || '')}">
+        <button type="button" class="btn-secondary text-[11px] sm:col-span-2" onclick="this.closest('.policy-extra-row').remove()">حذف</button>
+        ${policyEditorMarkup(contentId, 'ltr')}
+        ${policyEditorMarkup(contentArId, 'rtl')}
         <input type="hidden" data-policy="id" value="${escapeHtmlText(extra.id || extra._id || '')}">
-        <button type="button" class="btn-secondary text-[11px] sm:col-span-12" onclick="this.closest('.policy-extra-row').remove()">حذف</button>
     `;
     box.appendChild(row);
+    initHtmlEditors();
+    setHtmlEditor(contentId, extra.content || '');
+    setHtmlEditor(contentArId, extra.contentAr || '');
 }
 
 function fillPolicyFields(prefix, policies = {}) {
     POLICY_FIELDS.forEach((field) => {
         const text = policies[field.key] || {};
-        const en = document.getElementById(`${prefix}-policy-${field.id}`);
-        const ar = document.getElementById(`${prefix}-policy-${field.id}-ar`);
-        if (en) en.value = text.content || '';
-        if (ar) ar.value = text.contentAr || '';
+        setHtmlEditor(`${prefix}-policy-${field.id}`, text.content || '');
+        setHtmlEditor(`${prefix}-policy-${field.id}-ar`, text.contentAr || '');
     });
     const box = document.getElementById(`${prefix}-policy-extras`);
     if (box) box.innerHTML = '';
@@ -5379,16 +5402,18 @@ function readPolicyFields(prefix) {
     const policies = { extras: [] };
     POLICY_FIELDS.forEach((field) => {
         policies[field.key] = {
-            content: document.getElementById(`${prefix}-policy-${field.id}`)?.value.trim() || '',
-            contentAr: document.getElementById(`${prefix}-policy-${field.id}-ar`)?.value.trim() || '',
+            content: readHtmlEditor(`${prefix}-policy-${field.id}`),
+            contentAr: readHtmlEditor(`${prefix}-policy-${field.id}-ar`),
         };
     });
     document.querySelectorAll(`#${prefix}-policy-extras .policy-extra-row`).forEach((row) => {
+        const contentId = row.querySelector('[dir="ltr"].html-editor-area')?.closest('[data-html-editor]')?.getAttribute('data-html-editor');
+        const contentArId = row.querySelector('[dir="rtl"].html-editor-area')?.closest('[data-html-editor]')?.getAttribute('data-html-editor');
         const extra = {
             title: row.querySelector('[data-policy="title"]')?.value.trim() || '',
             titleAr: row.querySelector('[data-policy="titleAr"]')?.value.trim() || '',
-            content: row.querySelector('[data-policy="content"]')?.value.trim() || '',
-            contentAr: row.querySelector('[data-policy="contentAr"]')?.value.trim() || '',
+            content: contentId ? readHtmlEditor(contentId) : '',
+            contentAr: contentArId ? readHtmlEditor(contentArId) : '',
         };
         if (!extra.title && !extra.titleAr && !extra.content && !extra.contentAr) return;
         const id = row.querySelector('[data-policy="id"]')?.value;
@@ -5400,33 +5425,15 @@ function readPolicyFields(prefix) {
 
 function bookingPoliciesHtml(policies) {
     if (!policies || typeof policies !== 'object') return '';
-    const named = [
-        ['booking', 'سياسة الحجز'],
-        ['cancellation', 'سياسة الإلغاء'],
-        ['houseRules', 'قواعد الإقامة'],
-        ['checkIn', 'تعليمات الوصول'],
-        ['payment', 'سياسة الدفع'],
-    ];
-    const blocks = [];
-    named.forEach(([key, label]) => {
-        const text = policies[key]?.content;
-        if (!text) return;
-        blocks.push(`<div><div class="font-bold text-slate-800">${label}</div><div class="text-slate-600 whitespace-pre-line">${escapeHtmlText(text)}</div></div>`);
-    });
-    (policies.extras || []).forEach((item) => {
-        const title = item.title || 'سياسة إضافية';
-        const text = item.content || '';
-        if (!text && !item.title) return;
-        blocks.push(`<div><div class="font-bold text-slate-800">${escapeHtmlText(title)}</div>${text ? `<div class="text-slate-600 whitespace-pre-line">${escapeHtmlText(text)}</div>` : ''}</div>`);
-    });
-    if (!blocks.length) return '';
+    const article = policies.html || '';
+    if (!article) return '';
     return `
         <div class="p-4 bg-white border border-slate-200 rounded-xl space-y-2">
             <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <i class="fas fa-file-contract text-[#2D4F2E]"></i>
                 <span>سياسات صاحب الإعلان</span>
             </div>
-            <div class="space-y-2 text-xs">${blocks.join('')}</div>
+            <div class="text-xs">${article}</div>
         </div>`;
 }
 

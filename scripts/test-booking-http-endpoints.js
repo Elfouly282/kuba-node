@@ -299,8 +299,10 @@ const run = async () => {
         const arrivalMethod = (res.body.data.paymentMethods || []).find((method) => method.key === 'on_arrival');
         expect(res.status === 200 && res.body.data.totalPrice === 27510, 'Review: 7800 x 3 + cleaning 600 + 5% + VAT 10% = 27510', res);
         expect(arrivalMethod && arrivalMethod.requiresTerms === false && arrivalMethod.label === 'Pay on arrival', 'Payment: pay on arrival is offered before checkout', res);
-        expect(res.body.data.policies.booking.content === 'Full payment is due when the booking is confirmed.', 'Check: owner booking policy is shown before payment', res);
-        expect(res.body.data.policies.cancellation.contentAr === 'إلغاء مجاني حتى 5 أيام قبل الوصول.', 'Check: owner cancellation policy is shown in Arabic too', res);
+        expect(res.body.data.policies.booking.content === '<p>Full payment is due when the booking is confirmed.</p>', 'Check: owner booking policy is HTML', res);
+        expect(res.body.data.policies.cancellation.contentAr === '<p>إلغاء مجاني حتى 5 أيام قبل الوصول.</p>', 'Check: owner cancellation policy is HTML in Arabic too', res);
+        expect(res.body.data.policies.html.includes('Booking policy') && res.body.data.policies.html.includes('<article'), 'Check: policies.html is one organized article', res);
+        expect(res.body.data.policies.htmlAr.includes('سياسة الإلغاء'), 'Check: Arabic policies.html keeps the cancellation section', res);
         expect(res.body.data.quote.total === 27510 && res.body.data.quote.summary.beforeAddOns === 27510, 'Review: footer total matches the breakdown before meals', res);
 
         res = await request('GET', `/api/v1/bookings/check?room=${seaView._id}&startDate=${stayStart}&endDate=${stayEnd}&adults=2&addOns=${breakfastId}`);
@@ -401,7 +403,7 @@ const run = async () => {
         expectedFreeUntil.setUTCDate(expectedFreeUntil.getUTCDate() - 5);
         expectedFreeUntil.setUTCHours(21, 59, 0, 0);
         expect(new Date(confirmation.cancellation.freeUntil).getTime() === expectedFreeUntil.getTime(), 'Confirmation: free cancellation is 5 days before check-in at 11:59 PM', res);
-        expect(confirmation.policies.booking.content === 'Full payment is due when the booking is confirmed.' && confirmation.policies.extras[0].titleAr === 'الحيوانات', 'Confirmation: owner policies are saved with the booking', res);
+        expect(confirmation.policies.booking.content === '<p>Full payment is due when the booking is confirmed.</p>' && confirmation.policies.extras[0].titleAr === 'الحيوانات' && confirmation.policies.html.includes('Booking policy'), 'Confirmation: owner policies are saved as organized HTML', res);
 
         res = await request('GET', `/api/v1/bookings/${stayed.id}`, { token: customer.token });
         expect(res.status === 200 && res.body.data.booking.confirmation.price.total === 27930, 'Get booking: confirmation total is unchanged', res);
@@ -432,7 +434,7 @@ const run = async () => {
                 && stayedReceipt.stay.title === 'Deluxe Sea-View'
                 && stayedReceipt.property.title === 'Azure Bay Resort'
                 && stayedReceipt.lines.some((line) => line.label && line.amount !== undefined)
-                && stayedReceipt.policies.cancellation.content === 'Free cancellation until 5 days before check-in.'
+                && stayedReceipt.policies.cancellation.content === '<p>Free cancellation until 5 days before check-in.</p>'
                 && stayedReceipt.priceBreakdown === undefined
                 && stayedReceipt.user === undefined
                 && stayedReceipt.confirmation === undefined

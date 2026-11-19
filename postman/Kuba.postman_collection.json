@@ -344,6 +344,53 @@
               ]
             },
             {
+              "name": "Login (Apple / Firebase)",
+              "description": "Same contract as Google login. The client signs in with Apple through Firebase, then sends only the Firebase ID token. A private-relay Apple email is stored as the account email. The token must be an apple.com Firebase sign-in.",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/apple",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "apple"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firebaseIdToken\": \"<FIREBASE_ID_TOKEN_HERE>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const res = pm.response.json();",
+                      "if (res.token) pm.collectionVariables.set('token', res.token);",
+                      "pm.test('apple login returns the saved user', function () {",
+                      "    pm.expect(res.data && res.data.user && res.data.user.provider).to.eql('apple');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
               "name": "Logout",
               "request": {
                 "method": "POST",
@@ -1130,7 +1177,7 @@
                 }
               ]
             },
-            "description": "Returns the listing. `booking` tells the app which screen to open: mode stay | hourly | trip, requiresRoom (true only for a hotel), pricingUnit, minDuration. Same field is on list, search, and each room. `stay` is the checkout setup used by the booking quote: cleaningFee, serviceFeePercent, taxPercent, taxLabel, checkInTime, checkOutTime, freeCancellationDays, breakfastIncluded, and addOns (meals and extras). A room without its own stay inherits the hotel stay. `policies` is the owner's text for this listing: booking, cancellation, houseRules, checkIn, payment, and extras. Each text is `content` in the requested language. Empty sections are omitted."
+            "description": "Returns the listing. `booking` tells the app which screen to open: mode stay | hourly | trip, requiresRoom (true only for a hotel), pricingUnit, minDuration. Same field is on list, search, and each room. `stay` is the checkout setup used by the booking quote: cleaningFee, serviceFeePercent, taxPercent, taxLabel, checkInTime, checkOutTime, freeCancellationDays, breakfastIncluded, and addOns (meals and extras). A room without its own stay inherits the hotel stay. `policies` is the owner's HTML for this listing: booking, cancellation, houseRules, checkIn, payment, and extras. `content` is sanitized HTML in the requested language. `html` is one organized article with a heading for each section. Empty sections are omitted."
           }
         },
         {
@@ -1462,7 +1509,7 @@
                 }
               ]
             },
-            "description": "Public. Same pricing as Create Booking, without saving. `totalPrice` and `quote.total` are the amount every step must show (review, meals, payment, confirmation). `quote.lines` is the breakdown: room, discount, cleaning, service fee, VAT, selected add-ons. Pass `adults` and `addOns` (comma-separated ids) to preview the meals step. `paymentMethods` lists the active methods. Pay on arrival (`on_arrival`) is always included. A platform appears only after an admin adds it. `policies` is the listing owner's booking, cancellation, house rules, check-in, payment text, and any extras, in the requested language."
+            "description": "Public. Same pricing as Create Booking, without saving. `totalPrice` and `quote.total` are the amount every step must show (review, meals, payment, confirmation). `quote.lines` is the breakdown: room, discount, cleaning, service fee, VAT, selected add-ons. Pass `adults` and `addOns` (comma-separated ids) to preview the meals step. `paymentMethods` lists the active methods. Pay on arrival (`on_arrival`) is always included. A platform appears only after an admin adds it. `policies` is the listing owner's booking, cancellation, house rules, check-in, payment, and any extras. `content` is sanitized HTML and `html` is one organized article, both in the requested language."
           }
         },
         {
@@ -1509,7 +1556,7 @@
                 }
               }
             },
-            "description": "Requires login. For a hotel send `room` instead of `advertisement`. The server recalculates the quote, so the saved `totalPrice`, `priceBreakdown.total` and `confirmation.price.total` match Check for the same dates, guests and add-ons. `confirmation` is the confirmation screen: reference, guest, stay, payment amount, the same lines, and `policies` copied from the listing at booking time. paymentMethod: `on_arrival` (pay on arrival; `cash` is accepted as the same method) or the `key` of a platform added in the dashboard. A platform with `requiresTerms` needs `acceptedTerms`. Saved as pending / unpaid until the owner confirms."
+            "description": "Requires login. For a hotel send `room` instead of `advertisement`. The server recalculates the quote, so the saved `totalPrice`, `priceBreakdown.total` and `confirmation.price.total` match Check for the same dates, guests and add-ons. `confirmation` is the confirmation screen: reference, guest, stay, payment amount, the same lines, and `policies` copied from the listing at booking time. `policies.content` is sanitized HTML and `policies.html` is the organized article saved with the booking. paymentMethod: `on_arrival` (pay on arrival; `cash` is accepted as the same method) or the `key` of a platform added in the dashboard. A platform with `requiresTerms` needs `acceptedTerms`. Saved as pending / unpaid until the owner confirms."
           }
         },
         {
@@ -1563,7 +1610,7 @@
                 "{{bookingId}}"
               ]
             },
-            "description": "Requires login. Only the user who made the booking can see it. confirmation is the confirmation screen: reference, guest, stay, cancellation, price.lines, and policies. confirmation.policies is the owner's booking and cancellation text saved with this booking. confirmation.payment.amount equals totalPrice and does not change if the listing price or policies change later."
+            "description": "Requires login. Only the user who made the booking can see it. confirmation is the confirmation screen: reference, guest, stay, cancellation, price.lines, and policies. confirmation.policies is the owner's booking and cancellation HTML saved with this booking. confirmation.policies.html is the organized article and does not change if the listing policies change later. confirmation.payment.amount equals totalPrice and does not change if the listing price or policies change later."
           }
         },
         {

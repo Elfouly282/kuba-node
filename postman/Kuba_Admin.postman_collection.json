@@ -217,6 +217,58 @@
           ]
         },
         {
+          "name": "Login (Apple / Firebase)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/auth/apple",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "auth",
+                "apple"
+              ]
+            },
+            "description": "دخول الأدمن بتوكن Firebase الصادر من Apple. الـ role الناتج admin.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firebaseIdToken\": \"<FIREBASE_ID_TOKEN>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) pm.collectionVariables.set(\"token\", res.token);",
+                  "pm.test('apple admin login returns admin role', function () {",
+                  "    pm.expect(res.data && res.data.role).to.eql('admin');",
+                  "    pm.expect(res.data.provider).to.eql('apple');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Get Me",
           "request": {
             "method": "GET",
@@ -309,7 +361,7 @@
                 {
                   "key": "provider",
                   "value": "local",
-                  "description": "local | google",
+                  "description": "local | google | apple",
                   "disabled": true
                 },
                 {

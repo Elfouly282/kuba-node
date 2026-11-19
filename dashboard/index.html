@@ -658,6 +658,7 @@
                                     <option value="" data-i18n="filterAll">كل طرق التسجيل</option>
                                     <option value="local">Local (كلمة مرور)</option>
                                     <option value="google">Google</option>
+                                    <option value="apple">Apple</option>
                                 </select>
                             </div>
                         </div>
@@ -1663,48 +1664,148 @@
                                         <i class="fas fa-file-contract text-[#2D4F2E]"></i>
                                         <span>سياسات الحجز والإلغاء</span>
                                     </h3>
-                                    <p class="text-[11px] text-slate-500 mt-1">تظهر للعميل قبل الدفع، وتُحفظ مع الحجز حتى لو اتغيرت بعد كده.</p>
+                                    <p class="text-[11px] text-slate-500 mt-1">اتكتب HTML وتظهر للعميل مقال منظم قبل الدفع، وتتحفظ مع الحجز.</p>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">سياسة الحجز (English)</label>
-                                        <textarea id="owner-form-policy-booking" rows="3" class="form-input text-xs" dir="ltr" placeholder="Full payment is due when the booking is confirmed."></textarea>
+                                        <div class="html-editor is-compact" data-html-editor="owner-form-policy-booking">
+                                            <div class="html-editor-toolbar">
+                                                <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                                <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                                <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                                <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                                <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                            </div>
+                                            <div class="html-editor-area" contenteditable="true" dir="ltr" data-placeholder="Full payment is due when the booking is confirmed."></div>
+                                            <textarea id="owner-form-policy-booking" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">سياسة الحجز (عربي)</label>
-                                        <textarea id="owner-form-policy-booking-ar" rows="3" class="form-input text-xs" placeholder="يُدفع المبلغ كاملًا عند تأكيد الحجز."></textarea>
+                                        <div class="html-editor is-compact" data-html-editor="owner-form-policy-booking-ar">
+                                            <div class="html-editor-toolbar">
+                                                <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                                <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                                <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                                <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                                <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                            </div>
+                                            <div class="html-editor-area" contenteditable="true" dir="rtl" data-placeholder="يُدفع المبلغ كاملًا عند تأكيد الحجز."></div>
+                                            <textarea id="owner-form-policy-booking-ar" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">سياسة الإلغاء (English)</label>
-                                        <textarea id="owner-form-policy-cancellation" rows="3" class="form-input text-xs" dir="ltr" placeholder="Free cancellation until 5 days before check-in."></textarea>
+                                        <div class="html-editor is-compact" data-html-editor="owner-form-policy-cancellation">
+                                            <div class="html-editor-toolbar">
+                                                <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                                <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                                <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                                <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                                <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                            </div>
+                                            <div class="html-editor-area" contenteditable="true" dir="ltr" data-placeholder="Free cancellation until 5 days before check-in."></div>
+                                            <textarea id="owner-form-policy-cancellation" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">سياسة الإلغاء (عربي)</label>
-                                        <textarea id="owner-form-policy-cancellation-ar" rows="3" class="form-input text-xs" placeholder="إلغاء مجاني حتى 5 أيام قبل الوصول."></textarea>
+                                        <div class="html-editor is-compact" data-html-editor="owner-form-policy-cancellation-ar">
+                                            <div class="html-editor-toolbar">
+                                                <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                                <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                                <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                                <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                                <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                            </div>
+                                            <div class="html-editor-area" contenteditable="true" dir="rtl" data-placeholder="إلغاء مجاني حتى 5 أيام قبل الوصول."></div>
+                                            <textarea id="owner-form-policy-cancellation-ar" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">قواعد الإقامة (English)</label>
-                                        <textarea id="owner-form-policy-house-rules" rows="3" class="form-input text-xs" dir="ltr" placeholder="No parties. Quiet hours after 11 PM."></textarea>
+                                        <div class="html-editor is-compact" data-html-editor="owner-form-policy-house-rules">
+                                            <div class="html-editor-toolbar">
+                                                <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                                <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                                <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                                <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                                <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                            </div>
+                                            <div class="html-editor-area" contenteditable="true" dir="ltr" data-placeholder="No parties. Quiet hours after 11 PM."></div>
+                                            <textarea id="owner-form-policy-house-rules" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">قواعد الإقامة (عربي)</label>
-                                        <textarea id="owner-form-policy-house-rules-ar" rows="3" class="form-input text-xs" placeholder="ممنوع الحفلات. هدوء بعد 11 مساءً."></textarea>
+                                        <div class="html-editor is-compact" data-html-editor="owner-form-policy-house-rules-ar">
+                                            <div class="html-editor-toolbar">
+                                                <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                                <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                                <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                                <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                                <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                            </div>
+                                            <div class="html-editor-area" contenteditable="true" dir="rtl" data-placeholder="ممنوع الحفلات. هدوء بعد 11 مساءً."></div>
+                                            <textarea id="owner-form-policy-house-rules-ar" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">تعليمات الوصول (English)</label>
-                                        <textarea id="owner-form-policy-check-in" rows="3" class="form-input text-xs" dir="ltr" placeholder="The host meets guests at the gate."></textarea>
+                                        <div class="html-editor is-compact" data-html-editor="owner-form-policy-check-in">
+                                            <div class="html-editor-toolbar">
+                                                <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                                <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                                <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                                <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                                <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                            </div>
+                                            <div class="html-editor-area" contenteditable="true" dir="ltr" data-placeholder="The host meets guests at the gate."></div>
+                                            <textarea id="owner-form-policy-check-in" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">تعليمات الوصول (عربي)</label>
-                                        <textarea id="owner-form-policy-check-in-ar" rows="3" class="form-input text-xs" placeholder="المالك يستقبل النزلاء عند البوابة."></textarea>
+                                        <div class="html-editor is-compact" data-html-editor="owner-form-policy-check-in-ar">
+                                            <div class="html-editor-toolbar">
+                                                <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                                <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                                <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                                <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                                <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                            </div>
+                                            <div class="html-editor-area" contenteditable="true" dir="rtl" data-placeholder="المالك يستقبل النزلاء عند البوابة."></div>
+                                            <textarea id="owner-form-policy-check-in-ar" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">سياسة الدفع (English)</label>
-                                        <textarea id="owner-form-policy-payment" rows="3" class="form-input text-xs" dir="ltr" placeholder="Pay on arrival."></textarea>
+                                        <div class="html-editor is-compact" data-html-editor="owner-form-policy-payment">
+                                            <div class="html-editor-toolbar">
+                                                <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                                <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                                <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                                <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                                <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                            </div>
+                                            <div class="html-editor-area" contenteditable="true" dir="ltr" data-placeholder="InstaPay or cash on arrival."></div>
+                                            <textarea id="owner-form-policy-payment" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                        </div>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">سياسة الدفع (عربي)</label>
-                                        <textarea id="owner-form-policy-payment-ar" rows="3" class="form-input text-xs" placeholder="الدفع عند الوصول."></textarea>
+                                        <div class="html-editor is-compact" data-html-editor="owner-form-policy-payment-ar">
+                                            <div class="html-editor-toolbar">
+                                                <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                                <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                                <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                                <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                                <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                            </div>
+                                            <div class="html-editor-area" contenteditable="true" dir="rtl" data-placeholder="إنستا باي أو كاش عند الوصول."></div>
+                                            <textarea id="owner-form-policy-payment-ar" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="space-y-2">
@@ -3062,48 +3163,148 @@
                     <div class="pt-3 border-t border-slate-200 space-y-3">
                         <div>
                             <div class="text-xs font-bold text-slate-900">سياسات الحجز والإلغاء</div>
-                            <p class="text-[11px] text-slate-500 mt-1">يكتبها صاحب الإعلان، وتظهر للعميل قبل الدفع وتُحفظ مع الحجز.</p>
+                            <p class="text-[11px] text-slate-500 mt-1">اتكتب HTML وتترجع مقال منظم يتعرض للعميل قبل الدفع.</p>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">سياسة الحجز (English)</label>
-                                <textarea id="ad-modal-policy-booking" rows="3" class="form-input text-xs" dir="ltr"></textarea>
+                                <div class="html-editor is-compact" data-html-editor="ad-modal-policy-booking">
+                                    <div class="html-editor-toolbar">
+                                        <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                        <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                        <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                        <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                    </div>
+                                    <div class="html-editor-area" contenteditable="true" dir="ltr"></div>
+                                    <textarea id="ad-modal-policy-booking" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">سياسة الحجز (عربي)</label>
-                                <textarea id="ad-modal-policy-booking-ar" rows="3" class="form-input text-xs"></textarea>
+                                <div class="html-editor is-compact" data-html-editor="ad-modal-policy-booking-ar">
+                                    <div class="html-editor-toolbar">
+                                        <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                        <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                        <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                        <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                    </div>
+                                    <div class="html-editor-area" contenteditable="true" dir="rtl"></div>
+                                    <textarea id="ad-modal-policy-booking-ar" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">سياسة الإلغاء (English)</label>
-                                <textarea id="ad-modal-policy-cancellation" rows="3" class="form-input text-xs" dir="ltr"></textarea>
+                                <div class="html-editor is-compact" data-html-editor="ad-modal-policy-cancellation">
+                                    <div class="html-editor-toolbar">
+                                        <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                        <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                        <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                        <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                    </div>
+                                    <div class="html-editor-area" contenteditable="true" dir="ltr"></div>
+                                    <textarea id="ad-modal-policy-cancellation" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">سياسة الإلغاء (عربي)</label>
-                                <textarea id="ad-modal-policy-cancellation-ar" rows="3" class="form-input text-xs"></textarea>
+                                <div class="html-editor is-compact" data-html-editor="ad-modal-policy-cancellation-ar">
+                                    <div class="html-editor-toolbar">
+                                        <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                        <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                        <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                        <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                    </div>
+                                    <div class="html-editor-area" contenteditable="true" dir="rtl"></div>
+                                    <textarea id="ad-modal-policy-cancellation-ar" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">قواعد الإقامة (English)</label>
-                                <textarea id="ad-modal-policy-house-rules" rows="3" class="form-input text-xs" dir="ltr"></textarea>
+                                <div class="html-editor is-compact" data-html-editor="ad-modal-policy-house-rules">
+                                    <div class="html-editor-toolbar">
+                                        <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                        <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                        <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                        <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                    </div>
+                                    <div class="html-editor-area" contenteditable="true" dir="ltr"></div>
+                                    <textarea id="ad-modal-policy-house-rules" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">قواعد الإقامة (عربي)</label>
-                                <textarea id="ad-modal-policy-house-rules-ar" rows="3" class="form-input text-xs"></textarea>
+                                <div class="html-editor is-compact" data-html-editor="ad-modal-policy-house-rules-ar">
+                                    <div class="html-editor-toolbar">
+                                        <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                        <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                        <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                        <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                    </div>
+                                    <div class="html-editor-area" contenteditable="true" dir="rtl"></div>
+                                    <textarea id="ad-modal-policy-house-rules-ar" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">تعليمات الوصول (English)</label>
-                                <textarea id="ad-modal-policy-check-in" rows="3" class="form-input text-xs" dir="ltr"></textarea>
+                                <div class="html-editor is-compact" data-html-editor="ad-modal-policy-check-in">
+                                    <div class="html-editor-toolbar">
+                                        <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                        <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                        <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                        <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                    </div>
+                                    <div class="html-editor-area" contenteditable="true" dir="ltr"></div>
+                                    <textarea id="ad-modal-policy-check-in" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">تعليمات الوصول (عربي)</label>
-                                <textarea id="ad-modal-policy-check-in-ar" rows="3" class="form-input text-xs"></textarea>
+                                <div class="html-editor is-compact" data-html-editor="ad-modal-policy-check-in-ar">
+                                    <div class="html-editor-toolbar">
+                                        <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                        <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                        <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                        <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                    </div>
+                                    <div class="html-editor-area" contenteditable="true" dir="rtl"></div>
+                                    <textarea id="ad-modal-policy-check-in-ar" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">سياسة الدفع (English)</label>
-                                <textarea id="ad-modal-policy-payment" rows="3" class="form-input text-xs" dir="ltr"></textarea>
+                                <div class="html-editor is-compact" data-html-editor="ad-modal-policy-payment">
+                                    <div class="html-editor-toolbar">
+                                        <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                        <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                        <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                        <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                    </div>
+                                    <div class="html-editor-area" contenteditable="true" dir="ltr"></div>
+                                    <textarea id="ad-modal-policy-payment" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">سياسة الدفع (عربي)</label>
-                                <textarea id="ad-modal-policy-payment-ar" rows="3" class="form-input text-xs"></textarea>
+                                <div class="html-editor is-compact" data-html-editor="ad-modal-policy-payment-ar">
+                                    <div class="html-editor-toolbar">
+                                        <button type="button" data-cmd="bold" title="عريض"><i class="fas fa-bold"></i></button>
+                                        <button type="button" data-cmd="italic" title="مائل"><i class="fas fa-italic"></i></button>
+                                        <button type="button" data-cmd="insertUnorderedList" title="قائمة"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" data-cmd="insertOrderedList" title="قائمة مرقمة"><i class="fas fa-list-ol"></i></button>
+                                        <button type="button" data-cmd="removeFormat" title="مسح التنسيق"><i class="fas fa-eraser"></i></button>
+                                    </div>
+                                    <div class="html-editor-area" contenteditable="true" dir="rtl"></div>
+                                    <textarea id="ad-modal-policy-payment-ar" class="hidden" tabindex="-1" aria-hidden="true"></textarea>
+                                </div>
                             </div>
                         </div>
                         <div class="space-y-2">

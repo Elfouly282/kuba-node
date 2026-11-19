@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema(
         },
         provider: {
             type: String,
-            enum: ['local', 'google'],
+            enum: ['local', 'google', 'apple'],
             default: 'local',
         },
         role: {
@@ -83,6 +83,7 @@ userSchema.pre('save', async function (next) {
 });
 
 userSchema.methods.comparePassword = function (candidate) {
+    if (!this.password || !candidate) return false;
     return bcrypt.compare(candidate, this.password);
 };
 

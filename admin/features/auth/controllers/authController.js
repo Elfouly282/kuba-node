@@ -150,20 +150,25 @@ exports.getMe = async (req, res, next) => {
     }
 };
 
-exports.googleLogin = async (req, res, next) => {
+const firebaseSocialLogin = (signInProvider) => async (req, res, next) => {
     try {
-        const { firebaseIdToken } = req.body;
+        const firebaseIdToken = req.body.firebaseIdToken || req.body.idToken;
 
         if (!firebaseIdToken) {
             return next(new APIError('errors.tokenRequired', 401));
         }
 
         const decodedToken = await admin.auth().verifyIdToken(firebaseIdToken);
+        if (decodedToken.firebase?.sign_in_provider !== signInProvider) {
+            return next(new APIError('errors.wrongSignInProvider', 401));
+        }
 
+        const provider = signInProvider === 'apple.com' ? 'apple' : 'google';
         const jwtToken = generateToken({
             uid: decodedToken.uid,
             email: decodedToken.email,
             role: 'admin',
+            provider,
         });
 
         res.status(200).json({
@@ -172,9 +177,10 @@ exports.googleLogin = async (req, res, next) => {
             data: {
                 uid: decodedToken.uid,
                 email: decodedToken.email,
-                name: decodedToken.name,
-                picture: decodedToken.picture,
+                name: decodedToken.name || null,
+                picture: decodedToken.picture || null,
                 role: 'admin',
+                provider,
             },
         });
     } catch (err) {
@@ -184,9 +190,15 @@ exports.googleLogin = async (req, res, next) => {
             err.code === 'auth/id-token-revoked' ||
             err.code?.startsWith('auth/')
         ) {
-            return next(new APIError('errors.invalidFirebaseToken', 401));
+            const invalidKey = signInProvider === 'apple.com'
+                ? 'errors.invalidAppleToken'
+                : 'errors.invalidFirebaseToken';
+            return next(new APIError(invalidKey, 401));
         }
 
         next(err);
     }
 };
+
+exports.googleLogin = firebaseSocialLogin('google.com');
+exports.appleLogin = firebaseSocialLogin('apple.com');

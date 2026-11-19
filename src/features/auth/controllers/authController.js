@@ -116,8 +116,10 @@ exports.login = async (req, res, next) => {
 
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail }).select('+password').populate('region', 'name nameAr');
-    if (!user || !(await user.comparePassword(password))) return next(new APIError('errors.invalidCredentials', 401));
+    if (!user) return next(new APIError('errors.invalidCredentials', 401));
+    if (user.provider === 'apple') return next(new APIError('errors.useAppleLogin', 400));
     if (user.provider !== 'local') return next(new APIError('errors.useGoogleLogin', 400));
+    if (!(await user.comparePassword(password))) return next(new APIError('errors.invalidCredentials', 401));
     if (!user.isEmailVerified) return next(new APIError('errors.emailNotVerified', 403));
 
     SuccessResponse.ok(res, {
@@ -362,20 +364,39 @@ exports.deleteAccount = async (req, res, next) => {
     });
 };
 
-const explicitGoogleName = (decoded) => {
-    const raw = String(decoded.name || decoded.displayName || '').trim();
+const SOCIAL_SIGN_IN = {
+    google: 'google.com',
+    apple: 'apple.com',
+};
+
+const readPersonName = (value) => {
+    if (!value) return '';
+    if (typeof value === 'object') {
+        const first = value.givenName || value.firstName || value.first || '';
+        const last = value.familyName || value.lastName || value.last || '';
+        return `${first} ${last}`.replace(/\s+/g, ' ').trim();
+    }
+    return String(value).replace(/\s+/g, ' ').trim();
+};
+
+const explicitSocialName = (decoded) => {
+    const raw = readPersonName(decoded?.name || decoded?.displayName);
     return raw.length >= 2 ? raw.slice(0, 50) : '';
 };
 
-const normalizeGoogleName = (decoded) => {
-    const explicit = explicitGoogleName(decoded);
+const normalizeSocialName = (decoded) => {
+    const explicit = explicitSocialName(decoded);
     if (explicit) return explicit;
     const local = String(decoded.email || '').split('@')[0].trim();
     if (local.length >= 2) return local.slice(0, 50);
     return 'User';
 };
 
-const isGooglePhoto = (url) => !url || /googleusercontent\.com/.test(String(url));
+const socialEmail = (decoded) => String(
+    decoded?.email || decoded?.firebase?.identities?.email?.[0] || ''
+).toLowerCase().trim();
+
+const isReplaceablePhoto = (url) => !url || /googleusercontent\.com/.test(String(url));
 
 const resolveCityId = async (cityId) => {
     if (!cityId || !mongoose.Types.ObjectId.isValid(cityId)) return null;
@@ -383,11 +404,14 @@ const resolveCityId = async (cityId) => {
     return city ? city._id : null;
 };
 
-const upsertGoogleUser = async (decoded, cityId) => {
-    const email = String(decoded.email || '').toLowerCase().trim();
-    if (!decoded.uid || !email) throw new APIError('errors.missingFields', 400);
+const upsertSocialUser = async (decoded, cityId, provider = 'google') => {
+    const email = socialEmail(decoded);
+    if (!decoded?.uid || !email) {
+        if (provider === 'apple' && decoded?.uid) throw new APIError('errors.appleEmailRequired', 400);
+        throw new APIError('errors.missingFields', 400);
+    }
 
-    const name = normalizeGoogleName(decoded);
+    const name = normalizeSocialName({ ...decoded, email });
     const picture = decoded.picture || decoded.photoURL || null;
     const city = await resolveCityId(cityId);
 
@@ -407,11 +431,11 @@ const upsertGoogleUser = async (decoded, cityId) => {
         user.firebaseUid = decoded.uid;
         user.email = email;
         user.isEmailVerified = true;
-        const googleName = explicitGoogleName(decoded);
-        if (googleName) user.name = googleName;
+        const socialName = explicitSocialName(decoded);
+        if (socialName) user.name = socialName;
         else if (!user.name) user.name = name;
-        if (picture && isGooglePhoto(user.avatar)) user.avatar = picture;
-        if (user.provider !== 'local') user.provider = 'google';
+        if (picture && isReplaceablePhoto(user.avatar)) user.avatar = picture;
+        if (user.provider !== 'local') user.provider = provider;
         if (city) user.city = city;
 
         try {
@@ -429,7 +453,7 @@ const upsertGoogleUser = async (decoded, cityId) => {
             email,
             firebaseUid: decoded.uid,
             avatar: picture,
-            provider: 'google',
+            provider,
             isEmailVerified: true,
             ...(city ? { city } : {}),
         });
@@ -439,16 +463,39 @@ const upsertGoogleUser = async (decoded, cityId) => {
     }
 };
 
-exports.upsertGoogleUser = upsertGoogleUser;
+const upsertGoogleUser = (decoded, cityId) => upsertSocialUser(decoded, cityId, 'google');
 
-exports.googleLogin = async (req, res, next) => {
+exports.upsertGoogleUser = upsertGoogleUser;
+exports.upsertSocialUser = upsertSocialUser;
+
+const firebaseAuthError = (err, provider) => {
+    const invalidKey = provider === 'apple' ? 'errors.invalidAppleToken' : 'errors.invalidFirebaseToken';
+    const map = {
+        'auth/id-token-expired': new APIError(provider === 'apple' ? 'errors.appleTokenExpired' : 'errors.firebaseTokenExpired', 401),
+        'auth/id-token-revoked': new APIError(provider === 'apple' ? 'errors.appleTokenRevoked' : 'errors.firebaseTokenRevoked', 401),
+        'auth/user-disabled': new APIError('errors.userDisabled', 403),
+        'auth/argument-error': new APIError(invalidKey, 401),
+        'auth/invalid-id-token': new APIError(invalidKey, 401),
+    };
+    return map[err.code] || (err.code?.startsWith('auth/') ? new APIError(invalidKey, 401) : err);
+};
+
+const socialLogin = (provider) => async (req, res, next) => {
     try {
-        let firebaseToken = req.body.firebaseIdToken || req.headers.authorization?.split(' ')[1];
+        const firebaseToken = req.body.firebaseIdToken || req.body.idToken || req.headers.authorization?.split(' ')[1];
         if (!firebaseToken) return next(new APIError('errors.tokenRequired', 401));
 
         const admin = require('../../../../admin/config/firebase');
         const decoded = await admin.auth().verifyIdToken(firebaseToken);
-        const saved = await upsertGoogleUser(decoded, req.query.city || req.body.city || req.body.cityId);
+        if (decoded.firebase?.sign_in_provider !== SOCIAL_SIGN_IN[provider]) {
+            return next(new APIError('errors.wrongSignInProvider', 401));
+        }
+
+        const saved = await upsertSocialUser(
+            decoded,
+            req.query.city || req.body.city || req.body.cityId,
+            provider
+        );
         const user = await User.findById(saved._id).populate('city', 'name nameAr image').populate('region', 'name nameAr');
         const presented = presentUser(user);
 
@@ -464,13 +511,9 @@ exports.googleLogin = async (req, res, next) => {
             },
         });
     } catch (err) {
-        const map = {
-            'auth/id-token-expired': new APIError('errors.firebaseTokenExpired', 401),
-            'auth/id-token-revoked': new APIError('errors.firebaseTokenRevoked', 401),
-            'auth/user-disabled': new APIError('errors.userDisabled', 403),
-            'auth/argument-error': new APIError('errors.invalidFirebaseToken', 401),
-            'auth/invalid-id-token': new APIError('errors.invalidFirebaseToken', 401),
-        };
-        next(map[err.code] || (err.code?.startsWith('auth/') ? new APIError('errors.invalidFirebaseToken', 401) : err));
+        next(err instanceof APIError ? err : firebaseAuthError(err, provider));
     }
 };
+
+exports.googleLogin = socialLogin('google');
+exports.appleLogin = socialLogin('apple');

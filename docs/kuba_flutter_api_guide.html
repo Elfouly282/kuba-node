@@ -572,7 +572,7 @@
       <div class="nav-card">
         <div class="nav-card-title"><span class="nav-card-num">4</span> المصادقة أو التصفح كزائر</div>
         <p>تسجيل الدخول، إنشاء حساب، أو تصفح كـ Guest.</p>
-        <div class="nav-card-next">➡️ <code>POST /auth/login</code> أو <code>/signup</code> أو <code>/google</code></div>
+        <div class="nav-card-next">➡️ <code>POST /auth/login</code> أو <code>/signup</code> أو <code>/google</code> أو <code>/apple</code></div>
       </div>
 
       <div class="nav-card">
@@ -755,7 +755,13 @@
         <li>
           <strong>تسجيل الدخول بحساب جوجل (Google / Firebase Sign-In):</strong><br>
           في الفلاتر يتم استخدام باقة <code>google_sign_in</code> للحصول على <code>idToken</code>، ثم إرساله للباك إند:<br>
-          <span class="badge badge-post">POST</span> <code>/auth/google</code> (Body: <code>{"idToken": "firebase_id_token_here"}</code>)
+          <span class="badge badge-post">POST</span> <code>/auth/google</code> (Body: <code>{"firebaseIdToken": "firebase_id_token_here"}</code>)
+        </li>
+        <li>
+          <strong>تسجيل الدخول بحساب آبل (Apple / Firebase Sign-In):</strong><br>
+          في الفلاتر يتم استخدام <code>sign_in_with_apple</code> ثم تسجيل الدخول في Firebase بمزوّد <code>apple.com</code>، وبعدها إرسال توكن Firebase للباك إند:<br>
+          <span class="badge badge-post">POST</span> <code>/auth/apple</code> (Body: <code>{"firebaseIdToken": "firebase_id_token_here"}</code>)<br>
+          الطلب فيه التوكن فقط، من غير اسم. بريد إخفاء الهوية (<code>privaterelay.appleid.com</code>) يُحفظ كبريد الحساب.
         </li>
       </ul>
 
@@ -1077,7 +1083,13 @@
           <td><span class="badge badge-post">POST</span></td>
           <td><code>/auth/google</code></td>
           <td><span class="badge badge-public">No</span></td>
-          <td>تسجيل الدخول عبر توكن Firebase Google (idToken)</td>
+          <td>تسجيل الدخول عبر توكن Firebase Google (firebaseIdToken)</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-post">POST</span></td>
+          <td><code>/auth/apple</code></td>
+          <td><span class="badge badge-public">No</span></td>
+          <td>تسجيل الدخول عبر توكن Firebase Apple (firebaseIdToken فقط)</td>
         </tr>
         <tr>
           <td><span class="badge badge-get">GET</span></td>
@@ -1383,7 +1395,7 @@
       <tbody>
         <tr>
           <td><strong>Admin Auth</strong></td>
-          <td><code>POST /admin/auth/login</code>, <code>POST /admin/auth/google</code>, <code>GET /admin/auth/me</code></td>
+          <td><code>POST /admin/auth/login</code>, <code>POST /admin/auth/google</code>, <code>POST /admin/auth/apple</code>, <code>GET /admin/auth/me</code></td>
           <td>Admin / Super Admin</td>
         </tr>
         <tr>

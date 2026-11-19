@@ -63,7 +63,13 @@ const protectAdmin = async (req, _res, next) => {
     }
 
     if (decoded.uid) {
-        req.user = { _id: decompressId(decoded.uid), uid: decoded.uid, email: decoded.email, role: 'admin', provider: 'google' };
+        req.user = {
+            _id: decompressId(decoded.uid),
+            uid: decoded.uid,
+            email: decoded.email,
+            role: 'admin',
+            provider: decoded.provider === 'apple' ? 'apple' : 'google',
+        };
         return next();
     }
 

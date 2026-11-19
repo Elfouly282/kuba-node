@@ -54,15 +54,17 @@ const protect = async (req, _res, next) => {
 
         if (!user) {
             try {
-                const { upsertGoogleUser } = require('../controllers/authController');
+                const { upsertSocialUser } = require('../controllers/authController');
                 const admin = require('../../../../admin/config/firebase');
                 const fbUser = await admin.auth().getUser(decoded.uid);
-                const saved = await upsertGoogleUser({
+                const providerIds = new Set((fbUser.providerData || []).map((entry) => entry.providerId));
+                const provider = providerIds.has('apple.com') && !providerIds.has('google.com') ? 'apple' : 'google';
+                const saved = await upsertSocialUser({
                     uid: fbUser.uid,
                     email: fbUser.email,
                     name: fbUser.displayName,
                     picture: fbUser.photoURL,
-                });
+                }, null, provider);
                 user = await User.findById(saved._id).populate('city', 'name nameAr image').populate('region', 'name nameAr');
             } catch (err) {
                 if (err instanceof APIError) return next(err);

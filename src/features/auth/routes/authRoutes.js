@@ -15,6 +15,7 @@ const {
     updateProfile,
     deleteAccount,
     googleLogin,
+    appleLogin,
     selectCity,
     selectRegion,
 } = require('../controllers/authController');
@@ -34,6 +35,7 @@ const {
 router.post('/signup', validateSignUp, signUp);
 router.post('/login', validateLogin, login);
 router.post('/google', googleLogin);
+router.post('/apple', appleLogin);
 router.get('/verify-email/:token', verifyEmail);
 router.post('/resend-verification', validateResendVerification, resendVerificationEmail);
 router.post('/forgot-password', validateForgotPassword, forgotPassword);

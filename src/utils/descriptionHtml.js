@@ -201,6 +201,7 @@ module.exports = {
     escapeHtml,
     stripHtml,
     normalizeDescriptionHtml,
+    styleDescription,
     buildAttributeSpecsHtml,
     buildDetailsHtml,
 };
