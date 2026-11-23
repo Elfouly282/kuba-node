@@ -32,8 +32,7 @@ const I18N = {
         notificationGroup: 'مجموعة',
         notificationCity: 'مدينة كاملة',
         notificationRegion: 'منطقة',
-        notificationSearchUsers: 'ابحث عن المستخدم',
-        notificationSearchPlaceholder: 'الاسم، البريد، أو الهاتف',
+        notificationRecipients: 'المستخدمون اللي عندهم إشعارات',
         notificationTitleLabel: 'عنوان الإشعار',
         notificationBodyLabel: 'نص الإشعار',
         notificationImageLabel: 'صورة (اختياري)',
@@ -205,8 +204,7 @@ const I18N = {
         notificationGroup: 'Group',
         notificationCity: 'Whole city',
         notificationRegion: 'Region',
-        notificationSearchUsers: 'Find a user',
-        notificationSearchPlaceholder: 'Name, email, or phone',
+        notificationRecipients: 'People who can receive notifications',
         notificationTitleLabel: 'Notification title',
         notificationBodyLabel: 'Notification text',
         notificationImageLabel: 'Image (optional)',
@@ -8246,10 +8244,10 @@ async function handleOwnerPasswordUpdate(e) {
 const notificationState = {
     target: 'user',
     selected: [],
+    recipients: [],
+    recipientsLoaded: false,
     cities: [],
     regions: [],
-    searchTimer: null,
-    hits: [],
 };
 
 function placeName(item) {
@@ -8268,29 +8266,39 @@ function setNotificationTarget(target, preview = true) {
     document.getElementById('notification-region-box')?.classList.toggle('hidden', target !== 'region');
     if (target === 'user' && notificationState.selected.length > 1) {
         notificationState.selected = notificationState.selected.slice(0, 1);
-        renderSelectedNotificationUsers();
     }
+    renderNotificationRecipients();
     if (preview) previewNotificationAudience();
 }
 
-function renderSelectedNotificationUsers() {
-    const box = document.getElementById('notification-selected-users');
+function renderNotificationRecipients() {
+    const box = document.getElementById('notification-user-results');
     if (!box) return;
-    if (!notificationState.selected.length) {
-        box.innerHTML = '';
+    if (!notificationState.recipientsLoaded) {
+        box.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">${state.lang === 'ar' ? 'جاري تحميل المستخدمين...' : 'Loading people...'}</div>`;
         return;
     }
-    box.innerHTML = notificationState.selected.map((user) => `
-        <button type="button" class="badge badge-brand text-xs" data-remove-user="${user.id}">
-            ${escapeHtmlText(user.name || user.email)}
-            <i class="fas fa-times ms-1"></i>
-        </button>
-    `).join('');
-    box.querySelectorAll('[data-remove-user]').forEach((btn) => {
+    if (!notificationState.recipients.length) {
+        box.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">${state.lang === 'ar' ? 'مفيش مستخدمين سجلوا جهاز للإشعارات لسه.' : 'No one has registered a device for notifications yet.'}</div>`;
+        return;
+    }
+    const multiple = notificationState.target === 'users';
+    box.innerHTML = notificationState.recipients.map((user) => {
+        const selected = notificationState.selected.some((item) => item.id === user.id);
+        const place = [placeName(user.city), placeName(user.region)].filter(Boolean).join(' · ');
+        return `<button type="button" class="w-full text-start px-3 py-2 rounded-lg border text-xs flex items-center gap-2 ${selected ? 'border-[#2D4F2E] bg-[#eaf1ea]' : 'border-slate-200 hover:border-[#2D4F2E]'}" data-pick-user="${user.id}">
+            <i class="${multiple ? (selected ? 'fas fa-square-check text-[#2D4F2E]' : 'far fa-square text-slate-300') : (selected ? 'fas fa-circle-dot text-[#2D4F2E]' : 'far fa-circle text-slate-300')}"></i>
+            <span class="min-w-0">
+                <span class="font-semibold text-slate-800">${escapeHtmlText(user.name || user.email)}</span>
+                <span class="text-slate-400 ms-2">${escapeHtmlText(user.email || user.phone || '')}</span>
+                ${place ? `<span class="block text-[11px] text-slate-400">${escapeHtmlText(place)}</span>` : ''}
+            </span>
+        </button>`;
+    }).join('');
+    box.querySelectorAll('[data-pick-user]').forEach((btn) => {
         btn.addEventListener('click', () => {
-            notificationState.selected = notificationState.selected.filter((user) => user.id !== btn.dataset.removeUser);
-            renderSelectedNotificationUsers();
-            previewNotificationAudience();
+            const hit = notificationState.recipients.find((user) => user.id === btn.dataset.pickUser);
+            if (hit) toggleNotificationUser(hit);
         });
     });
 }
@@ -8304,42 +8312,8 @@ function toggleNotificationUser(user) {
     } else {
         notificationState.selected.push(user);
     }
-    renderSelectedNotificationUsers();
+    renderNotificationRecipients();
     previewNotificationAudience();
-}
-
-function searchNotificationUsers(value) {
-    clearTimeout(notificationState.searchTimer);
-    const query = value.trim();
-    const box = document.getElementById('notification-user-results');
-    if (!query) {
-        if (box) box.innerHTML = '';
-        return;
-    }
-    notificationState.searchTimer = setTimeout(async () => {
-        try {
-            const res = await apiFetch(`/api/v1/admin/users?search=${encodeURIComponent(query)}&limit=8`, { silent: true });
-            notificationState.hits = res.data?.users || [];
-            if (!box) return;
-            box.innerHTML = notificationState.hits.map((user) => {
-                const id = user.id || user._id;
-                const name = user.name || user.email;
-                return `<button type="button" class="w-full text-start px-3 py-2 rounded-lg border border-slate-200 hover:border-[#2D4F2E] text-xs" data-pick-user="${id}">
-                    <span class="font-semibold text-slate-800">${escapeHtmlText(name)}</span>
-                    <span class="text-slate-400 ms-2">${escapeHtmlText(user.email || '')}</span>
-                </button>`;
-            }).join('') || `<div class="text-xs text-slate-400">${state.lang === 'ar' ? 'لا توجد نتائج' : 'No matches'}</div>`;
-            box.querySelectorAll('[data-pick-user]').forEach((btn) => {
-                btn.addEventListener('click', () => {
-                    const hit = notificationState.hits.find((user) => String(user.id || user._id) === btn.dataset.pickUser);
-                    if (!hit) return;
-                    toggleNotificationUser({ id: String(hit.id || hit._id), name: hit.name, email: hit.email });
-                });
-            });
-        } catch (_) {
-            if (box) box.innerHTML = '';
-        }
-    }, 300);
 }
 
 function fillNotificationPlaces() {
@@ -8424,14 +8398,23 @@ function renderNotificationHistory(items) {
 async function loadNotifications() {
     setNotificationTarget(notificationState.target, false);
     try {
-        const [citiesRes, regionsRes, historyRes] = await Promise.all([
+        const [citiesRes, regionsRes, historyRes, recipientsRes] = await Promise.all([
             apiFetch('/api/v1/admin/cities', { silent: true }),
             apiFetch('/api/v1/admin/regions', { silent: true }),
             apiFetch('/api/v1/admin/notifications', { silent: true }),
+            apiFetch('/api/v1/admin/notifications/recipients', { silent: true }),
         ]);
         notificationState.cities = citiesRes.data?.cities || [];
         notificationState.regions = regionsRes.data?.regions || [];
+        notificationState.recipients = (recipientsRes.data?.recipients || []).map((user) => ({
+            ...user,
+            id: String(user.id || user._id),
+        }));
+        notificationState.recipientsLoaded = true;
+        const known = new Set(notificationState.recipients.map((user) => user.id));
+        notificationState.selected = notificationState.selected.filter((user) => known.has(user.id));
         fillNotificationPlaces();
+        renderNotificationRecipients();
         renderNotificationHistory(historyRes.data?.notifications || []);
         previewNotificationAudience();
     } catch (err) {
@@ -8477,8 +8460,7 @@ async function sendNotification(event) {
             : `Delivered to ${stats.sent || 0} devices`, stats.sent ? 'success' : 'warning');
         document.getElementById('notification-form').reset();
         notificationState.selected = [];
-        renderSelectedNotificationUsers();
-        document.getElementById('notification-user-results').innerHTML = '';
+        renderNotificationRecipients();
         loadNotifications();
     } catch (_) {
         // apiFetch already shows the error

@@ -4,6 +4,7 @@ const {
     previewAudience,
     sendNotification,
     listNotifications,
+    listRecipients,
 } = require('../../../../src/features/notifications/notificationService');
 
 const readImage = (req) => {
@@ -25,6 +26,18 @@ exports.preview = async (req, res, next) => {
     try {
         const audience = await previewAudience({ ...req.query, ...req.body });
         SuccessResponse.ok(res, { data: { audience } });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.recipients = async (req, res, next) => {
+    try {
+        const recipients = await listRecipients();
+        SuccessResponse.ok(res, {
+            results: recipients.length,
+            data: { recipients },
+        });
     } catch (err) {
         next(err);
     }

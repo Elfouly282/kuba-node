@@ -301,9 +301,32 @@ const listNotifications = async (req) => {
     };
 };
 
+const listRecipients = async () => {
+    const users = await User.find({ 'fcmTokens.0': { $exists: true } })
+        .select('name email phone city region')
+        .populate('city', 'name nameAr')
+        .populate('region', 'name nameAr')
+        .sort({ name: 1, email: 1 })
+        .lean();
+
+    return users.map((user) => ({
+        id: user._id,
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        city: user.city && typeof user.city === 'object'
+            ? { id: user.city._id, name: user.city.name || '', nameAr: user.city.nameAr || '' }
+            : null,
+        region: user.region && typeof user.region === 'object'
+            ? { id: user.region._id, name: user.region.name || '', nameAr: user.region.nameAr || '' }
+            : null,
+    }));
+};
+
 module.exports = {
     previewAudience,
     sendNotification,
     listNotifications,
+    listRecipients,
     publicImageUrl,
 };

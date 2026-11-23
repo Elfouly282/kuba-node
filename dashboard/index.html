@@ -808,10 +808,8 @@
                             </div>
 
                             <div id="notification-user-box" class="space-y-2">
-                                <label class="block text-xs font-semibold text-slate-700" data-i18n="notificationSearchUsers">ابحث عن المستخدم</label>
-                                <input id="notification-user-search" class="form-input text-sm" data-i18n-placeholder="notificationSearchPlaceholder" placeholder="الاسم، البريد، أو الهاتف" oninput="searchNotificationUsers(this.value)">
-                                <div id="notification-user-results" class="space-y-1"></div>
-                                <div id="notification-selected-users" class="flex flex-wrap gap-2"></div>
+                                <label class="block text-xs font-semibold text-slate-700" data-i18n="notificationRecipients">المستخدمون اللي عندهم إشعارات</label>
+                                <div id="notification-user-results" class="max-h-64 overflow-y-auto space-y-1 rounded-xl border border-slate-200 p-2"></div>
                             </div>
 
                             <div id="notification-city-box" class="hidden">
