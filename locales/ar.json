@@ -49,7 +49,10 @@
         "privacyPolicyUpdated": "تم تحديث سياسة الخصوصية بنجاح.",
         "paymentMethodCreated": "تمت إضافة منصة الدفع.",
         "paymentMethodUpdated": "تم تحديث طريقة الدفع.",
-        "paymentMethodDeleted": "تم حذف منصة الدفع."
+        "paymentMethodDeleted": "تم حذف منصة الدفع.",
+        "fcmTokenSaved": "تم ربط جهازك بالإشعارات.",
+        "fcmTokenRemoved": "تم إيقاف الإشعارات على هذا الجهاز.",
+        "notificationSent": "تم إرسال الإشعار."
     },
     "errors": {
         "somethingWentWrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.",
@@ -119,7 +122,17 @@
         "advertisementInactive": "هذا الإعلان غير متاح للحجز حالياً.",
         "bookingCannotBeCancelled": "يمكن إلغاء الحجوزات قيد الانتظار أو المؤكدة فقط.",
         "bookingClosed": "مقدم الخدمة قفل الموعد ده. اختار يوم أو ساعة تانية.",
-        "blockedPeriodNotFound": "فترة الإغلاق دي مش موجودة."
+        "blockedPeriodNotFound": "فترة الإغلاق دي مش موجودة.",
+        "invalidFcmToken": "توكن الإشعارات غير صالح.",
+        "invalidNotificationTarget": "اختار الجمهور: شخص، مجموعة، مدينة، أو منطقة.",
+        "notificationUsersRequired": "اختار شخص واحد على الأقل.",
+        "notificationTooManyUsers": "يمكن اختيار {{max}} شخص كحد أقصى في المرة الواحدة.",
+        "notificationTitleRequired": "عنوان الإشعار مطلوب.",
+        "notificationBodyRequired": "نص الإشعار مطلوب.",
+        "noNotificationAudience": "لا يوجد مستخدمون يطابقون هذا الاختيار.",
+        "noNotificationDevices": "في {{matched}} مستخدم، لكن ولا واحد سجّل جهاز لاستلام الإشعارات.",
+        "notificationSendFailed": "تعذر إرسال الإشعار. تأكد من إعدادات Firebase.",
+        "invalidNotificationImage": "رابط الصورة لازم يبدأ بـ http أو https."
     },
     "validation": {
         "nameRequired": "الاسم مطلوب.",

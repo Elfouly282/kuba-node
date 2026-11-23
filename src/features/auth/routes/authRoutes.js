@@ -18,6 +18,8 @@ const {
     appleLogin,
     selectCity,
     selectRegion,
+    registerFcmToken,
+    removeFcmToken,
 } = require('../controllers/authController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -43,6 +45,8 @@ router.post('/verify-reset-otp', validateVerifyResetOtp, verifyResetOtp);
 router.patch('/reset-password/:token', validateResetPassword, resetPassword);
 
 router.post('/logout', protect, logout);
+router.put('/fcm-token', protect, registerFcmToken);
+router.delete('/fcm-token', protect, removeFcmToken);
 router.patch('/change-password', protect, validateChangePassword, changePassword);
 router.get('/me', protect, getMe);
 router.patch('/update-profile', protect, updateProfile);

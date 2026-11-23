@@ -13,6 +13,7 @@ const { SuccessResponse } = require('../../../utils/apiResponse');
 const { generateToken } = require('../../../utils/generateToken');
 const { sendVerificationEmail, sendPasswordResetOtpEmail } = require('../../../utils/sendEmail');
 const { deleteImageFile } = require('../../../utils/imageUrl');
+const { linkFcmToken, parseFcmToken, removeFcmToken: removeStoredFcmToken } = require('../../notifications/fcmToken');
 
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
@@ -27,7 +28,7 @@ const expiresIn = (envKey, fallback) =>
 const clean = (user) => {
     const obj = user.toObject();
     ['password', 'emailVerificationToken', 'emailVerificationExpires',
-        'passwordResetToken', 'passwordResetExpires', 'active', '__v'].forEach(k => delete obj[k]);
+        'passwordResetToken', 'passwordResetExpires', 'active', 'fcmTokens', 'fcmToken', '__v'].forEach(k => delete obj[k]);
     return obj;
 };
 
@@ -122,10 +123,17 @@ exports.login = async (req, res, next) => {
     if (!(await user.comparePassword(password))) return next(new APIError('errors.invalidCredentials', 401));
     if (!user.isEmailVerified) return next(new APIError('errors.emailNotVerified', 403));
 
+    let fcmTokenLinked = false;
+    try {
+        fcmTokenLinked = await linkFcmToken(user._id, req.body);
+    } catch (err) {
+        return next(err);
+    }
+
     SuccessResponse.ok(res, {
         message: req.t('messages.loginSuccess'),
         token: authToken(user),
-        data: { user: clean(user) },
+        data: { user: clean(user), fcmTokenLinked },
     });
 };
 
@@ -185,8 +193,27 @@ exports.selectRegion = async (req, res, next) => {
     });
 };
 
-exports.logout = (_req, res) => {
-    SuccessResponse.ok(res, { message: 'messages.logoutSuccess' });
+exports.logout = async (req, res) => {
+    const parsed = parseFcmToken(req.body);
+    if (parsed.token) await removeStoredFcmToken(req.user._id, parsed.token);
+    SuccessResponse.ok(res, { message: req.t('messages.logoutSuccess') });
+};
+
+exports.registerFcmToken = async (req, res, next) => {
+    try {
+        const linked = await linkFcmToken(req.user._id, req.body);
+        if (!linked) return next(new APIError('errors.invalidFcmToken', 400));
+        SuccessResponse.ok(res, { message: req.t('messages.fcmTokenSaved'), data: { fcmTokenLinked: true } });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.removeFcmToken = async (req, res, next) => {
+    const parsed = parseFcmToken({ ...req.query, ...req.body });
+    if (!parsed.token) return next(new APIError('errors.invalidFcmToken', 400));
+    await removeStoredFcmToken(req.user._id, parsed.token);
+    SuccessResponse.ok(res, { message: req.t('messages.fcmTokenRemoved'), data: { fcmTokenLinked: false } });
 };
 
 exports.verifyEmail = async (req, res, next) => {
@@ -496,6 +523,7 @@ const socialLogin = (provider) => async (req, res, next) => {
             req.query.city || req.body.city || req.body.cityId,
             provider
         );
+        const fcmTokenLinked = await linkFcmToken(saved._id, req.body);
         const user = await User.findById(saved._id).populate('city', 'name nameAr image').populate('region', 'name nameAr');
         const presented = presentUser(user);
 
@@ -508,6 +536,7 @@ const socialLogin = (provider) => async (req, res, next) => {
                 name: presented.name,
                 picture: presented.picture || decoded.picture || null,
                 user: presented,
+                fcmTokenLinked,
             },
         });
     } catch (err) {

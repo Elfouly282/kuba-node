@@ -72,9 +72,16 @@ const userSchema = new mongoose.Schema(
         passwordResetOtp: { type: String, select: false },
         passwordResetOtpExpires: { type: Date, select: false },
         active: { type: Boolean, default: true, select: false },
+        fcmTokens: {
+            type: [String],
+            default: undefined,
+            select: false,
+        },
     },
     { timestamps: true }
 );
+
+userSchema.index({ fcmTokens: 1 });
 
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password') || !this.password) return next();

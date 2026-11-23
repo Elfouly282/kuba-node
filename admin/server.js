@@ -30,6 +30,7 @@ const regionRoutes = require('./features/regions/routes/regionRoutes');
 const unitTypeRoutes = require('./features/unit-types/routes/unitTypeRoutes');
 const bookingRoutes = require('./features/bookings/routes/bookingRoutes');
 const policyRoutes = require('./features/policies/routes/policyRoutes');
+const notificationRoutes = require('./features/notifications/routes/notificationRoutes');
 const { renderPrivacyPage } = require('../src/features/policies/controllers/policyController');
 
 dbConnection();
@@ -69,6 +70,7 @@ app.use('/api/v1/admin/regions', regionRoutes);
 app.use('/api/v1/admin/unit-types', unitTypeRoutes);
 app.use('/api/v1/admin/bookings', bookingRoutes);
 app.use('/api/v1/admin/privacy-policy', policyRoutes);
+app.use('/api/v1/admin/notifications', notificationRoutes);
 
 app.get(['/privacy-policy', '/privacy', '/policy'], renderPrivacyPage);
 

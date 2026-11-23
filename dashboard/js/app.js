@@ -25,6 +25,21 @@ const I18N = {
         kpiBannersHint: 'بانرات الواجهة النشطة',
         kpiOnboardingHint: 'شاشات البداية',
         users: 'إدارة المستخدمين',
+        notificationsTitle: 'الإشعارات',
+        notificationsSubtitle: 'أرسل إشعار لشخص، أو مجموعة، أو كل مستخدمي مدينة أو منطقة. الصورة اختيارية.',
+        notificationAudience: 'الجمهور',
+        notificationOne: 'شخص واحد',
+        notificationGroup: 'مجموعة',
+        notificationCity: 'مدينة كاملة',
+        notificationRegion: 'منطقة',
+        notificationSearchUsers: 'ابحث عن المستخدم',
+        notificationSearchPlaceholder: 'الاسم، البريد، أو الهاتف',
+        notificationTitleLabel: 'عنوان الإشعار',
+        notificationBodyLabel: 'نص الإشعار',
+        notificationImageLabel: 'صورة (اختياري)',
+        notificationImageUrlLabel: 'أو رابط صورة',
+        notificationSend: 'إرسال الإشعار',
+        notificationHistory: 'الإشعارات السابقة',
         onboarding: 'شاشات الترحيب',
         privacyPolicy: 'سياسة الخصوصية',
         privacyPolicySubtitle: 'الرابط العام المطلوب في Google Play و App Store. الصفحة مفتوحة بدون تسجيل دخول.',
@@ -183,6 +198,21 @@ const I18N = {
         kpiBannersHint: 'Active home banners',
         kpiOnboardingHint: 'Welcome screens',
         users: 'Users Management',
+        notificationsTitle: 'Notifications',
+        notificationsSubtitle: 'Send a notification to one person, a group, a whole city, or a region. An image is optional.',
+        notificationAudience: 'Audience',
+        notificationOne: 'One person',
+        notificationGroup: 'Group',
+        notificationCity: 'Whole city',
+        notificationRegion: 'Region',
+        notificationSearchUsers: 'Find a user',
+        notificationSearchPlaceholder: 'Name, email, or phone',
+        notificationTitleLabel: 'Notification title',
+        notificationBodyLabel: 'Notification text',
+        notificationImageLabel: 'Image (optional)',
+        notificationImageUrlLabel: 'Or an image URL',
+        notificationSend: 'Send notification',
+        notificationHistory: 'Sent notifications',
         onboarding: 'Onboarding Screens',
         privacyPolicy: 'Privacy Policy',
         privacyPolicySubtitle: 'Public URL required by Google Play and the App Store. The page is open without login.',
@@ -661,6 +691,7 @@ function updateAdminProfileUI() {
 const PAGE_TITLES = {
     overview: 'overview',
     users: 'users',
+    notifications: 'notificationsTitle',
     bookings: 'bookings',
     regions: 'regions',
     advertisements: 'advertisements',
@@ -708,6 +739,8 @@ function loadCurrentTab() {
         loadStats();
     } else if (state.currentTab === 'users') {
         loadUsers();
+    } else if (state.currentTab === 'notifications') {
+        loadNotifications();
     } else if (state.currentTab === 'bookings') {
         loadBookingsTab();
     } else if (state.currentTab === 'regions') {
@@ -8207,6 +8240,252 @@ async function handleOwnerPasswordUpdate(e) {
     }
 }
 
+
+// ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
+
+const notificationState = {
+    target: 'user',
+    selected: [],
+    cities: [],
+    regions: [],
+    searchTimer: null,
+    hits: [],
+};
+
+function placeName(item) {
+    if (!item) return '';
+    return state.lang === 'ar' ? (item.nameAr || item.name || '') : (item.name || item.nameAr || '');
+}
+
+function setNotificationTarget(target, preview = true) {
+    notificationState.target = target;
+    document.querySelectorAll('.notification-target').forEach((btn) => {
+        btn.classList.toggle('gold-btn', btn.dataset.target === target);
+        btn.classList.toggle('btn-secondary', btn.dataset.target !== target);
+    });
+    document.getElementById('notification-user-box')?.classList.toggle('hidden', target !== 'user' && target !== 'users');
+    document.getElementById('notification-city-box')?.classList.toggle('hidden', target !== 'city');
+    document.getElementById('notification-region-box')?.classList.toggle('hidden', target !== 'region');
+    if (target === 'user' && notificationState.selected.length > 1) {
+        notificationState.selected = notificationState.selected.slice(0, 1);
+        renderSelectedNotificationUsers();
+    }
+    if (preview) previewNotificationAudience();
+}
+
+function renderSelectedNotificationUsers() {
+    const box = document.getElementById('notification-selected-users');
+    if (!box) return;
+    if (!notificationState.selected.length) {
+        box.innerHTML = '';
+        return;
+    }
+    box.innerHTML = notificationState.selected.map((user) => `
+        <button type="button" class="badge badge-brand text-xs" data-remove-user="${user.id}">
+            ${escapeHtmlText(user.name || user.email)}
+            <i class="fas fa-times ms-1"></i>
+        </button>
+    `).join('');
+    box.querySelectorAll('[data-remove-user]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            notificationState.selected = notificationState.selected.filter((user) => user.id !== btn.dataset.removeUser);
+            renderSelectedNotificationUsers();
+            previewNotificationAudience();
+        });
+    });
+}
+
+function toggleNotificationUser(user) {
+    const exists = notificationState.selected.some((item) => item.id === user.id);
+    if (notificationState.target === 'user') {
+        notificationState.selected = exists ? [] : [user];
+    } else if (exists) {
+        notificationState.selected = notificationState.selected.filter((item) => item.id !== user.id);
+    } else {
+        notificationState.selected.push(user);
+    }
+    renderSelectedNotificationUsers();
+    previewNotificationAudience();
+}
+
+function searchNotificationUsers(value) {
+    clearTimeout(notificationState.searchTimer);
+    const query = value.trim();
+    const box = document.getElementById('notification-user-results');
+    if (!query) {
+        if (box) box.innerHTML = '';
+        return;
+    }
+    notificationState.searchTimer = setTimeout(async () => {
+        try {
+            const res = await apiFetch(`/api/v1/admin/users?search=${encodeURIComponent(query)}&limit=8`, { silent: true });
+            notificationState.hits = res.data?.users || [];
+            if (!box) return;
+            box.innerHTML = notificationState.hits.map((user) => {
+                const id = user.id || user._id;
+                const name = user.name || user.email;
+                return `<button type="button" class="w-full text-start px-3 py-2 rounded-lg border border-slate-200 hover:border-[#2D4F2E] text-xs" data-pick-user="${id}">
+                    <span class="font-semibold text-slate-800">${escapeHtmlText(name)}</span>
+                    <span class="text-slate-400 ms-2">${escapeHtmlText(user.email || '')}</span>
+                </button>`;
+            }).join('') || `<div class="text-xs text-slate-400">${state.lang === 'ar' ? 'لا توجد نتائج' : 'No matches'}</div>`;
+            box.querySelectorAll('[data-pick-user]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const hit = notificationState.hits.find((user) => String(user.id || user._id) === btn.dataset.pickUser);
+                    if (!hit) return;
+                    toggleNotificationUser({ id: String(hit.id || hit._id), name: hit.name, email: hit.email });
+                });
+            });
+        } catch (_) {
+            if (box) box.innerHTML = '';
+        }
+    }, 300);
+}
+
+function fillNotificationPlaces() {
+    const citySelect = document.getElementById('notification-city');
+    const regionSelect = document.getElementById('notification-region');
+    if (citySelect) {
+        citySelect.innerHTML = notificationState.cities.map((city) =>
+            `<option value="${city.id || city._id}">${escapeHtmlText(placeName(city))}</option>`
+        ).join('');
+    }
+    if (regionSelect) {
+        regionSelect.innerHTML = notificationState.regions.map((region) => {
+            const city = placeName(region.city);
+            const label = city ? `${placeName(region)} — ${city}` : placeName(region);
+            return `<option value="${region.id || region._id}">${escapeHtmlText(label)}</option>`;
+        }).join('');
+    }
+}
+
+async function previewNotificationAudience() {
+    const preview = document.getElementById('notification-audience-preview');
+    if (!preview) return;
+    const params = new URLSearchParams({ target: notificationState.target });
+    if (notificationState.target === 'user' || notificationState.target === 'users') {
+        if (!notificationState.selected.length) {
+            preview.textContent = state.lang === 'ar' ? 'اختار المستخدمين الأول.' : 'Choose the recipients first.';
+            return;
+        }
+        params.set('userIds', notificationState.selected.map((user) => user.id).join(','));
+    } else if (notificationState.target === 'city') {
+        const cityId = document.getElementById('notification-city')?.value;
+        if (!cityId) return;
+        params.set('cityId', cityId);
+    } else {
+        const regionId = document.getElementById('notification-region')?.value;
+        if (!regionId) return;
+        params.set('regionId', regionId);
+    }
+
+    try {
+        const res = await apiFetch(`/api/v1/admin/notifications/audience?${params.toString()}`, { silent: true });
+        const audience = res.data?.audience || {};
+        preview.textContent = state.lang === 'ar'
+            ? `هيوصل لـ ${audience.devices || 0} جهاز من ${audience.matchedUsers || 0} مستخدم. ${audience.skippedNoToken || 0} بدون تطبيق مسجّل.`
+            : `Will reach ${audience.devices || 0} devices out of ${audience.matchedUsers || 0} users. ${audience.skippedNoToken || 0} have no registered app.`;
+    } catch (err) {
+        preview.textContent = err.message || '';
+    }
+}
+
+function renderNotificationHistory(items) {
+    const box = document.getElementById('notification-history');
+    if (!box) return;
+    if (!items.length) {
+        box.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">${state.lang === 'ar' ? 'لسه مفيش إشعارات متبعتة.' : 'No notifications sent yet.'}</div>`;
+        return;
+    }
+    const targetLabel = {
+        user: state.lang === 'ar' ? 'شخص' : 'One person',
+        users: state.lang === 'ar' ? 'مجموعة' : 'Group',
+        city: state.lang === 'ar' ? 'مدينة' : 'City',
+        region: state.lang === 'ar' ? 'منطقة' : 'Region',
+    };
+    box.innerHTML = items.map((item) => {
+        const place = item.targetType === 'city' ? placeName(item.city) : item.targetType === 'region' ? placeName(item.region) : '';
+        const when = item.createdAt ? new Date(item.createdAt).toLocaleString(state.lang === 'ar' ? 'ar-EG' : 'en-GB') : '';
+        const stats = item.stats || {};
+        return `<article class="border border-slate-200 rounded-xl p-3 flex gap-3">
+            ${item.image ? `<img src="${escapeHtmlText(item.image)}" alt="" class="w-16 h-16 rounded-lg object-cover shrink-0">` : ''}
+            <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                    <h4 class="font-bold text-sm text-slate-900">${escapeHtmlText(item.title)}</h4>
+                    <span class="badge badge-brand text-[10px]">${escapeHtmlText(targetLabel[item.targetType] || item.targetType)}${place ? ` · ${escapeHtmlText(place)}` : ''}</span>
+                </div>
+                <p class="text-xs text-slate-600 mt-1">${escapeHtmlText(item.body)}</p>
+                <p class="text-[11px] text-slate-400 mt-1">${escapeHtmlText(when)} · ${stats.sent || 0}/${stats.devices || 0}</p>
+            </div>
+        </article>`;
+    }).join('');
+}
+
+async function loadNotifications() {
+    setNotificationTarget(notificationState.target, false);
+    try {
+        const [citiesRes, regionsRes, historyRes] = await Promise.all([
+            apiFetch('/api/v1/admin/cities', { silent: true }),
+            apiFetch('/api/v1/admin/regions', { silent: true }),
+            apiFetch('/api/v1/admin/notifications', { silent: true }),
+        ]);
+        notificationState.cities = citiesRes.data?.cities || [];
+        notificationState.regions = regionsRes.data?.regions || [];
+        fillNotificationPlaces();
+        renderNotificationHistory(historyRes.data?.notifications || []);
+        previewNotificationAudience();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+}
+
+async function sendNotification(event) {
+    event.preventDefault();
+    const title = document.getElementById('notification-title').value.trim();
+    const body = document.getElementById('notification-body').value.trim();
+    if (!title || !body) return;
+
+    const audienceText = document.getElementById('notification-audience-preview')?.textContent || '';
+    const confirmed = window.confirm(state.lang === 'ar'
+        ? `تأكيد إرسال الإشعار؟\n${audienceText}`
+        : `Send this notification?\n${audienceText}`);
+    if (!confirmed) return;
+
+    const form = new FormData();
+    form.append('target', notificationState.target);
+    form.append('title', title);
+    form.append('body', body);
+    if (notificationState.target === 'user' || notificationState.target === 'users') {
+        form.append('userIds', notificationState.selected.map((user) => user.id).join(','));
+    } else if (notificationState.target === 'city') {
+        form.append('cityId', document.getElementById('notification-city').value);
+    } else {
+        form.append('regionId', document.getElementById('notification-region').value);
+    }
+    const file = document.getElementById('notification-image').files[0];
+    const imageUrl = document.getElementById('notification-image-url').value.trim();
+    if (file) form.append('image', file);
+    else if (imageUrl) form.append('imageUrl', imageUrl);
+
+    const button = document.getElementById('notification-send-btn');
+    button.disabled = true;
+    try {
+        const res = await apiFetch('/api/v1/admin/notifications', { method: 'POST', body: form });
+        const stats = res.data?.notification?.stats || {};
+        showToast(state.lang === 'ar'
+            ? `تم الإرسال إلى ${stats.sent || 0} جهاز`
+            : `Delivered to ${stats.sent || 0} devices`, stats.sent ? 'success' : 'warning');
+        document.getElementById('notification-form').reset();
+        notificationState.selected = [];
+        renderSelectedNotificationUsers();
+        document.getElementById('notification-user-results').innerHTML = '';
+        loadNotifications();
+    } catch (_) {
+        // apiFetch already shows the error
+    } finally {
+        button.disabled = false;
+    }
+}
 
 // ─── INITIALIZATION ───────────────────────────────────────────────────────────
 

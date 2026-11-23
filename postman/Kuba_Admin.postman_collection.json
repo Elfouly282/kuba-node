@@ -2930,6 +2930,70 @@
           }
         }
       ]
+    },
+    {
+      "name": "Notifications",
+      "description": "Push notifications through Firebase. The user app sends fcmToken on login (or PUT /auth/fcm-token). Audience is one user, a list of users, a city, or a region. Image is optional: upload field image, or imageUrl.",
+      "item": [
+        {
+          "name": "Preview Audience",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/notifications/audience?target=city&cityId={{cityId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "notifications", "audience"],
+              "query": [
+                { "key": "target", "value": "city", "description": "user | users | city | region" },
+                { "key": "cityId", "value": "{{cityId}}" },
+                { "key": "regionId", "value": "{{regionId}}", "disabled": true },
+                { "key": "userIds", "value": "{{userId}}", "disabled": true }
+              ]
+            },
+            "description": "Admin only. Counts matching users and devices that already registered an FCM token. Does not send."
+          }
+        },
+        {
+          "name": "Send Notification",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "target", "value": "user", "type": "text", "description": "user | users | city | region" },
+                { "key": "userIds", "value": "{{userId}}", "type": "text", "description": "One id, or comma-separated ids when target is users" },
+                { "key": "cityId", "value": "{{cityId}}", "type": "text", "disabled": true },
+                { "key": "regionId", "value": "{{regionId}}", "type": "text", "disabled": true },
+                { "key": "title", "value": "عرض جديد", "type": "text" },
+                { "key": "body", "value": "في شاليه متاح النهارده في الغردقة", "type": "text" },
+                { "key": "image", "type": "file", "disabled": true },
+                { "key": "imageUrl", "value": "https://example.com/offer.jpg", "type": "text", "disabled": true }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "notifications"]
+            },
+            "description": "Admin only. Sends a push, with an optional image, to the chosen audience."
+          }
+        },
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "notifications"]
+            },
+            "description": "Admin only. Previously sent notifications."
+          }
+        }
+      ]
     }
   ]
 }

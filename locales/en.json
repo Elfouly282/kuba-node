@@ -49,7 +49,10 @@
         "privacyPolicyUpdated": "Privacy policy updated successfully.",
         "paymentMethodCreated": "Payment platform added.",
         "paymentMethodUpdated": "Payment method updated.",
-        "paymentMethodDeleted": "Payment platform removed."
+        "paymentMethodDeleted": "Payment platform removed.",
+        "fcmTokenSaved": "This device is now linked for notifications.",
+        "fcmTokenRemoved": "Notifications were turned off for this device.",
+        "notificationSent": "Notification sent."
     },
     "errors": {
         "somethingWentWrong": "Something went wrong. Please try again later.",
@@ -119,7 +122,17 @@
         "advertisementInactive": "This listing is currently not available for booking.",
         "bookingCannotBeCancelled": "Only pending or confirmed bookings can be cancelled.",
         "bookingClosed": "The provider has closed this time. Please choose another day or time.",
-        "blockedPeriodNotFound": "That closed period was not found."
+        "blockedPeriodNotFound": "That closed period was not found.",
+        "invalidFcmToken": "The notification token is invalid.",
+        "invalidNotificationTarget": "Choose an audience: one person, a group, a city, or a region.",
+        "notificationUsersRequired": "Choose at least one person.",
+        "notificationTooManyUsers": "You can choose at most {{max}} people at once.",
+        "notificationTitleRequired": "Notification title is required.",
+        "notificationBodyRequired": "Notification text is required.",
+        "noNotificationAudience": "No users match this audience.",
+        "noNotificationDevices": "{{matched}} users match, but none of them have a device registered for notifications.",
+        "notificationSendFailed": "The notification could not be sent. Check the Firebase setup.",
+        "invalidNotificationImage": "The image URL must start with http or https."
     },
     "validation": {
         "nameRequired": "Name is required.",

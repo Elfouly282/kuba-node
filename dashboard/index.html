@@ -112,6 +112,10 @@
                                 <i class="fas fa-users w-5 text-center"></i>
                                 <span data-i18n="users">إدارة المستخدمين</span>
                             </a>
+                            <a href="#" class="nav-link" data-tab="notifications">
+                                <i class="fas fa-bell w-5 text-center"></i>
+                                <span data-i18n="notificationsTitle">الإشعارات</span>
+                            </a>
                             <a href="#" class="nav-link" data-tab="bookings">
                                 <i class="fas fa-calendar-check w-5 text-center"></i>
                                 <span data-i18n="bookings">كافة الحجوزات</span>
@@ -777,6 +781,83 @@
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </section>
+
+                    <section id="view-notifications" class="tab-view hidden space-y-6">
+                        <div class="page-head">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900" data-i18n="notificationsTitle">الإشعارات</h2>
+                                <p class="text-xs text-slate-500" data-i18n="notificationsSubtitle">أرسل إشعار لشخص، أو مجموعة، أو كل مستخدمي مدينة أو منطقة. الصورة اختيارية.</p>
+                            </div>
+                            <button type="button" onclick="loadNotifications()" class="btn-secondary text-xs">
+                                <i class="fas fa-sync-alt"></i>
+                                <span data-i18n="refresh">تحديث</span>
+                            </button>
+                        </div>
+
+                        <form id="notification-form" onsubmit="sendNotification(event)" class="card p-5 bg-white space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-2" data-i18n="notificationAudience">الجمهور</label>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" class="btn-secondary text-xs notification-target" data-target="user" onclick="setNotificationTarget('user')"><i class="fas fa-user"></i> <span data-i18n="notificationOne">شخص واحد</span></button>
+                                    <button type="button" class="btn-secondary text-xs notification-target" data-target="users" onclick="setNotificationTarget('users')"><i class="fas fa-user-group"></i> <span data-i18n="notificationGroup">مجموعة</span></button>
+                                    <button type="button" class="btn-secondary text-xs notification-target" data-target="city" onclick="setNotificationTarget('city')"><i class="fas fa-city"></i> <span data-i18n="notificationCity">مدينة كاملة</span></button>
+                                    <button type="button" class="btn-secondary text-xs notification-target" data-target="region" onclick="setNotificationTarget('region')"><i class="fas fa-map-location-dot"></i> <span data-i18n="notificationRegion">منطقة</span></button>
+                                </div>
+                            </div>
+
+                            <div id="notification-user-box" class="space-y-2">
+                                <label class="block text-xs font-semibold text-slate-700" data-i18n="notificationSearchUsers">ابحث عن المستخدم</label>
+                                <input id="notification-user-search" class="form-input text-sm" data-i18n-placeholder="notificationSearchPlaceholder" placeholder="الاسم، البريد، أو الهاتف" oninput="searchNotificationUsers(this.value)">
+                                <div id="notification-user-results" class="space-y-1"></div>
+                                <div id="notification-selected-users" class="flex flex-wrap gap-2"></div>
+                            </div>
+
+                            <div id="notification-city-box" class="hidden">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="notificationCity">المدينة</label>
+                                <select id="notification-city" class="form-select text-sm" onchange="previewNotificationAudience()"></select>
+                            </div>
+
+                            <div id="notification-region-box" class="hidden">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="notificationRegion">المنطقة</label>
+                                <select id="notification-region" class="form-select text-sm" onchange="previewNotificationAudience()"></select>
+                            </div>
+
+                            <p id="notification-audience-preview" class="text-xs text-slate-500"></p>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="notificationTitleLabel">عنوان الإشعار</label>
+                                    <input id="notification-title" class="form-input text-sm" maxlength="120" required>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="notificationBodyLabel">نص الإشعار</label>
+                                    <textarea id="notification-body" class="form-input text-sm" rows="4" maxlength="1000" required></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="notificationImageLabel">صورة (اختياري)</label>
+                                    <input id="notification-image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" class="form-input text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="notificationImageUrlLabel">أو رابط صورة</label>
+                                    <input id="notification-image-url" type="url" class="form-input text-sm" dir="ltr" placeholder="https://">
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-end">
+                                <button type="submit" id="notification-send-btn" class="gold-btn text-xs">
+                                    <i class="fas fa-paper-plane"></i>
+                                    <span data-i18n="notificationSend">إرسال الإشعار</span>
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="card p-5 bg-white space-y-3">
+                            <h3 class="font-bold text-slate-900 text-sm" data-i18n="notificationHistory">الإشعارات السابقة</h3>
+                            <div id="notification-history" class="space-y-3">
+                                <div class="text-center py-6 text-slate-400 text-xs">...</div>
+                            </div>
                         </div>
                     </section>
 

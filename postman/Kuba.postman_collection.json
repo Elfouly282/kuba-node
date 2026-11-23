@@ -271,7 +271,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Password123\"\n}",
+                  "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Password123\",\n  \"fcmToken\": \"<FCM_DEVICE_TOKEN>\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -322,7 +322,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"firebaseIdToken\": \"<FIREBASE_ID_TOKEN_HERE>\"\n}",
+                  "raw": "{\n  \"firebaseIdToken\": \"<FIREBASE_ID_TOKEN_HERE>\",\n  \"fcmToken\": \"<FCM_DEVICE_TOKEN>\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -366,7 +366,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"firebaseIdToken\": \"<FIREBASE_ID_TOKEN_HERE>\"\n}",
+                  "raw": "{\n  \"firebaseIdToken\": \"<FIREBASE_ID_TOKEN_HERE>\",\n  \"fcmToken\": \"<FCM_DEVICE_TOKEN>\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -398,8 +398,21 @@
                   {
                     "key": "Authorization",
                     "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
                   }
                 ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fcmToken\": \"<FCM_DEVICE_TOKEN>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
                 "url": {
                   "raw": "{{baseUrl}}/auth/logout",
                   "host": [
@@ -409,7 +422,8 @@
                     "auth",
                     "logout"
                   ]
-                }
+                },
+                "description": "Optional fcmToken removes this device so it stops receiving notifications after logout."
               },
               "event": [
                 {
@@ -422,6 +436,42 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "Save FCM Token",
+              "description": "Call after login, and again whenever Firebase refreshes the device token. The same token is moved off any other account.",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fcmToken\": \"<FCM_DEVICE_TOKEN>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/fcm-token",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "fcm-token"
+                  ]
+                }
+              }
             }
           ]
         },
